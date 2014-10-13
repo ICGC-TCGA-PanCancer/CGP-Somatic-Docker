@@ -31,6 +31,8 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   private String greeting ="";
   private static String OUTDIR = "outdir/";
   private static String LOGDIR = "logdir/";
+  
+  private boolean testMode=false;
 
   // MEMORY variables //
   private String  memGnosDownload,
@@ -55,7 +57,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
                   //GNOS identifiers
                   tumourAnalysisId, controlAnalysisId,
                   // test files, instead of GNOS ids
-                  tumourBam, normalBam,
+                  tumourBam, normalBam, tumourBas, normalBas,
                   // ascat variables
                   gender,
                   // pindel variables
@@ -159,9 +161,11 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       // test files
       if(tumourAnalysisId == null || tumourAnalysisId.equals("CHANGEME")) {
         tumourBam = getProperty("tumourBam");
+        testMode=true;
       }
       if(controlAnalysisId == null || controlAnalysisId.equals("CHANGEME")) {
         normalBam = getProperty("normalBam");
+        testMode=true;
       }
 
       //environment
@@ -182,23 +186,30 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
 
     
     Job[] gnosDownloadJobs = new Job[2];
-    /*
+    Job[] basDownloadJobs = new Job[2];
+    
     // @TODO, when we have a decider in place
-    for(int i=0; i<2; i++) {
-      String thisId = "";
-      switch(i){
-        case 0: thisId = tumourAnalysisId;
-        case 1: thisId = controlAnalysisId;
-      }
+    if(testMode == false) {
+      for(int i=0; i<2; i++) {
+        String thisId = "";
+        switch(i){
+          case 0: thisId = tumourAnalysisId;
+          case 1: thisId = controlAnalysisId;
+        }
 
-      Job gnosDownload = this.getWorkflow().createBashJob("GNOSDownload");
-      gnosDownload.setMaxMemory(memGnosDownload);
-      gnosDownload.getCommand()
-                    .addArgument(this.getWorkflowBaseDir()+"/bin/download_gnos.pl") // ?? @TODO Is there a generic script for this???
-                    .addArgument(thisId); // @TODO can't use Donor ID as a donor can have multiple tumours (but only one normal)
-      // the file needs to end up in tumourBam/normalBam
-      gnosDownloadJobs[i] = gnosDownload;
-    }*/
+        Job gnosDownload = this.getWorkflow().createBashJob("GNOSDownload");
+        gnosDownload.setMaxMemory(memGnosDownload);
+        gnosDownload.getCommand()
+                      .addArgument(this.getWorkflowBaseDir()+"/bin/download_gnos.pl") // ?? @TODO Is there a generic script for this???
+                      .addArgument(thisId); // @TODO can't use Donor ID as a donor can have multiple tumours (but only one normal)
+        // the file needs to end up in tumourBam/normalBam
+        gnosDownloadJobs[i] = gnosDownload;
+
+        // get the BAS files
+        Job basJob = basFileBaseJob(thisId);
+        basDownloadJobs[i] = basJob;
+      }
+    }
     
     /**
      * ASCAT - Copynumber
@@ -210,8 +221,12 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     for(int i=0; i<2; i++) {
       Job alleleCountJob = this.cgpAscatBaseJob("ascatAlleleCount", "allele_count", i+1);
       alleleCountJob.setMaxMemory(memAlleleCount);
-//      alleleCountJob.addParent(gnosDownloadJobs[0]);
-//      alleleCountJob.addParent(gnosDownloadJobs[1]);
+      if(testMode == false) {
+        alleleCountJob.addParent(gnosDownloadJobs[0]);
+        alleleCountJob.addParent(gnosDownloadJobs[1]);
+        alleleCountJob.addParent(basDownloadJobs[0]);
+        alleleCountJob.addParent(basDownloadJobs[1]);
+      }
       alleleCountJobs[i] = alleleCountJob;
     }
 
@@ -235,8 +250,12 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       inputParse.getCommand().addArgument("-c " + pindelInputThreads);
       inputParse.setMaxMemory(memInputParse);
       inputParse.setThreads(pindelInputThreads);
-//      inputParse.addParent(gnosDownloadJobs[0]);
-//      inputParse.addParent(gnosDownloadJobs[1]);  
+      if(testMode == false) {
+        inputParse.addParent(gnosDownloadJobs[0]);
+        inputParse.addParent(gnosDownloadJobs[1]);  
+        inputParse.addParent(basDownloadJobs[0]);
+        inputParse.addParent(basDownloadJobs[1]);
+      }
       pindelInputJobs[i] = inputParse;
     }
     
@@ -278,8 +297,12 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     for(int i=0; i<2; i++) {
       Job brassInputJob = this.brassBaseJob("brassInput", "input", i+1);
       brassInputJob.setMaxMemory(memBrassInput);
-//      brassInputJob.addParent(gnosDownloadJobs[0]);
-//      brassInputJob.addParent(gnosDownloadJobs[1]);
+      if(testMode == false) {
+        brassInputJob.addParent(gnosDownloadJobs[0]);
+        brassInputJob.addParent(gnosDownloadJobs[1]);
+        brassInputJob.addParent(basDownloadJobs[0]);
+        brassInputJob.addParent(basDownloadJobs[1]);
+      }
       brassInputJobs[i] = brassInputJob;
     }
     
@@ -319,8 +342,12 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
      */
     Job cavemanSetupJob = this.cavemanBaseJob("cavemanSetup", "setup", 1);
     cavemanSetupJob.setMaxMemory(memCavemanSetup);
-    cavemanSetupJob.addParent(gnosDownloadJobs[0]); // not really needed as ASCAT will do this check
-    cavemanSetupJob.addParent(gnosDownloadJobs[1]); // but here for complete disclosure
+    if(testMode == false) {
+      cavemanSetupJob.addParent(gnosDownloadJobs[0]);
+      cavemanSetupJob.addParent(gnosDownloadJobs[1]);
+      cavemanSetupJob.addParent(basDownloadJobs[0]);
+      cavemanSetupJob.addParent(basDownloadJobs[1]);
+    }
     cavemanSetupJob.addParent(ascatJob);
     
     // should really line count the fai file
@@ -383,6 +410,19 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
 
     // @TODO then we need to write back to GNOS
 
+  }
+  
+  private Job basFileBaseJob(String analysisId) {
+    Job thisJob = this.getWorkflow().createBashJob("basFileGet");
+    thisJob.getCommand()
+            .addArgument(this.getWorkflowBaseDir()+ "/bin/wrapper.sh")
+            .addArgument(installBase)
+            .addArgument(LOGDIR.concat("basFileGet.log"))
+            .addArgument("xml_to_bas.pl")
+            .addArgument("-d " + analysisId)
+            .addArgument("-o " + OUTDIR + "/" + analysisId + ".bas")
+            ;
+    return thisJob;
   }
   
   private Job cavemanBaseJob(String name, String process, int index) {
