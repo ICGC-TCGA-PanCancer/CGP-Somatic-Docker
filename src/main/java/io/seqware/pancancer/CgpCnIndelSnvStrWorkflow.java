@@ -164,8 +164,8 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       }
 
       //environment
-      installBase = getWorkflowBaseDir() + "/opt";
-      refBase = installBase + "/seqware_ref";
+      installBase = getWorkflowBaseDir() + "bin/opt";
+      refBase = installBase + "bin/seqware_ref";
     } catch (Exception ex) {
       ex.printStackTrace();
       throw new RuntimeException(ex);
