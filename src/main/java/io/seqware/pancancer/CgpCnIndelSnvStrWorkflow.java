@@ -62,8 +62,8 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
                   gender,
                   // pindel variables
                   refExclude,
-                  // caveman variables
-                  httpRangeSrv,
+                  //caveman variables
+                  tabixSrvUri,
                   //general variables
                   installBase, refBase;
 
@@ -93,13 +93,16 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     //since setupDirectory is the first method run, we use it to initialize variables too.
     init();
     // creates a dir1 directory in the current working directory where the workflow runs
-    this.addDirectory(OUTDIR);
-    this.addDirectory(LOGDIR);
+    addDirectory(OUTDIR);
+    addDirectory(LOGDIR);
   }
 
   @Override
   public Map<String, SqwFile> setupFiles() {
     try {
+      testMode=Boolean.valueOf(getProperty("testMode"));
+      
+      // used by steps that can use all available cores
       coresAddressable = Integer.valueOf(getProperty("coresAddressable"));
 
       // MEMORY //
@@ -133,7 +136,6 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       // REFERENCE INFO //
       species = getProperty("species");
       assembly = getProperty("assembly");
-      refBase = getProperty("refBase");
       
       // Sequencing info
       seqType = getProperty("seqType");
@@ -146,35 +148,29 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       pindelInputThreads = Integer.valueOf(getProperty("pindelInputThreads"));
       
       // Specific to Caveman workflow //
-      httpRangeSrv = getProperty("httpRangeSrv");
+      tabixSrvUri = getProperty("tabixSrvUri");
 
-      // Which data to process //
-      if(hasPropertyAndNotNull("tumourAnalysisId") && hasPropertyAndNotNull("controlAnalysisId")) {
-        // used in preference to test files if set //
-        tumourAnalysisId = getProperty("tumourAnalysisId");
-        controlAnalysisId = getProperty("controlAnalysisId");
-      }
+      // used in preference to test files if set //
+      tumourAnalysisId = getProperty("tumourAnalysisId");
+      controlAnalysisId = getProperty("controlAnalysisId");
 
       // pindel specific
       refExclude = getProperty("refExclude");
 
-      // test files
-      if(tumourAnalysisId == null || tumourAnalysisId.equals("CHANGEME")) {
+      // test mode
+      if(testMode) {
         tumourBam = getProperty("tumourBam");
-        testMode=true;
-      }
-      if(controlAnalysisId == null || controlAnalysisId.equals("CHANGEME")) {
         normalBam = getProperty("normalBam");
-        testMode=true;
       }
 
       //environment
-      installBase = getProperty("installBase");
+      installBase = getWorkflowBaseDir() + "/opt";
+      refBase = installBase + "/seqware_ref";
     } catch (Exception ex) {
       ex.printStackTrace();
       throw new RuntimeException(ex);
     }
-    return this.getFiles();
+    return getFiles();
   }
 
   @Override
@@ -197,10 +193,10 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
           case 1: thisId = controlAnalysisId;
         }
 
-        Job gnosDownload = this.getWorkflow().createBashJob("GNOSDownload");
+        Job gnosDownload = getWorkflow().createBashJob("GNOSDownload");
         gnosDownload.setMaxMemory(memGnosDownload);
         gnosDownload.getCommand()
-                      .addArgument(this.getWorkflowBaseDir()+"/bin/download_gnos.pl") // ?? @TODO Is there a generic script for this???
+                      .addArgument(getWorkflowBaseDir()+"/bin/download_gnos.pl") // ?? @TODO Is there a generic script for this???
                       .addArgument(thisId); // @TODO can't use Donor ID as a donor can have multiple tumours (but only one normal)
         // the file needs to end up in tumourBam/normalBam
         gnosDownloadJobs[i] = gnosDownload;
@@ -219,7 +215,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
      */
     Job[] alleleCountJobs = new Job[2];
     for(int i=0; i<2; i++) {
-      Job alleleCountJob = this.cgpAscatBaseJob("ascatAlleleCount", "allele_count", i+1);
+      Job alleleCountJob = cgpAscatBaseJob("ascatAlleleCount", "allele_count", i+1);
       alleleCountJob.setMaxMemory(memAlleleCount);
       if(testMode == false) {
         alleleCountJob.addParent(gnosDownloadJobs[0]);
@@ -230,12 +226,12 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       alleleCountJobs[i] = alleleCountJob;
     }
 
-    Job ascatJob = this.cgpAscatBaseJob("ascat", "ascat", 1);
+    Job ascatJob = cgpAscatBaseJob("ascat", "ascat", 1);
     ascatJob.setMaxMemory(memAscat);
     ascatJob.addParent(alleleCountJobs[0]);
     ascatJob.addParent(alleleCountJobs[1]);
     
-    Job ascatFinaliseJob = this.cgpAscatBaseJob("ascatFinalise", "finalise", 1);
+    Job ascatFinaliseJob = cgpAscatBaseJob("ascatFinalise", "finalise", 1);
     ascatFinaliseJob.setMaxMemory(memAscatFinalise);
     ascatFinaliseJob.addParent(ascatJob);
     
@@ -246,7 +242,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
      */
     Job[] pindelInputJobs = new Job[2];
     for(int i=0; i<2; i++) {
-      Job inputParse = this.pindelBaseJob("pindelInput", "input", i+1);
+      Job inputParse = pindelBaseJob("pindelInput", "input", i+1);
       inputParse.getCommand().addArgument("-c " + pindelInputThreads);
       inputParse.setMaxMemory(memInputParse);
       inputParse.setThreads(pindelInputThreads);
@@ -264,12 +260,12 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     // but pindel needs to know the exclude list so hard code this
     Job pinVcfJobs[] = new Job[24];
     for(int i=0; i<24; i++) {
-      Job pindelJob = this.pindelBaseJob("pindelPindel", "pindel", i+1);
+      Job pindelJob = pindelBaseJob("pindelPindel", "pindel", i+1);
       pindelJob.setMaxMemory(memPindel);
       pindelJob.addParent(pindelInputJobs[0]);
       pindelJob.addParent(pindelInputJobs[1]);
       
-      Job pinVcfJob = this.pindelBaseJob("pindelVcf", "pin2vcf", i+1);
+      Job pinVcfJob = pindelBaseJob("pindelVcf", "pin2vcf", i+1);
       pinVcfJob.setMaxMemory(memPinVcf);
       pinVcfJob.addParent(pindelJob);
       
@@ -277,13 +273,13 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       pinVcfJobs[i] = pinVcfJob;
     }
     
-    Job pindelMergeJob = this.pindelBaseJob("pindelMerge", "merge", 1);
+    Job pindelMergeJob = pindelBaseJob("pindelMerge", "merge", 1);
     pindelMergeJob.setMaxMemory(memPinMerge);
     for (Job parent : pinVcfJobs) {
       pindelMergeJob.addParent(parent);
     }
     
-    Job pindelFlagJob = this.pindelBaseJob("pindelFlag", "flag", 1);
+    Job pindelFlagJob = pindelBaseJob("pindelFlag", "flag", 1);
     pindelFlagJob.setMaxMemory(memPinFlag);
     pindelFlagJob.addParent(pindelMergeJob);
     
@@ -295,7 +291,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
      */
     Job brassInputJobs[] = new Job[2];
     for(int i=0; i<2; i++) {
-      Job brassInputJob = this.brassBaseJob("brassInput", "input", i+1);
+      Job brassInputJob = brassBaseJob("brassInput", "input", i+1);
       brassInputJob.setMaxMemory(memBrassInput);
       if(testMode == false) {
         brassInputJob.addParent(gnosDownloadJobs[0]);
@@ -306,30 +302,30 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       brassInputJobs[i] = brassInputJob;
     }
     
-    Job brassGroupJob = this.brassBaseJob("brassGroup", "group", 1);
+    Job brassGroupJob = brassBaseJob("brassGroup", "group", 1);
     brassGroupJob.setMaxMemory(memBrassGroup);
     brassGroupJob.addParent(brassInputJobs[0]);
     brassGroupJob.addParent(brassInputJobs[1]);
     
-    Job brassFilterJob = this.brassBaseJob("brassFilter", "filter", 1);
+    Job brassFilterJob = brassBaseJob("brassFilter", "filter", 1);
     brassFilterJob.setMaxMemory(memBrassFilter);
     brassFilterJob.addParent(brassGroupJob);
     brassFilterJob.addParent(ascatFinaliseJob); // NOTE: dependency on ASCAT!!
     
-    Job brassSplitJob = this.brassBaseJob("brassSplit", "split", 1);
+    Job brassSplitJob = brassBaseJob("brassSplit", "split", 1);
     brassSplitJob.setMaxMemory(memBrassSplit);
     brassSplitJob.addParent(brassFilterJob);
     
-    Job brassAssembleJob = this.brassBaseJob("brassAssemble", "assemble", 1);
+    Job brassAssembleJob = brassBaseJob("brassAssemble", "assemble", 1);
     brassAssembleJob.getCommand().addArgument("-l 1"); // regardless of number of splits, run sequentially
     brassAssembleJob.setMaxMemory(memBrassAssemble);
     brassAssembleJob.addParent(brassSplitJob);
     
-    Job brassGrassJob = this.brassBaseJob("brassGrass", "grass", 1);
+    Job brassGrassJob = brassBaseJob("brassGrass", "grass", 1);
     brassGrassJob.setMaxMemory(memBrassGrass);
     brassGrassJob.addParent(brassAssembleJob);
     
-    Job brassTabixJob = this.brassBaseJob("brassTabix", "tabix", 1);
+    Job brassTabixJob = brassBaseJob("brassTabix", "tabix", 1);
     brassTabixJob.setMaxMemory(memBrassTabix);
     brassTabixJob.addParent(brassGrassJob);
     
@@ -340,7 +336,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
      *  - ASCAT from outset
      *  - pindel at flag step
      */
-    Job cavemanSetupJob = this.cavemanBaseJob("cavemanSetup", "setup", 1);
+    Job cavemanSetupJob = cavemanBaseJob("cavemanSetup", "setup", 1);
     cavemanSetupJob.setMaxMemory(memCavemanSetup);
     if(testMode == false) {
       cavemanSetupJob.addParent(gnosDownloadJobs[0]);
@@ -353,13 +349,13 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     // should really line count the fai file
     Job cavemanSplitJobs[] = new Job[86];
     for(int i=0; i<86; i++) {
-      Job cavemanSplitJob = this.cavemanBaseJob("cavemanSplit", "split", i+1);
+      Job cavemanSplitJob = cavemanBaseJob("cavemanSplit", "split", i+1);
       cavemanSplitJob.setMaxMemory(memCavemanSplit);
       cavemanSplitJob.addParent(cavemanSetupJob);
       cavemanSplitJobs[i] = cavemanSplitJob;
     }
     
-    Job cavemanSplitConcatJob = this.cavemanBaseJob("cavemanSplitConcat", "split_concat", 1);
+    Job cavemanSplitConcatJob = cavemanBaseJob("cavemanSplitConcat", "split_concat", 1);
     cavemanSplitConcatJob.setMaxMemory(memCavemanSplitConcat);
     for (Job cavemanSplitJob : cavemanSplitJobs) {
       cavemanSplitConcatJob.addParent(cavemanSplitJob);
@@ -367,14 +363,15 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     
     List<Job> cavemanMstepJobs = new ArrayList<Job>();
     for(int i=0; i<coresAddressable; i++) {
-      Job cavemanMstepJob = this.cavemanBaseJob("cavemanMstep", "mstep", i+1);
+      Job cavemanMstepJob = cavemanBaseJob("cavemanMstep", "mstep", i+1);
       cavemanMstepJob.getCommand().addArgument("-l " + coresAddressable);
+      cavemanMstepJob.setThreads(coresAddressable);
       cavemanMstepJob.setMaxMemory(memCavemanMstep);
       cavemanMstepJob.addParent(cavemanSplitConcatJob);
       cavemanMstepJobs.add(cavemanMstepJob);
     }
     
-    Job cavemanMergeJob = this.cavemanBaseJob("cavemanMerge", "merge", 1);
+    Job cavemanMergeJob = cavemanBaseJob("cavemanMerge", "merge", 1);
     cavemanMergeJob.setMaxMemory(memCavemanMerge);
     for(Job parent : cavemanMstepJobs) {
       cavemanMergeJob.addParent(parent);
@@ -382,25 +379,26 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     
     List<Job> cavemanEstepJobs = new ArrayList<Job>();
     for(int i=0; i<coresAddressable; i++) {
-      Job cavemanEstepJob = this.cavemanBaseJob("cavemanEstep", "estep", i+1);
+      Job cavemanEstepJob = cavemanBaseJob("cavemanEstep", "estep", i+1);
       cavemanEstepJob.getCommand().addArgument("-l " + coresAddressable);
+      cavemanEstepJob.setThreads(coresAddressable);
       cavemanEstepJob.setMaxMemory(memCavemanEstep);
       cavemanEstepJob.addParent(cavemanMergeJob);
       cavemanEstepJobs.add(cavemanEstepJob);
     }
     
-    Job cavemanMergeResultsJob = this.cavemanBaseJob("cavemanMergeResults", "merge_results", 1);
+    Job cavemanMergeResultsJob = cavemanBaseJob("cavemanMergeResults", "merge_results", 1);
     cavemanMergeResultsJob.setMaxMemory(memCavemanMergeResults);
     for(Job parent : cavemanEstepJobs) {
       cavemanMergeResultsJob.addParent(parent);
     }
     
-    Job cavemanAddIdsJob = this.cavemanBaseJob("cavemanAddIds", "add_ids", 1);
+    Job cavemanAddIdsJob = cavemanBaseJob("cavemanAddIds", "add_ids", 1);
     cavemanAddIdsJob.setMaxMemory(memCavemanAddIds);
     cavemanAddIdsJob.addParent(cavemanMergeResultsJob);
     
-    Job cavemanFlagJob = this.cavemanBaseJob("cavemanFlag", "flag", 1);
-    cavemanFlagJob.getCommand().addArgument("-in " + OUTDIR + "/pindel/germline.bed"); // @TODO
+    Job cavemanFlagJob = cavemanBaseJob("cavemanFlag", "flag", 1);
+    cavemanFlagJob.getCommand().addArgument("-in " + OUTDIR + "/pindel/germline.bed");
     cavemanFlagJob.setMaxMemory(memCavemanFlag);
     cavemanFlagJob.addParent(cavemanAddIdsJob);
     
@@ -413,9 +411,9 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   }
   
   private Job basFileBaseJob(String analysisId) {
-    Job thisJob = this.getWorkflow().createBashJob("basFileGet");
+    Job thisJob = getWorkflow().createBashJob("basFileGet");
     thisJob.getCommand()
-            .addArgument(this.getWorkflowBaseDir()+ "/bin/wrapper.sh")
+            .addArgument(getWorkflowBaseDir()+ "/bin/wrapper.sh")
             .addArgument(installBase)
             .addArgument(LOGDIR.concat("basFileGet.log"))
             .addArgument("xml_to_bas.pl")
@@ -426,9 +424,9 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   }
   
   private Job cavemanBaseJob(String name, String process, int index) {
-    Job thisJob = this.getWorkflow().createBashJob(name);
+    Job thisJob = getWorkflow().createBashJob(name);
     thisJob.getCommand()
-              .addArgument(this.getWorkflowBaseDir()+ "/bin/wrapper.sh")
+              .addArgument(getWorkflowBaseDir()+ "/bin/wrapper.sh")
               .addArgument(installBase)
               .addArgument(LOGDIR.concat(process).concat(".").concat(Integer.toString(index)).concat(".log"))
               .addArgument("caveman.pl")
@@ -438,7 +436,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
               .addArgument("-r " + refBase + "/genome.fa.fai")
               .addArgument("-ig " + refBase + "/caveman/ucscHiDepth_0.01_merge1000_no_exon.tsv")
               .addArgument("-b " + refBase + "/caveman")
-              .addArgument("-u " + httpRangeSrv + "/caveman_unmatched")
+              .addArgument("-u " + tabixSrvUri)
               .addArgument("-np " + seqType)
               .addArgument("-tp " + seqType)
               .addArgument("-sa " + assembly)
@@ -457,9 +455,9 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   }
 
   private Job cgpAscatBaseJob(String name, String process, int index) {
-    Job thisJob = this.getWorkflow().createBashJob(name);
+    Job thisJob = getWorkflow().createBashJob(name);
     thisJob.getCommand()
-              .addArgument(this.getWorkflowBaseDir()+ "/bin/wrapper.sh")
+              .addArgument(getWorkflowBaseDir()+ "/bin/wrapper.sh")
               .addArgument(installBase)
               .addArgument(LOGDIR.concat(process).concat(".").concat(Integer.toString(index)).concat(".log"))
               .addArgument("ascat.pl")
@@ -487,9 +485,9 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   }
 
   private Job pindelBaseJob(String name, String process, int index) {
-    Job thisJob = this.getWorkflow().createBashJob(name);
+    Job thisJob = getWorkflow().createBashJob(name);
     thisJob.getCommand()
-              .addArgument(this.getWorkflowBaseDir()+ "/bin/wrapper.sh")
+              .addArgument(getWorkflowBaseDir()+ "/bin/wrapper.sh")
               .addArgument(installBase)
               .addArgument(LOGDIR.concat(process).concat(".").concat(Integer.toString(index)).concat(".log"))
               .addArgument("pindel.pl")
@@ -514,9 +512,9 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   }
 
   private Job brassBaseJob(String name, String process, int index) {
-    Job thisJob = this.getWorkflow().createBashJob(name);
+    Job thisJob = getWorkflow().createBashJob(name);
     thisJob.getCommand()
-              .addArgument(this.getWorkflowBaseDir()+ "/bin/wrapper.sh")
+              .addArgument(getWorkflowBaseDir()+ "/bin/wrapper.sh")
               .addArgument(installBase)
               .addArgument(LOGDIR.concat(process).concat(".").concat(Integer.toString(index)).concat(".log"))
               .addArgument("brass.pl")
