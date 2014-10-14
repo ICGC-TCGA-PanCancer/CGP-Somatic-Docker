@@ -239,7 +239,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
      * Pindel - InDel calling
      * Depends on:
      *  - tumour/normal BAMs
-     */
+
     Job[] pindelInputJobs = new Job[2];
     for(int i=0; i<2; i++) {
       Job inputParse = pindelBaseJob("pindelInput", "input", i+1);
@@ -288,7 +288,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
      * Depends on:
      *  - tumour/normal BAMs
      *  - ASCAT output at filter step
-     */
+     
     Job brassInputJobs[] = new Job[2];
     for(int i=0; i<2; i++) {
       Job brassInputJob = brassBaseJob("brassInput", "input", i+1);
@@ -335,7 +335,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
      *  - tumour/normal BAMs
      *  - ASCAT from outset
      *  - pindel at flag step
-     */
+     
     Job cavemanSetupJob = cavemanBaseJob("cavemanSetup", "setup", 1);
     cavemanSetupJob.setMaxMemory(memCavemanSetup);
     if(testMode == false) {
@@ -402,7 +402,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     cavemanFlagJob.setMaxMemory(memCavemanFlag);
     cavemanFlagJob.addParent(cavemanAddIdsJob);
     
-    
+    */
     
     
 
