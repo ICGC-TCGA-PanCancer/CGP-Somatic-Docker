@@ -44,6 +44,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
                   memBrassInput, memBrassGroup, memBrassFilter, memBrassSplit,
                   memBrassAssemble, memBrassGrass, memBrassTabix,
                   // caveman memory
+                  memCaveCnPrep,
                   memCavemanSetup, memCavemanSplit, memCavemanSplitConcat,
                   memCavemanMstep, memCavemanMerge, memCavemanEstep,
                   memCavemanMergeResults, memCavemanAddIds, memCavemanFlag
@@ -94,7 +95,6 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     init();
     // creates a dir1 directory in the current working directory where the workflow runs
     addDirectory(OUTDIR);
-    addDirectory(OUTDIR + "/brass/tmpBrass"); // as brass doesnt have a setup step
     addDirectory(LOGDIR);
   }
 
@@ -126,6 +126,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       memBrassGrass = getProperty("memBrassGrass");
       memBrassTabix = getProperty("memBrassTabix");
       
+      memCaveCnPrep = getProperty("memCaveCnPrep");
       memCavemanSetup = getProperty("memCavemanSetup");
       memCavemanSplit = getProperty("memCavemanSplit");
       memCavemanSplitConcat = getProperty("memCavemanSplitConcat");
@@ -359,18 +360,20 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     
     Job caveCnPrepJobs[] = new Job[2];
     for(int i=0; i<2; i++) {
-      String type = "";
-      switch(i){
-        case 0: type = "tumour";
-        case 1: type = "normal";
+      Job caveCnPrepJob;
+      if(i==0) {
+        caveCnPrepJob = caveCnPrep("tumour");
       }
-      Job caveCnPrepJob = caveCnPrep(type);
+      else {
+        caveCnPrepJob = caveCnPrep("normal");
+      }
+      caveCnPrepJob.setMaxMemory(memCaveCnPrep);
+//      caveCnPrepJob.addParent(ascatJob); // ASCAT dependency!!!
       caveCnPrepJobs[i] = caveCnPrepJob;
     }
     
     Job cavemanSetupJob = cavemanBaseJob("cavemanSetup", "setup", 1);
     cavemanSetupJob.setMaxMemory(memCavemanSetup);
-//    cavemanSetupJob.addParent(ascatJob); // ASCAT dependency!!!
     cavemanSetupJob.addParent(caveCnPrepJobs[0]);
     cavemanSetupJob.addParent(caveCnPrepJobs[1]);
     if(testMode == false) {
@@ -509,8 +512,8 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
               .addArgument("-st " + seqProtocol)
             
               .addArgument("-o " + OUTDIR + "/caveman")
-              .addArgument("-tc " + OUTDIR + "/ascat/tum.cn.bed") // @TODO
-              .addArgument("-nc " + OUTDIR + "/ascat/norm.cn.bed") // @TODO
+              .addArgument("-tc " + OUTDIR + "/tumour.cn.bed") // @TODO
+              .addArgument("-nc " + OUTDIR + "/normal.cn.bed") // @TODO
               .addArgument("-k " + OUTDIR + "/ascat/samplestatistics.csv") // @TODO
               .addArgument("-tb " + tumourBam)
               .addArgument("-nb " + normalBam);
