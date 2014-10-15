@@ -372,7 +372,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     cavemanSetupJob.addParent(caveCnPrepJobs[0]);
     cavemanSetupJob.addParent(caveCnPrepJobs[1]);
     // some dependencies handled by ascat step
-    /*
+    
     // should really line count the fai file
     Job cavemanSplitJobs[] = new Job[86];
     for(int i=0; i<86; i++) {
@@ -381,7 +381,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       cavemanSplitJob.addParent(cavemanSetupJob);
       cavemanSplitJobs[i] = cavemanSplitJob;
     }
-    
+    /*
     Job cavemanSplitConcatJob = cavemanBaseJob("cavemanSplitConcat", "split_concat", 1);
     cavemanSplitConcatJob.setMaxMemory(memCavemanSplitConcat);
     for (Job cavemanSplitJob : cavemanSplitJobs) {
