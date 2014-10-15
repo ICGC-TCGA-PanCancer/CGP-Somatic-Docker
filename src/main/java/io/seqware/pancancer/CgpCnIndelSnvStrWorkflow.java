@@ -59,9 +59,9 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
                   // test files, instead of GNOS ids
                   tumourBam, normalBam,
                   // ascat variables
-                  gender,
+                  gender, ascatCn, ascatContam,
                   // pindel variables
-                  refExclude,
+                  refExclude, pindelGermline,
                   //caveman variables
                   tabixSrvUri,
                   //general variables
@@ -101,7 +101,9 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   @Override
   public Map<String, SqwFile> setupFiles() {
     try {
-      testMode=Boolean.valueOf(getProperty("testMode"));
+      if(hasPropertyAndNotNull("testMode")) {
+        testMode=Boolean.valueOf(getProperty("testMode"));
+      }
       
       // used by steps that can use all available cores
       coresAddressable = Integer.valueOf(getProperty("coresAddressable"));
@@ -165,6 +167,15 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       if(testMode) {
         tumourBam = getProperty("tumourBam");
         normalBam = getProperty("normalBam");
+        if(hasPropertyAndNotNull("pindelGermline")) {
+          pindelGermline = getProperty("pindelGermline");
+        }
+        if(hasPropertyAndNotNull("ascatCn")) {
+          ascatCn = getProperty("ascatCn");
+        }
+        if(hasPropertyAndNotNull("ascatContam")) {
+          ascatCn = getProperty("ascatContam");
+        }
       }
 
       //environment
@@ -179,6 +190,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
 
   @Override
   public void buildWorkflow() {
+    
     // First we need the tumour and normal BAM files (+bai)
     // this can be done in parallel, based on tumour/control
     // correlate names on by number of parallel jobs neeeded.
@@ -294,7 +306,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
      * Depends on:
      *  - tumour/normal BAMs
      *  - ASCAT output at filter step
-     */
+     *
     
     Job brassInputJobs[] = new Job[2];
     for(int i=0; i<2; i++) {
@@ -335,6 +347,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     Job brassTabixJob = brassBaseJob("brassTabix", "tabix", 1);
     brassTabixJob.setMaxMemory(memBrassTabix);
     brassTabixJob.addParent(brassGrassJob);
+    */
     
     /**
      * CaVEMan - SNV analysis
@@ -342,16 +355,30 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
      *  - tumour/normal BAMs
      *  - ASCAT from outset
      *  - pindel at flag step
-     
+     */
+    
+    Job caveCnPrepJobs[] = new Job[2];
+    for(int i=0; i<2; i++) {
+      String type;
+      switch(i){
+        case 0: type = "tumour";
+        case 1: type = "normal";
+      }
+      Job caveCnPrepJob = caveCnPrep("type");
+      caveCnPrepJobs[i] = caveCnPrepJob;
+    }
+    
     Job cavemanSetupJob = cavemanBaseJob("cavemanSetup", "setup", 1);
     cavemanSetupJob.setMaxMemory(memCavemanSetup);
+//    cavemanSetupJob.addParent(ascatJob); // ASCAT dependency!!!
+    cavemanSetupJob.addParent(caveCnPrepJobs[0]);
+    cavemanSetupJob.addParent(caveCnPrepJobs[1]);
     if(testMode == false) {
       cavemanSetupJob.addParent(gnosDownloadJobs[0]);
       cavemanSetupJob.addParent(gnosDownloadJobs[1]);
       cavemanSetupJob.addParent(basDownloadJobs[0]);
       cavemanSetupJob.addParent(basDownloadJobs[1]);
     }
-    cavemanSetupJob.addParent(ascatJob);
     
     // should really line count the fai file
     Job cavemanSplitJobs[] = new Job[86];
@@ -405,11 +432,16 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     cavemanAddIdsJob.addParent(cavemanMergeResultsJob);
     
     Job cavemanFlagJob = cavemanBaseJob("cavemanFlag", "flag", 1);
-    cavemanFlagJob.getCommand().addArgument("-in " + OUTDIR + "/pindel/germline.bed");
+    if(pindelGermline == null) {
+      cavemanFlagJob.getCommand().addArgument("-in " + OUTDIR + "/pindel/*.germline.bed");
+    }
+    else {
+      cavemanFlagJob.getCommand().addArgument("-in " + pindelGermline);
+    }
     cavemanFlagJob.setMaxMemory(memCavemanFlag);
+//    cavemanFlagJob.addParent(pindelFlagJob); // PINDEL dependency
     cavemanFlagJob.addParent(cavemanAddIdsJob);
     
-    */
     
     
 
@@ -427,6 +459,32 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
             .addArgument("-d " + analysisId)
             .addArgument("-o " + OUTDIR + "/" + analysisId + ".bam.bas")
             ;
+    return thisJob;
+  }
+  
+  private Job caveCnPrep(String type) {
+    String cnPath;
+    if(ascatCn == null) {
+      cnPath = OUTDIR + "/ascat/*.copynumber.caveman.csv";
+    }
+    else {
+      cnPath = ascatCn;
+    }
+    
+    Job thisJob = getWorkflow().createBashJob("caveCnPrep_" + type);
+    int offset = 0;
+    if(type.equals("tumour")) {
+      offset = 6;
+    }
+    else if(type.equals("normal")) {
+      offset = 4;
+    }
+    thisJob.getCommand()
+      .addArgument("perl -ne '@F=(split q{,}, $_)[1,2,3," + offset + "]; $F[1]-1; print join(\"\t\",@F).\"\n\";'")
+      .addArgument("< " + cnPath)
+      .addArgument("> " + OUTDIR + "/" + type + ".cn.bed")
+      ;
+    
     return thisJob;
   }
   
@@ -519,6 +577,15 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   }
 
   private Job brassBaseJob(String name, String process, int index) {
+    
+    String cnPath;
+    if(ascatCn == null) {
+      cnPath = OUTDIR + "/ascat/*.copynumber.caveman.csv";
+    }
+    else {
+      cnPath = ascatCn;
+    }
+    
     Job thisJob = getWorkflow().createBashJob(name);
     thisJob.getCommand()
               .addArgument(getWorkflowBaseDir()+ "/bin/wrapper.sh")
@@ -538,7 +605,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
               .addArgument("-f "  + refBase + "/brass/brass_np.groups.gz")
               .addArgument("-g_cache "  + refBase + "/vagrent/e74/Homo_sapiens.GRCh37.74.vagrent.cache.gz")
               .addArgument("-o " + OUTDIR + "/brass")
-//              .addArgument("-a " + OUTDIR + "/ascat/") // @TODO
+              .addArgument("-a " + cnPath)
               .addArgument("-t " + tumourBam)
               .addArgument("-n " + normalBam)
             ;
