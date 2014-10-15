@@ -297,7 +297,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
      * Depends on:
      *  - tumour/normal BAMs
      *  - ASCAT output at filter step
-     *
+     */
     
     Job brassInputJobs[] = new Job[2];
     for(int i=0; i<2; i++) {
@@ -338,7 +338,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     Job brassTabixJob = brassBaseJob("brassTabix", "tabix", 1);
     brassTabixJob.setMaxMemory(memBrassTabix);
     brassTabixJob.addParent(brassGrassJob);
-    */
+    
     
     /**
      * CaVEMan - SNV analysis
@@ -346,7 +346,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
      *  - tumour/normal BAMs
      *  - ASCAT from outset
      *  - pindel at flag step
-     */
+     *
     
     Job caveCnPrepJobs[] = new Job[2];
     for(int i=0; i<2; i++) {
@@ -434,7 +434,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     cavemanFlagJob.addParent(cavemanAddIdsJob);
     
     
-    
+    */
 
     // @TODO then we need to write back to GNOS
 
