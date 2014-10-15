@@ -175,7 +175,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
           ascatCn = getProperty("ascatCn");
         }
         if(hasPropertyAndNotNull("ascatContam")) {
-          ascatCn = getProperty("ascatContam");
+          ascatContam = getProperty("ascatContam");
         }
       }
 
