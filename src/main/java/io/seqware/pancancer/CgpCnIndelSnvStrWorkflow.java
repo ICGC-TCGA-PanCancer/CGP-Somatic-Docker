@@ -219,6 +219,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
      * Depends on
      *  - tumour/normal BAMs
      *  - Gender, will attempt to determine if not specified
+     */
 
     Job[] alleleCountJobs = new Job[2];
     for(int i=0; i<2; i++) {
@@ -227,8 +228,6 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       if(testMode == false) {
         alleleCountJob.addParent(gnosDownloadJobs[0]);
         alleleCountJob.addParent(gnosDownloadJobs[1]);
-        alleleCountJob.addParent(basDownloadJobs[0]);
-        alleleCountJob.addParent(basDownloadJobs[1]);
       }
       alleleCountJobs[i] = alleleCountJob;
     }
@@ -241,12 +240,12 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     Job ascatFinaliseJob = cgpAscatBaseJob("ascatFinalise", "finalise", 1);
     ascatFinaliseJob.setMaxMemory(memAscatFinalise);
     ascatFinaliseJob.addParent(ascatJob);
-    */
     
     /**
      * Pindel - InDel calling
      * Depends on:
      *  - tumour/normal BAMs
+     */
      
     Job[] pindelInputJobs = new Job[2];
     for(int i=0; i<2; i++) {
@@ -290,7 +289,6 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     Job pindelFlagJob = pindelBaseJob("pindelFlag", "flag", 1);
     pindelFlagJob.setMaxMemory(memPinFlag);
     pindelFlagJob.addParent(pindelMergeJob);
-    */
     
     /**
      * BRASS - BReakpoint AnalySiS
@@ -320,7 +318,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     Job brassFilterJob = brassBaseJob("brassFilter", "filter", 1);
     brassFilterJob.setMaxMemory(memBrassFilter);
     brassFilterJob.addParent(brassGroupJob);
-//    brassFilterJob.addParent(ascatFinaliseJob); // NOTE: dependency on ASCAT!!
+    brassFilterJob.addParent(ascatFinaliseJob); // NOTE: dependency on ASCAT!!
     
     Job brassSplitJob = brassBaseJob("brassSplit", "split", 1);
     brassSplitJob.setMaxMemory(memBrassSplit);
@@ -346,7 +344,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
      *  - tumour/normal BAMs
      *  - ASCAT from outset
      *  - pindel at flag step
-     *
+     */
     
     Job caveCnPrepJobs[] = new Job[2];
     for(int i=0; i<2; i++) {
@@ -358,7 +356,13 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
         caveCnPrepJob = caveCnPrep("normal");
       }
       caveCnPrepJob.setMaxMemory(memCaveCnPrep);
-//      caveCnPrepJob.addParent(ascatJob); // ASCAT dependency!!!
+       if(testMode == false) {
+        caveCnPrepJob.addParent(gnosDownloadJobs[0]);
+        caveCnPrepJob.addParent(gnosDownloadJobs[1]);
+        caveCnPrepJob.addParent(basDownloadJobs[0]);
+        caveCnPrepJob.addParent(basDownloadJobs[1]);
+      }
+      caveCnPrepJob.addParent(ascatJob); // ASCAT dependency!!!
       caveCnPrepJobs[i] = caveCnPrepJob;
     }
     
@@ -366,12 +370,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     cavemanSetupJob.setMaxMemory(memCavemanSetup);
     cavemanSetupJob.addParent(caveCnPrepJobs[0]);
     cavemanSetupJob.addParent(caveCnPrepJobs[1]);
-    if(testMode == false) {
-      cavemanSetupJob.addParent(gnosDownloadJobs[0]);
-      cavemanSetupJob.addParent(gnosDownloadJobs[1]);
-      cavemanSetupJob.addParent(basDownloadJobs[0]);
-      cavemanSetupJob.addParent(basDownloadJobs[1]);
-    }
+    // some dependencies handled by ascat step
     
     // should really line count the fai file
     Job cavemanSplitJobs[] = new Job[86];
@@ -430,11 +429,8 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       cavemanFlagJob.getCommand().addArgument("-in " + pindelGermline);
     }
     cavemanFlagJob.setMaxMemory(memCavemanFlag);
-//    cavemanFlagJob.addParent(pindelFlagJob); // PINDEL dependency
+    cavemanFlagJob.addParent(pindelFlagJob); // PINDEL dependency
     cavemanFlagJob.addParent(cavemanAddIdsJob);
-    
-    
-    */
 
     // @TODO then we need to write back to GNOS
 
