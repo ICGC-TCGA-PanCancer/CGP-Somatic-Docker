@@ -366,6 +366,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       caveCnPrepJobs[i] = caveCnPrepJob;
     }
     
+    /*
     Job cavemanSetupJob = cavemanBaseJob("cavemanSetup", "setup", 1);
     cavemanSetupJob.setMaxMemory(memCavemanSetup);
     cavemanSetupJob.addParent(caveCnPrepJobs[0]);
@@ -432,6 +433,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     cavemanFlagJob.addParent(pindelFlagJob); // PINDEL dependency
     cavemanFlagJob.addParent(cavemanAddIdsJob);
 
+    */
     // @TODO then we need to write back to GNOS
 
   }
