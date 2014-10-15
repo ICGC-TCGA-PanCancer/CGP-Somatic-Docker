@@ -57,7 +57,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
                   //GNOS identifiers
                   tumourAnalysisId, controlAnalysisId,
                   // test files, instead of GNOS ids
-                  tumourBam, normalBam, tumourBas, normalBas,
+                  tumourBam, normalBam, tumourBamDs, normalBamDs,
                   // ascat variables
                   gender,
                   // pindel variables
@@ -164,6 +164,8 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       if(testMode) {
         tumourBam = getProperty("tumourBam");
         normalBam = getProperty("normalBam");
+        tumourBamDs = getProperty("tumourBamDs");
+        normalBamDs = getProperty("normalBamDs");
       }
 
       //environment
@@ -422,7 +424,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
             .addArgument(LOGDIR.concat("basFileGet.log"))
             .addArgument("xml_to_bas.pl")
             .addArgument("-d " + analysisId)
-            .addArgument("-o " + OUTDIR + "/" + analysisId + ".bas")
+            .addArgument("-o " + OUTDIR + "/" + analysisId + ".bam.bas")
             ;
     return thisJob;
   }
@@ -448,12 +450,20 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
               .addArgument("-st " + seqProtocol)
             
               .addArgument("-o " + OUTDIR + "/caveman")
-              .addArgument("-tb " + tumourBam)
-              .addArgument("-nb " + normalBam)
               .addArgument("-tc " + OUTDIR + "/ascat/tum.cn.bed") // @TODO
               .addArgument("-nc " + OUTDIR + "/ascat/norm.cn.bed") // @TODO
               .addArgument("-k " + OUTDIR + "/ascat/samplestatistics.csv") // @TODO
             ;
+    if(testMode) {
+      thisJob.getCommand()
+              .addArgument("-tb " + tumourBamDs)
+              .addArgument("-nb " + normalBamDs);
+    }
+    else {
+      thisJob.getCommand()
+              .addArgument("-tb " + tumourBam)
+              .addArgument("-nb " + normalBam);
+    }
 
     return thisJob;
   }
@@ -474,7 +484,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
               .addArgument("-pr " + seqType)
               .addArgument("-ra " + assembly)
               .addArgument("-rs " + species)
-            //.addArgument("-pl " + "ILLUMINA") // should be in BAM header
+              .addArgument("-pl " + "ILLUMINA") // should be in BAM header
               .addArgument("-o " + OUTDIR + "/ascat")
               .addArgument("-t " + tumourBam)
               .addArgument("-n " + normalBam)
@@ -512,6 +522,16 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
               .addArgument("-t " + tumourBam)
               .addArgument("-n " + normalBam)
               ;
+    if(testMode) {
+      thisJob.getCommand()
+              .addArgument("-t " + tumourBamDs)
+              .addArgument("-n " + normalBamDs);
+    }
+    else {
+      thisJob.getCommand()
+              .addArgument("-t " + tumourBam)
+              .addArgument("-n " + normalBam);
+    }
     return thisJob;
   }
 
@@ -535,10 +555,18 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
               .addArgument("-f "  + refBase + "/brass/brass_np.groups.gz")
               .addArgument("-g_cache "  + refBase + "/vagrent/e74/Homo_sapiens.GRCh37.74.vagrent.cache.gz")
               .addArgument("-o " + OUTDIR + "/brass")
-              .addArgument("-t " + tumourBam)
-              .addArgument("-n " + normalBam)
               .addArgument("-a " + OUTDIR + "/ascat/") // @TODO
             ;
+    if(testMode) {
+      thisJob.getCommand()
+              .addArgument("-t " + tumourBamDs)
+              .addArgument("-n " + normalBamDs);
+    }
+    else {
+      thisJob.getCommand()
+              .addArgument("-t " + tumourBam)
+              .addArgument("-n " + normalBam);
+    }
     return thisJob;
   }
 
