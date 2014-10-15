@@ -526,7 +526,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
               .addArgument("brass.pl")
               .addArgument("-p " + process)
               .addArgument("-i " + index)
-              .addArgument("-r " + refBase + "/genome.fa")
+              .addArgument("-g " + refBase + "/genome.fa")
               .addArgument("-e " + refExclude)
               .addArgument("-pr " + seqType)
               .addArgument("-as " + assembly)
