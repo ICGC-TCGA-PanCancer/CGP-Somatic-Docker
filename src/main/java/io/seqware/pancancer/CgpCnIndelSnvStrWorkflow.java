@@ -480,7 +480,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       offset = 4;
     }
     thisJob.getCommand()
-      .addArgument("perl -ne '@F=(split q{,}, $_)[1,2,3," + offset + "]; $F[1]-1; print join(\"\t\",@F).\"\n\";'")
+      .addArgument("perl -ne '@F=(split q{,}, $_)[1,2,3," + offset + "]; $F[1]-1; print join(\"\\t\",@F).\"\\n\";'")
       .addArgument("< " + cnPath)
       .addArgument("> " + OUTDIR + "/" + type + ".cn.bed")
       ;
