@@ -499,7 +499,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
             
               .addArgument("-r " + refBase + "/genome.fa.fai")
               .addArgument("-ig " + refBase + "/caveman/ucscHiDepth_0.01_merge1000_no_exon.tsv")
-              .addArgument("-b " + refBase + "/caveman")
+              .addArgument("-b " + refBase + "/caveman/flagging")
               .addArgument("-u " + tabixSrvUri)
               .addArgument("-np " + seqType)
               .addArgument("-tp " + seqType)
