@@ -295,7 +295,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
      * Depends on:
      *  - tumour/normal BAMs
      *  - ASCAT output at filter step
-     *
+     */
     
     Job brassInputJobs[] = new Job[2];
     for(int i=0; i<2; i++) {
