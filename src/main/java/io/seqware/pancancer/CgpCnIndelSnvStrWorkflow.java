@@ -30,7 +30,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   private String catPath, echoPath;
   private String greeting ="";
   private static String OUTDIR = "outdir";
-  private static String LOGDIR = "logdir";
+  private static String LOGDIR = "logdir/"; // leave trailing slash on this
   
   private boolean testMode=false;
 
