@@ -359,12 +359,12 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     
     Job caveCnPrepJobs[] = new Job[2];
     for(int i=0; i<2; i++) {
-      String type;
+      String type = "";
       switch(i){
         case 0: type = "tumour";
         case 1: type = "normal";
       }
-      Job caveCnPrepJob = caveCnPrep("type");
+      Job caveCnPrepJob = caveCnPrep(type);
       caveCnPrepJobs[i] = caveCnPrepJob;
     }
     
