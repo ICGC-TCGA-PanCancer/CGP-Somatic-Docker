@@ -412,8 +412,6 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       cavemanEstepJobs.add(cavemanEstepJob);
     }
     
-    /*
-    
     Job cavemanMergeResultsJob = cavemanBaseJob("cavemanMergeResults", "merge_results", 1);
     cavemanMergeResultsJob.setMaxMemory(memCavemanMergeResults);
     for(Job cavemanEstepJob : cavemanEstepJobs) {
@@ -435,7 +433,6 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     cavemanFlagJob.addParent(pindelFlagJob); // PINDEL dependency
     cavemanFlagJob.addParent(cavemanAddIdsJob);
 
-    */
     // @TODO then we need to write back to GNOS
 
   }
