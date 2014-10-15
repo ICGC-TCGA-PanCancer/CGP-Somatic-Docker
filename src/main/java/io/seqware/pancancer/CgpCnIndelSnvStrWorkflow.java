@@ -573,15 +573,6 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   }
 
   private Job brassBaseJob(String name, String process, int index) {
-    
-    String cnPath;
-    if(ascatCn == null) {
-      cnPath = OUTDIR + "/ascat/*.copynumber.caveman.csv";
-    }
-    else {
-      cnPath = ascatCn;
-    }
-    
     Job thisJob = getWorkflow().createBashJob(name);
     thisJob.getCommand()
               .addArgument(getWorkflowBaseDir()+ "/bin/wrapper.sh")
@@ -601,10 +592,19 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
               .addArgument("-f "  + refBase + "/brass/brass_np.groups.gz")
               .addArgument("-g_cache "  + refBase + "/vagrent/e74/Homo_sapiens.GRCh37.74.vagrent.cache.gz")
               .addArgument("-o " + OUTDIR + "/brass")
-              .addArgument("-a " + cnPath)
               .addArgument("-t " + tumourBam)
               .addArgument("-n " + normalBam)
             ;
+    if(name.equals("brassFilter")) {
+      String cnPath;
+      if(ascatCn == null) {
+        cnPath = OUTDIR + "/ascat/*.copynumber.caveman.csv";
+      }
+      else {
+        cnPath = ascatCn;
+      }
+      thisJob.getCommand().addArgument("-a " + cnPath);
+    }
     return thisJob;
   }
 
