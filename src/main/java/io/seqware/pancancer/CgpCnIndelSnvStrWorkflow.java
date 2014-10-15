@@ -402,7 +402,6 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     for(int i=0; i<coresAddressable; i++) {
       Job cavemanMstepJob = cavemanBaseJob("cavemanMstep", "mstep", i+1);
       cavemanMstepJob.getCommand().addArgument("-l " + coresAddressable);
-      cavemanMstepJob.setThreads(coresAddressable);
       cavemanMstepJob.setMaxMemory(memCavemanMstep);
       cavemanMstepJob.addParent(cavemanSplitConcatJob);
       cavemanMstepJobs.add(cavemanMstepJob);
@@ -418,7 +417,6 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     for(int i=0; i<coresAddressable; i++) {
       Job cavemanEstepJob = cavemanBaseJob("cavemanEstep", "estep", i+1);
       cavemanEstepJob.getCommand().addArgument("-l " + coresAddressable);
-      cavemanEstepJob.setThreads(coresAddressable);
       cavemanEstepJob.setMaxMemory(memCavemanEstep);
       cavemanEstepJob.addParent(cavemanMergeJob);
       cavemanEstepJobs.add(cavemanEstepJob);
