@@ -344,7 +344,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
      *  - tumour/normal BAMs
      *  - ASCAT from outset
      *  - pindel at flag step
-     *
+     */
     
     Job caveCnPrepJobs[] = new Job[2];
     for(int i=0; i<2; i++) {
@@ -362,7 +362,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
         caveCnPrepJob.addParent(basDownloadJobs[0]);
         caveCnPrepJob.addParent(basDownloadJobs[1]);
       }
-      caveCnPrepJob.addParent(ascatJob); // ASCAT dependency!!!
+      caveCnPrepJob.addParent(ascatFinaliseJob); // ASCAT dependency!!!
       caveCnPrepJobs[i] = caveCnPrepJob;
     }
     
@@ -398,8 +398,8 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     
     Job cavemanMergeJob = cavemanBaseJob("cavemanMerge", "merge", 1);
     cavemanMergeJob.setMaxMemory(memCavemanMerge);
-    for(Job parent : cavemanMstepJobs) {
-      cavemanMergeJob.addParent(parent);
+    for(Job cavemanMstepJob : cavemanMstepJobs) {
+      cavemanMergeJob.addParent(cavemanMstepJob);
     }
     
     List<Job> cavemanEstepJobs = new ArrayList<Job>();
@@ -413,8 +413,8 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     
     Job cavemanMergeResultsJob = cavemanBaseJob("cavemanMergeResults", "merge_results", 1);
     cavemanMergeResultsJob.setMaxMemory(memCavemanMergeResults);
-    for(Job parent : cavemanEstepJobs) {
-      cavemanMergeResultsJob.addParent(parent);
+    for(Job cavemanEstepJob : cavemanEstepJobs) {
+      cavemanMergeResultsJob.addParent(cavemanEstepJob);
     }
     
     Job cavemanAddIdsJob = cavemanBaseJob("cavemanAddIds", "add_ids", 1);
@@ -431,7 +431,6 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     cavemanFlagJob.setMaxMemory(memCavemanFlag);
     cavemanFlagJob.addParent(pindelFlagJob); // PINDEL dependency
     cavemanFlagJob.addParent(cavemanAddIdsJob);
-    */
 
     // @TODO then we need to write back to GNOS
 
@@ -489,7 +488,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     thisJob.getCommand()
               .addArgument(getWorkflowBaseDir()+ "/bin/wrapper.sh")
               .addArgument(installBase)
-              .addArgument(LOGDIR.concat(process).concat(".").concat(Integer.toString(index)).concat(".log"))
+              .addArgument(LOGDIR.concat(name).concat(".").concat(Integer.toString(index)).concat(".log"))
               .addArgument("caveman.pl")
               .addArgument("-p " + process)
               .addArgument("-i " + index)
@@ -520,7 +519,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     thisJob.getCommand()
               .addArgument(getWorkflowBaseDir()+ "/bin/wrapper.sh")
               .addArgument(installBase)
-              .addArgument(LOGDIR.concat(process).concat(".").concat(Integer.toString(index)).concat(".log"))
+              .addArgument(LOGDIR.concat(name).concat(".").concat(Integer.toString(index)).concat(".log"))
               .addArgument("ascat.pl")
               .addArgument("-p " + process)
               .addArgument("-i " + index)
@@ -550,7 +549,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     thisJob.getCommand()
               .addArgument(getWorkflowBaseDir()+ "/bin/wrapper.sh")
               .addArgument(installBase)
-              .addArgument(LOGDIR.concat(process).concat(".").concat(Integer.toString(index)).concat(".log"))
+              .addArgument(LOGDIR.concat(name).concat(".").concat(Integer.toString(index)).concat(".log"))
               .addArgument("pindel.pl")
               .addArgument("-p " + process)
               .addArgument("-i " + index)
@@ -586,7 +585,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     thisJob.getCommand()
               .addArgument(getWorkflowBaseDir()+ "/bin/wrapper.sh")
               .addArgument(installBase)
-              .addArgument(LOGDIR.concat(process).concat(".").concat(Integer.toString(index)).concat(".log"))
+              .addArgument(LOGDIR.concat(name).concat(".").concat(Integer.toString(index)).concat(".log"))
               .addArgument("brass.pl")
               .addArgument("-p " + process)
               .addArgument("-i " + index)
