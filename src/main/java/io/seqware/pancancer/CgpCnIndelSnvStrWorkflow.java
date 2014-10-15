@@ -29,8 +29,8 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   private boolean manualOutput=false;
   private String catPath, echoPath;
   private String greeting ="";
-  private static String OUTDIR = "outdir/";
-  private static String LOGDIR = "logdir/";
+  private static String OUTDIR = "outdir";
+  private static String LOGDIR = "logdir";
   
   private boolean testMode=false;
 
@@ -507,7 +507,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
               .addArgument("-g " + refBase + "/vagrent/e74/Human.GRCh37.codingexon_regions.indel.bed.gz")
               .addArgument("-u " + refBase + "/pindel/pindel_np.gff3.gz")
               .addArgument("-sf " + refBase + "/pindel/softRules.lst")
-              .addArgument("-b " + refBase + "/pindel/ucscHiDepth_0.01_mrg1000_no_exon_coreChrs.bed.gz")
+              .addArgument("-b " + refBase + "/shared/ucscHiDepth_0.01_mrg1000_no_exon_coreChrs.bed.gz")
               .addArgument("-o " + OUTDIR + "/pindel")
               .addArgument("-t " + tumourBam)
               .addArgument("-n " + normalBam)
@@ -530,7 +530,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
               .addArgument("-as " + assembly)
               .addArgument("-s " + species)
               //.addArgument("-pl " + "ILLUMINA") // should be in BAM header
-              .addArgument("-d "  + refBase + "/brass/ucscHiDepth_0.01_mrg1000_no_exon_coreChrs.bed.gz")
+              .addArgument("-d "  + refBase + "/shared/ucscHiDepth_0.01_mrg1000_no_exon_coreChrs.bed.gz")
               .addArgument("-r "  + refBase + "/brass/brassRepeats.bed.gz")
               .addArgument("-f "  + refBase + "/brass/brass_np.groups.gz")
               .addArgument("-g_cache "  + refBase + "/vagrent/e74/Homo_sapiens.GRCh37.74.vagrent.cache.gz")
