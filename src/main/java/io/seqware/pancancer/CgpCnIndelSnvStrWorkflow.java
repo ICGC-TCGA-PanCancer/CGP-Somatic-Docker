@@ -381,13 +381,13 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       cavemanSplitJob.addParent(cavemanSetupJob);
       cavemanSplitJobs[i] = cavemanSplitJob;
     }
-    /*
+    
     Job cavemanSplitConcatJob = cavemanBaseJob("cavemanSplitConcat", "split_concat", 1);
     cavemanSplitConcatJob.setMaxMemory(memCavemanSplitConcat);
     for (Job cavemanSplitJob : cavemanSplitJobs) {
       cavemanSplitConcatJob.addParent(cavemanSplitJob);
     }
-    
+    /*
     List<Job> cavemanMstepJobs = new ArrayList<Job>();
     for(int i=0; i<coresAddressable; i++) {
       Job cavemanMstepJob = cavemanBaseJob("cavemanMstep", "mstep", i+1);
