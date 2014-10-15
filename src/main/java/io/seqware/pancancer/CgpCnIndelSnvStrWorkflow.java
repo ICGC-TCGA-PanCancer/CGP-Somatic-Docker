@@ -3,8 +3,6 @@ package io.seqware.pancancer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import net.sourceforge.seqware.pipeline.workflowV2.AbstractWorkflowDataModel;
 import net.sourceforge.seqware.pipeline.workflowV2.model.Job;
 import net.sourceforge.seqware.pipeline.workflowV2.model.SqwFile;
@@ -29,8 +27,8 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   private boolean manualOutput=false;
   private String catPath, echoPath;
   private String greeting ="";
-  private static String OUTDIR = "outdir";
-  private static String LOGDIR = "logdir/"; // leave trailing slash on this
+  private static final String OUTDIR = "outdir";
+  private static final String LOGDIR = "logdir/"; // leave trailing slash on this
   
   private boolean testMode=false;
 
@@ -84,7 +82,6 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       catPath = getProperty("cat");
       echoPath = getProperty("echo");
     } catch (Exception e) {
-      e.printStackTrace();
       throw new RuntimeException(e);
     }
   }
@@ -183,7 +180,6 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       installBase = getWorkflowBaseDir() + "/bin/opt";
       refBase = getWorkflowBaseDir() + "/bin/seqware_ref";
     } catch (Exception ex) {
-      ex.printStackTrace();
       throw new RuntimeException(ex);
     }
     return getFiles();
@@ -194,21 +190,15 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     
     // First we need the tumour and normal BAM files (+bai)
     // this can be done in parallel, based on tumour/control
-    // correlate names on by number of parallel jobs neeeded.
-    String samples[] = {"tumour", "control"};
-
-    
     Job[] gnosDownloadJobs = new Job[2];
     Job[] basDownloadJobs = new Job[2];
     
     // @TODO, when we have a decider in place
     if(testMode == false) {
       for(int i=0; i<2; i++) {
-        String thisId = "";
-        switch(i){
-          case 0: thisId = tumourAnalysisId;
-          case 1: thisId = controlAnalysisId;
-        }
+        String thisId;
+        if(i == 0) { thisId = tumourAnalysisId; }
+        else { thisId = controlAnalysisId; }
 
         Job gnosDownload = getWorkflow().createBashJob("GNOSDownload");
         gnosDownload.setMaxMemory(memGnosDownload);
@@ -490,6 +480,14 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   }
   
   private Job cavemanBaseJob(String name, String process, int index) {
+    String ascatContamFile;
+    if(ascatContam == null) {
+      ascatContamFile = OUTDIR + "/ascat/*.samplestatistics.csv";
+    }
+    else {
+      ascatContamFile = ascatContam;
+    }
+    
     Job thisJob = getWorkflow().createBashJob(name);
     thisJob.getCommand()
               .addArgument(getWorkflowBaseDir()+ "/bin/wrapper.sh")
@@ -510,11 +508,11 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
               .addArgument("-st " + seqProtocol)
             
               .addArgument("-o " + OUTDIR + "/caveman")
-              .addArgument("-tc " + OUTDIR + "/tumour.cn.bed") // @TODO
-              .addArgument("-nc " + OUTDIR + "/normal.cn.bed") // @TODO
-              .addArgument("-k " + OUTDIR + "/ascat/samplestatistics.csv") // @TODO
+              .addArgument("-tc " + OUTDIR + "/tumour.cn.bed")
+              .addArgument("-nc " + OUTDIR + "/normal.cn.bed")
+              .addArgument("-k " + ascatContamFile)
               .addArgument("-tb " + tumourBam)
-              .addArgument("-nb " + normalBam);
+              .addArgument("-nb " + normalBam)
             ;
 
     return thisJob;
