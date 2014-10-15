@@ -94,6 +94,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     init();
     // creates a dir1 directory in the current working directory where the workflow runs
     addDirectory(OUTDIR);
+    addDirectory(OUTDIR + "/brass/tmpBrass"); // as brass doesnt have a setup step
     addDirectory(LOGDIR);
   }
 
