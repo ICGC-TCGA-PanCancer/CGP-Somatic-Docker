@@ -146,6 +146,9 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       
       // Specific to PINDEL workflow //
       pindelInputThreads = Integer.valueOf(getProperty("pindelInputThreads"));
+      if(coresAddressable < pindelInputThreads) {
+        pindelInputThreads = 1;
+      }
       
       // Specific to Caveman workflow //
       tabixSrvUri = getProperty("tabixSrvUri");
@@ -212,7 +215,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
      * Depends on
      *  - tumour/normal BAMs
      *  - Gender, will attempt to determine if not specified
-     */
+
     Job[] alleleCountJobs = new Job[2];
     for(int i=0; i<2; i++) {
       Job alleleCountJob = cgpAscatBaseJob("ascatAlleleCount", "allele_count", i+1);
@@ -234,12 +237,13 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     Job ascatFinaliseJob = cgpAscatBaseJob("ascatFinalise", "finalise", 1);
     ascatFinaliseJob.setMaxMemory(memAscatFinalise);
     ascatFinaliseJob.addParent(ascatJob);
+    */
     
     /**
      * Pindel - InDel calling
      * Depends on:
      *  - tumour/normal BAMs
-
+     */
     Job[] pindelInputJobs = new Job[2];
     for(int i=0; i<2; i++) {
       Job inputParse = pindelBaseJob("pindelInput", "input", i+1);
