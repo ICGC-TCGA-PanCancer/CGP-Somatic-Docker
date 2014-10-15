@@ -403,7 +403,6 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       cavemanMergeJob.addParent(cavemanMstepJob);
     }
     
-    /*
     List<Job> cavemanEstepJobs = new ArrayList<Job>();
     for(int i=0; i<coresAddressable; i++) {
       Job cavemanEstepJob = cavemanBaseJob("cavemanEstep", "estep", i+1);
@@ -412,6 +411,8 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       cavemanEstepJob.addParent(cavemanMergeJob);
       cavemanEstepJobs.add(cavemanEstepJob);
     }
+    
+    /*
     
     Job cavemanMergeResultsJob = cavemanBaseJob("cavemanMergeResults", "merge_results", 1);
     cavemanMergeResultsJob.setMaxMemory(memCavemanMergeResults);
