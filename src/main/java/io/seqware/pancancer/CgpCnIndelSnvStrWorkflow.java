@@ -355,8 +355,6 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
         caveCnPrepJob = caveCnPrep("normal");
       }
        if(testMode == false) {
-        caveCnPrepJob.addParent(gnosDownloadJobs[0]);
-        caveCnPrepJob.addParent(gnosDownloadJobs[1]);
         caveCnPrepJob.addParent(basDownloadJobs[0]);
         caveCnPrepJob.addParent(basDownloadJobs[1]);
       }

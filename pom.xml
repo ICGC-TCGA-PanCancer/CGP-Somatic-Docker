@@ -261,6 +261,17 @@
                             <commandlineArgs>-jar ${workflow-dir}/lib/seqware-distribution-${seqware-version}-full.jar --plugin net.sourceforge.seqware.pipeline.plugins.BundleManager -- -t -b ${project.build.directory}/${workflow-full-name}/ </commandlineArgs>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>download_data</id>
+                        <phase>package</phase>
+                        <goals>
+                          <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>perl</executable>
+                            <commandlineArgs>${basedir}/workflow/scripts/download_ref.pl ${basedir}/links</commandlineArgs>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
             <plugin>
@@ -307,25 +318,6 @@
                     </links>
                 </configuration>
             </plugin>
-            <plugin>
-              <groupId>org.codehaus.mojo</groupId>
-              <artifactId>exec-maven-plugin</artifactId>
-              <version>1.2.1</version>
-              <executions>
-                <execution>
-                  <id>download_data</id>
-                  <phase>package</phase>
-                  <goals>
-                    <goal>exec</goal>
-                  </goals>
-                  <configuration>
-                    <executable>perl</executable>
-                    <commandlineArgs>${basedir}/workflow/scripts/download_data.pl ${basedir}/links ${project.build.directory}/Workflow_Bundle_${workflow-directory-name}_${project.version}_SeqWare_${seqware-version}/Workflow_Bundle_${workflow-directory-name}/${project.version}/bin/</commandlineArgs>
-                  </configuration>
-                </execution>
-              </executions>
-            </plugin>
         </plugins>
     </build>
-
 </project>
