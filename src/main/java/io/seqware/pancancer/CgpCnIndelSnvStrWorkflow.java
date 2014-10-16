@@ -184,7 +184,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       }
 
       //environment
-      installBase = getWorkflowBaseDir() + "/opt";
+      installBase = getWorkflowBaseDir() + "/bin/opt";
       refBase = getWorkflowBaseDir() + "/cgp_reference";
     } catch (Exception ex) {
       throw new RuntimeException(ex);
