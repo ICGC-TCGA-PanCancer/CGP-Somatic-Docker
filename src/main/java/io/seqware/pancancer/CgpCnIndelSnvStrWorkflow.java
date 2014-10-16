@@ -54,7 +54,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
                   // sequencing type/protocol
                   seqType, seqProtocol,
                   //GNOS identifiers
-                  tumourAnalysisId, controlAnalysisId,
+                  tumourAnalysisId, controlAnalysisId, pemFile, gnosServer,
                   // test files, instead of GNOS ids
                   tumourBam, normalBam,
                   // ascat variables
@@ -158,6 +158,8 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       // used in preference to test files if set //
       tumourAnalysisId = getProperty("tumourAnalysisId");
       controlAnalysisId = getProperty("controlAnalysisId");
+      gnosServer = getProperty("gnosServer");
+      pemFile = getProperty("pemFile");
 
       // pindel specific
       refExclude = getProperty("refExclude");
@@ -175,6 +177,10 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
         if(hasPropertyAndNotNull("ascatContam")) {
           ascatContam = getProperty("ascatContam");
         }
+      }
+      else {
+        tumourBam = OUTDIR + "/" + tumourAnalysisId + "/" + tumourAnalysisId + ".bam";
+        normalBam = OUTDIR + "/" + controlAnalysisId + "/" + controlAnalysisId + ".bam";
       }
 
       //environment
@@ -200,12 +206,9 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
         String thisId;
         if(i == 0) { thisId = tumourAnalysisId; }
         else { thisId = controlAnalysisId; }
-
-        Job gnosDownload = getWorkflow().createBashJob("GNOSDownload");
+        
+        Job gnosDownload = gnosDownloadBaseJob(thisId);
         gnosDownload.setMaxMemory(memGnosDownload);
-        gnosDownload.getCommand()
-                      .addArgument(getWorkflowBaseDir()+"/bin/download_gnos.pl") // ?? @TODO Is there a generic script for this???
-                      .addArgument(thisId); // @TODO can't use Donor ID as a donor can have multiple tumours (but only one normal)
         // the file needs to end up in tumourBam/normalBam
         gnosDownloadJobs[i] = gnosDownload;
 
@@ -427,6 +430,14 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
 
   }
   
+  private Job gnosDownloadBaseJob(String analysisId) {
+    Job thisJob = getWorkflow().createBashJob("GNOSDownload");
+    thisJob.getCommand()
+                  .addArgument("gtdownload -c " + pemFile)
+                  .addArgument("-v " + gnosServer + "/cghub/data/analysis/download/" + analysisId);
+    return thisJob;
+  }
+  
   private Job basFileBaseJob(String analysisId) {
     Job thisJob = getWorkflow().createBashJob("basFileGet");
     thisJob.getCommand()
@@ -434,8 +445,8 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
             .addArgument(installBase)
             .addArgument(LOGDIR.concat("basFileGet.log"))
             .addArgument("xml_to_bas.pl")
-            .addArgument("-d " + analysisId)
-            .addArgument("-o " + OUTDIR + "/" + analysisId + ".bam.bas")
+            .addArgument("-d " + gnosServer + "/cghub/metadata/analysisFull/" + analysisId)
+            .addArgument("-o " + OUTDIR + "/" + analysisId + "/" + analysisId + ".bam.bas")
             ;
     return thisJob;
   }
