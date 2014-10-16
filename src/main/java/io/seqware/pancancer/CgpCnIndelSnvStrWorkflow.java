@@ -179,8 +179,8 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
         }
       }
       else {
-        tumourBam = OUTDIR + "/" + tumourAnalysisId + "/" + tumourAnalysisId + ".bam";
-        normalBam = OUTDIR + "/" + controlAnalysisId + "/" + controlAnalysisId + ".bam";
+        tumourBam = tumourAnalysisId + "/" + tumourAnalysisId + ".bam";
+        normalBam = controlAnalysisId + "/" + controlAnalysisId + ".bam";
       }
 
       //environment
