@@ -447,7 +447,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
             .addArgument(LOGDIR.concat("basFileGet.log"))
             .addArgument("xml_to_bas.pl")
             .addArgument("-d " + gnosServer + "/cghub/metadata/analysisFull/" + analysisId)
-            .addArgument("-o " + OUTDIR + "/" + analysisId + "/" + analysisId + ".bam.bas")
+            .addArgument("-o " + analysisId + "/" + analysisId + ".bam.bas")
             ;
     return thisJob;
   }
