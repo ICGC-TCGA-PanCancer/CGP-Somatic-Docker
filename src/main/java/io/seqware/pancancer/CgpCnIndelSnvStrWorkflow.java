@@ -64,7 +64,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
                   //caveman variables
                   tabixSrvUri,
                   //general variables
-                  installBase, refBase;
+                  installBase, refBase, genomeFa;
 
   private int pindelInputThreads, coresAddressable;
   
@@ -186,6 +186,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       //environment
       installBase = getWorkflowBaseDir() + "/bin/opt";
       refBase = getWorkflowBaseDir() + "/cgp_reference";
+      genomeFa = getWorkflowBaseDir() + "/data/reference/genome.fa";
     } catch (Exception ex) {
       throw new RuntimeException(ex);
     }
@@ -490,7 +491,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
               .addArgument("-p " + process)
               .addArgument("-i " + index)
             
-              .addArgument("-r " + getWorkflowBaseDir() + "/genome.fa.fai")
+              .addArgument("-r " + genomeFa + ".fai")
               .addArgument("-ig " + refBase + "/caveman/ucscHiDepth_0.01_merge1000_no_exon.tsv")
               .addArgument("-b " + refBase + "/caveman/flagging")
               .addArgument("-u " + tabixSrvUri)
@@ -531,7 +532,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
               .addArgument("ascat.pl")
               .addArgument("-p " + process)
               .addArgument("-i " + index)
-              .addArgument("-r " + getWorkflowBaseDir() + "/genome.fa")
+              .addArgument("-r " + genomeFa)
               .addArgument("-s " + refBase + "/ascat/SnpLocus.tsv")
               .addArgument("-sp " + refBase + "/ascat/SnpPositions.tsv")
               .addArgument("-sg " + refBase + "/ascat/SnpGcCorrections.tsv")
@@ -561,7 +562,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
               .addArgument("pindel.pl")
               .addArgument("-p " + process)
               .addArgument("-i " + index)
-              .addArgument("-r " + getWorkflowBaseDir() + "/genome.fa")
+              .addArgument("-r " + genomeFa)
               .addArgument("-e " + refExclude)
               .addArgument("-st " + seqType)
               .addArgument("-as " + assembly)
@@ -592,7 +593,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
               .addArgument("brass.pl")
               .addArgument("-p " + process)
               .addArgument("-i " + index)
-              .addArgument("-g " + getWorkflowBaseDir() + "/genome.fa")
+              .addArgument("-g " + genomeFa)
               .addArgument("-e " + refExclude)
               .addArgument("-pr " + seqType)
               .addArgument("-as " + assembly)
