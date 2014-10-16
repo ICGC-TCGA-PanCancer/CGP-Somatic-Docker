@@ -49,7 +49,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
           ;
 
   // workflow variables
-  private String  // reference variables
+  private String  // reference variablesprivate String  // reference variables
                   species, assembly,
                   // sequencing type/protocol
                   seqType, seqProtocol,
@@ -64,7 +64,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
                   //caveman variables
                   tabixSrvUri,
                   //general variables
-                  installBase, refBase, genomeFa;
+                  installBase, refBase, genomeFaGz;
 
   private int pindelInputThreads, coresAddressable;
   
@@ -186,7 +186,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       //environment
       installBase = getWorkflowBaseDir() + "/bin/opt";
       refBase = getWorkflowBaseDir() + "/cgp_reference";
-      genomeFa = getWorkflowBaseDir() + "/data/reference/genome.fa";
+      genomeFaGz = getWorkflowBaseDir() + "/data/reference/genome.fa.gz";
     } catch (Exception ex) {
       throw new RuntimeException(ex);
     }
@@ -491,7 +491,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
               .addArgument("-p " + process)
               .addArgument("-i " + index)
             
-              .addArgument("-r " + genomeFa + ".fai")
+              .addArgument("-r " + genomeFaGz + ".fai")
               .addArgument("-ig " + refBase + "/caveman/ucscHiDepth_0.01_merge1000_no_exon.tsv")
               .addArgument("-b " + refBase + "/caveman/flagging")
               .addArgument("-u " + tabixSrvUri)
@@ -532,7 +532,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
               .addArgument("ascat.pl")
               .addArgument("-p " + process)
               .addArgument("-i " + index)
-              .addArgument("-r " + genomeFa)
+              .addArgument("-r " + genomeFaGz)
               .addArgument("-s " + refBase + "/ascat/SnpLocus.tsv")
               .addArgument("-sp " + refBase + "/ascat/SnpPositions.tsv")
               .addArgument("-sg " + refBase + "/ascat/SnpGcCorrections.tsv")
@@ -562,7 +562,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
               .addArgument("pindel.pl")
               .addArgument("-p " + process)
               .addArgument("-i " + index)
-              .addArgument("-r " + genomeFa)
+              .addArgument("-r " + genomeFaGz)
               .addArgument("-e " + refExclude)
               .addArgument("-st " + seqType)
               .addArgument("-as " + assembly)
@@ -593,7 +593,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
               .addArgument("brass.pl")
               .addArgument("-p " + process)
               .addArgument("-i " + index)
-              .addArgument("-g " + genomeFa)
+              .addArgument("-g " + genomeFaGz)
               .addArgument("-e " + refExclude)
               .addArgument("-pr " + seqType)
               .addArgument("-as " + assembly)
