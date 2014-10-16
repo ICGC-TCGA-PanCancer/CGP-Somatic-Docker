@@ -119,6 +119,17 @@
                 <version>1.0-alpha-2</version>
                 <executions>
                     <execution>
+                        <id>download_data</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>perl</executable>
+                            <commandlineArgs>${basedir}/workflow/scripts/download_ref.pl ${basedir}/links ${project.build.directory}/Workflow_Bundle_${workflow-directory-name}_${project.version}_SeqWare_${seqware-version}/Workflow_Bundle_${workflow-directory-name}/${project.version}/bin/</commandlineArgs>
+                        </configuration>
+                    </execution>
+                    <execution>
                         <id>properties-maven-plugin-execution</id>
                         <phase>validate</phase>
                         <goals>

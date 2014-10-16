@@ -258,8 +258,6 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       Job inputParse = pindelBaseJob("pindelInput", "input", i+1);
       inputParse.setMaxMemory(memInputParse);
       if(testMode == false) {
-        inputParse.addParent(gnosDownloadJobs[0]);
-        inputParse.addParent(gnosDownloadJobs[1]);  
         inputParse.addParent(basDownloadJobs[0]);
         inputParse.addParent(basDownloadJobs[1]);
       }
@@ -306,8 +304,6 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       Job brassInputJob = brassBaseJob("brassInput", "input", i+1);
       brassInputJob.setMaxMemory(memBrassInput);
       if(testMode == false) {
-        brassInputJob.addParent(gnosDownloadJobs[0]);
-        brassInputJob.addParent(gnosDownloadJobs[1]);
         brassInputJob.addParent(basDownloadJobs[0]);
         brassInputJob.addParent(basDownloadJobs[1]);
       }
