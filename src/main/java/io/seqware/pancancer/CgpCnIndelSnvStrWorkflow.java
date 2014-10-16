@@ -184,8 +184,8 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       }
 
       //environment
-      installBase = getWorkflowBaseDir() + "/bin/opt";
-      refBase = getWorkflowBaseDir() + "/bin/seqware_ref";
+      installBase = getWorkflowBaseDir() + "/opt";
+      refBase = getWorkflowBaseDir() + "/cgp_reference";
     } catch (Exception ex) {
       throw new RuntimeException(ex);
     }
@@ -490,7 +490,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
               .addArgument("-p " + process)
               .addArgument("-i " + index)
             
-              .addArgument("-r " + refBase + "/genome.fa.fai")
+              .addArgument("-r " + getWorkflowBaseDir() + "/genome.fa.fai")
               .addArgument("-ig " + refBase + "/caveman/ucscHiDepth_0.01_merge1000_no_exon.tsv")
               .addArgument("-b " + refBase + "/caveman/flagging")
               .addArgument("-u " + tabixSrvUri)
@@ -531,7 +531,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
               .addArgument("ascat.pl")
               .addArgument("-p " + process)
               .addArgument("-i " + index)
-              .addArgument("-r " + refBase + "/genome.fa")
+              .addArgument("-r " + getWorkflowBaseDir() + "/genome.fa")
               .addArgument("-s " + refBase + "/ascat/SnpLocus.tsv")
               .addArgument("-sp " + refBase + "/ascat/SnpPositions.tsv")
               .addArgument("-sg " + refBase + "/ascat/SnpGcCorrections.tsv")
@@ -561,7 +561,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
               .addArgument("pindel.pl")
               .addArgument("-p " + process)
               .addArgument("-i " + index)
-              .addArgument("-r " + refBase + "/genome.fa")
+              .addArgument("-r " + getWorkflowBaseDir() + "/genome.fa")
               .addArgument("-e " + refExclude)
               .addArgument("-st " + seqType)
               .addArgument("-as " + assembly)
@@ -592,7 +592,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
               .addArgument("brass.pl")
               .addArgument("-p " + process)
               .addArgument("-i " + index)
-              .addArgument("-g " + refBase + "/genome.fa")
+              .addArgument("-g " + getWorkflowBaseDir() + "/genome.fa")
               .addArgument("-e " + refExclude)
               .addArgument("-pr " + seqType)
               .addArgument("-as " + assembly)
