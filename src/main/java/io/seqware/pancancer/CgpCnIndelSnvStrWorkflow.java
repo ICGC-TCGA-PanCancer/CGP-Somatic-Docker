@@ -45,18 +45,19 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
                   memCaveCnPrep,
                   memCavemanSetup, memCavemanSplit, memCavemanSplitConcat,
                   memCavemanMstep, memCavemanMerge, memCavemanEstep,
-                  memCavemanMergeResults, memCavemanAddIds, memCavemanFlag
+                  memCavemanMergeResults, memCavemanAddIds, memCavemanFlag,
+                  memCavemanTbiClean
           ;
 
   // workflow variables
-  private String  // reference variablesprivate String  // reference variables
+  private String  // reference variablesprivate String  // reference variablesprivate String  // reference variablesprivate String  // reference variables
                   species, assembly,
                   // sequencing type/protocol
                   seqType, seqProtocol,
                   //GNOS identifiers
                   tumourAnalysisId, controlAnalysisId, pemFile, gnosServer,
                   // test files, instead of GNOS ids
-                  tumourBam, normalBam,
+                  tumourBam, controlBam,
                   // ascat variables
                   gender, ascatCn, ascatContam,
                   // pindel variables
@@ -134,6 +135,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       memCavemanMergeResults = getProperty("memCavemanMergeResults");
       memCavemanAddIds = getProperty("memCavemanAddIds");
       memCavemanFlag = getProperty("memCavemanFlag");
+      memCavemanTbiClean = getProperty("memCavemanTbiClean");
 
       // REFERENCE INFO //
       species = getProperty("species");
@@ -166,8 +168,8 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
 
       // test mode
       if(testMode) {
-        tumourBam = getProperty("tumourBam");
-        normalBam = getProperty("normalBam");
+        tumourBam = getProperty("tumourBamT");
+        controlBam = getProperty("controlBamT");
         if(hasPropertyAndNotNull("pindelGermline")) {
           pindelGermline = getProperty("pindelGermline");
         }
@@ -179,8 +181,8 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
         }
       }
       else {
-        tumourBam = tumourAnalysisId + "/" + tumourAnalysisId + ".bam";
-        normalBam = controlAnalysisId + "/" + controlAnalysisId + ".bam";
+        tumourBam = tumourAnalysisId + "/" + getProperty("tumourBam");
+        controlBam = controlAnalysisId + "/" + getProperty("controlBam");
       }
 
       //environment
@@ -204,9 +206,15 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     // @TODO, when we have a decider in place
     if(testMode == false) {
       for(int i=0; i<2; i++) {
-        String thisId;
-        if(i == 0) { thisId = tumourAnalysisId; }
-        else { thisId = controlAnalysisId; }
+        String thisId, thisBam;
+        if(i == 0) {
+          thisId = tumourAnalysisId;
+          thisBam = tumourBam;
+        }
+        else {
+          thisId = controlAnalysisId;
+          thisBam = controlBam;
+        }
         
         Job gnosDownload = gnosDownloadBaseJob(thisId);
         gnosDownload.setMaxMemory(memGnosDownload);
@@ -214,7 +222,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
         gnosDownloadJobs[i] = gnosDownload;
 
         // get the BAS files
-        Job basJob = basFileBaseJob(thisId);
+        Job basJob = basFileBaseJob(thisId, controlBam);
         basJob.setMaxMemory(memBasFileGet);
         basJob.addParent(gnosDownload);
         basDownloadJobs[i] = basJob;
@@ -421,6 +429,10 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     cavemanFlagJob.setMaxMemory(memCavemanFlag);
     cavemanFlagJob.addParent(pindelFlagJob); // PINDEL dependency
     cavemanFlagJob.addParent(cavemanAddIdsJob);
+    
+    Job cavemanTbiCleanJob = cavemanTbiCleanJob();
+    cavemanTbiCleanJob.setMaxMemory(memCavemanTbiClean);
+    cavemanTbiCleanJob.addParent(cavemanFlagJob);
 
     // @TODO then we need to write back to GNOS
 
@@ -434,7 +446,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     return thisJob;
   }
   
-  private Job basFileBaseJob(String analysisId) {
+  private Job basFileBaseJob(String analysisId, String sampleBam) {
     Job thisJob = getWorkflow().createBashJob("basFileGet");
     thisJob.getCommand()
             .addArgument(getWorkflowBaseDir()+ "/bin/wrapper.sh")
@@ -442,7 +454,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
             .addArgument(LOGDIR.concat("basFileGet.log"))
             .addArgument("xml_to_bas.pl")
             .addArgument("-d " + gnosServer + "/cghub/metadata/analysisFull/" + analysisId)
-            .addArgument("-o " + analysisId + "/" + analysisId + ".bam.bas")
+            .addArgument("-o " + sampleBam + ".bas")
             ;
     return thisJob;
   }
@@ -470,6 +482,12 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       .addArgument("> " + OUTDIR + "/" + type + ".cn.bed")
       ;
     thisJob.setMaxMemory(memCaveCnPrep);
+    return thisJob;
+  }
+  
+  private Job cavemanTbiCleanJob() {
+    Job thisJob = getWorkflow().createBashJob("CaveTbiClean");
+    thisJob.getCommand().addArgument("rm -f unmatchedNormal.*.vcf.gz.tbi");
     return thisJob;
   }
   
@@ -506,7 +524,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
               .addArgument("-nc " + OUTDIR + "/normal.cn.bed")
               .addArgument("-k " + ascatContamFile)
               .addArgument("-tb " + tumourBam)
-              .addArgument("-nb " + normalBam)
+              .addArgument("-nb " + controlBam)
             ;
     if(name.equals("cavemanMstep") || name.equals("cavemanEstep")) {
       thisJob.getCommand().addArgument("-l " + coresAddressable);
@@ -542,7 +560,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
               .addArgument("-pl " + "ILLUMINA") // should be in BAM header
               .addArgument("-o " + OUTDIR + "/ascat")
               .addArgument("-t " + tumourBam)
-              .addArgument("-n " + normalBam)
+              .addArgument("-n " + controlBam)
               ;
     // this is used when gender is not specified
     if(gender.equals("L")) {
@@ -575,7 +593,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
               .addArgument("-b " + refBase + "/shared/ucscHiDepth_0.01_mrg1000_no_exon_coreChrs.bed.gz")
               .addArgument("-o " + OUTDIR + "/pindel")
               .addArgument("-t " + tumourBam)
-              .addArgument("-n " + normalBam)
+              .addArgument("-n " + controlBam)
               ;
     if(name.equals("pindelInput")) {
       thisJob.getCommand().addArgument("-c " + pindelInputThreads);
@@ -605,7 +623,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
               .addArgument("-g_cache "  + refBase + "/vagrent/e74/Homo_sapiens.GRCh37.74.vagrent.cache.gz")
               .addArgument("-o " + OUTDIR + "/brass")
               .addArgument("-t " + tumourBam)
-              .addArgument("-n " + normalBam)
+              .addArgument("-n " + controlBam)
             ;
     if(name.equals("brassFilter")) {
       String cnPath;
