@@ -50,7 +50,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
           ;
 
   // workflow variables
-  private String  // reference variablesprivate String  // reference variablesprivate String  // reference variablesprivate String  // reference variables
+  private String  // reference variables
                   species, assembly,
                   // sequencing type/protocol
                   seqType, seqProtocol,
