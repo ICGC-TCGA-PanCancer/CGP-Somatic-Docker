@@ -222,7 +222,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
         gnosDownloadJobs[i] = gnosDownload;
 
         // get the BAS files
-        Job basJob = basFileBaseJob(thisId, controlBam);
+        Job basJob = basFileBaseJob(thisId, thisBam);
         basJob.setMaxMemory(memBasFileGet);
         basJob.addParent(gnosDownload);
         basDownloadJobs[i] = basJob;
