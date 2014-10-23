@@ -33,7 +33,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   private boolean testMode=false;
 
   // MEMORY variables //
-  private String  memBasFileGet, memGnosDownload,
+  private String  memBasFileGet, memGnosDownload, memPackageResults,
                   // ascat memory
                   memAlleleCount, memAscat, memAscatFinalise,
                   // pindel memory
@@ -143,7 +143,9 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       
       // Sequencing info
       seqType = getProperty("seqType");
-      seqProtocol = getProperty("seqProtocol");
+      if(seqType.equals("WGS")) {
+        seqProtocol = "genomic";
+      }
 
       // Specific to ASCAT workflow //
       gender = getProperty("gender");
@@ -156,12 +158,6 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       
       // Specific to Caveman workflow //
       tabixSrvUri = getProperty("tabixSrvUri");
-
-      // used in preference to test files if set //
-      tumourAnalysisId = getProperty("tumourAnalysisId");
-      controlAnalysisId = getProperty("controlAnalysisId");
-      gnosServer = getProperty("gnosServer");
-      pemFile = getProperty("pemFile");
 
       // pindel specific
       refExclude = getProperty("refExclude");
@@ -181,6 +177,10 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
         }
       }
       else {
+        tumourAnalysisId = getProperty("tumourAnalysisId");
+        controlAnalysisId = getProperty("controlAnalysisId");
+        gnosServer = getProperty("gnosServer");
+        pemFile = getProperty("pemFile");
         tumourBam = tumourAnalysisId + "/" + getProperty("tumourBam");
         controlBam = controlAnalysisId + "/" + getProperty("controlBam");
       }
@@ -241,8 +241,8 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       Job alleleCountJob = cgpAscatBaseJob("ascatAlleleCount", "allele_count", i+1);
       alleleCountJob.setMaxMemory(memAlleleCount);
       if(testMode == false) {
-        alleleCountJob.addParent(gnosDownloadJobs[0]);
-        alleleCountJob.addParent(gnosDownloadJobs[1]);
+        alleleCountJob.addParent(basDownloadJobs[0]);
+        alleleCountJob.addParent(basDownloadJobs[1]);
       }
       alleleCountJobs[i] = alleleCountJob;
     }
@@ -255,6 +255,10 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     Job ascatFinaliseJob = cgpAscatBaseJob("ascatFinalise", "finalise", 1);
     ascatFinaliseJob.setMaxMemory(memAscatFinalise);
     ascatFinaliseJob.addParent(ascatJob);
+    
+    Job ascatPackage = packageResults("ascat", "cnv", tumourBam, "copynumber.caveman.vcf.gz");
+    ascatPackage.setMaxMemory(memPackageResults);
+    ascatPackage.addParent(ascatFinaliseJob);
     
     /**
      * Pindel - InDel calling
@@ -301,6 +305,10 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     pindelFlagJob.setMaxMemory(memPinFlag);
     pindelFlagJob.addParent(pindelMergeJob);
     
+    Job pindelPackage = packageResults("pindel", "indel", tumourBam, "flagged.vcf.gz");
+    pindelPackage.setMaxMemory(memPackageResults);
+    pindelPackage.addParent(pindelFlagJob);
+    
     /**
      * BRASS - BReakpoint AnalySiS
      * Depends on:
@@ -344,6 +352,10 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     Job brassTabixJob = brassBaseJob("brassTabix", "tabix", 1);
     brassTabixJob.setMaxMemory(memBrassTabix);
     brassTabixJob.addParent(brassGrassJob);
+    
+    Job brassPackage = packageResults("brass", "sv", tumourBam, "annot.vcf.gz");
+    brassPackage.setMaxMemory(memPackageResults);
+    brassPackage.addParent(brassTabixJob);
     
     
     /**
@@ -433,9 +445,30 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     Job cavemanTbiCleanJob = cavemanTbiCleanJob();
     cavemanTbiCleanJob.setMaxMemory(memCavemanTbiClean);
     cavemanTbiCleanJob.addParent(cavemanFlagJob);
+    
+    Job cavemanPackage = packageResults("caveman", "snv_mnv", tumourBam, "flagged.muts.vcf.gz");
+    cavemanPackage.setMaxMemory(memPackageResults);
+    cavemanPackage.addParent(cavemanFlagJob);
 
     // @TODO then we need to write back to GNOS
 
+  }
+  
+  private Job packageResults(String algName, String resultType, String tumourBam, String baseVcf) {
+    //#packageResults.pl outdir 0772aed3-4df7-403f-802a-808df2935cd1/c007f362d965b32174ec030825262714.bam outdir/caveman snv_mnv flagged.muts.vcf.gz
+    Job thisJob = getWorkflow().createBashJob("packageResults");
+    thisJob.getCommand()
+              .addArgument(getWorkflowBaseDir()+ "/bin/wrapper.sh")
+              .addArgument(installBase)
+              .addArgument(LOGDIR.concat("packageResults.").concat(algName).concat(".log"))
+              .addArgument("packageResults.pl")
+              .addArgument(OUTDIR)
+              .addArgument(tumourBam)
+              .addArgument(OUTDIR + "/" + algName)
+              .addArgument(OUTDIR + "/" + resultType)
+              .addArgument(OUTDIR + "/" + baseVcf)
+      ;
+    return thisJob;
   }
   
   private Job gnosDownloadBaseJob(String analysisId) {
@@ -561,6 +594,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
               .addArgument("-o " + OUTDIR + "/ascat")
               .addArgument("-t " + tumourBam)
               .addArgument("-n " + controlBam)
+              .addArgument("-f") // force completion, even when ascat fails
               ;
     // this is used when gender is not specified
     if(gender.equals("L")) {
