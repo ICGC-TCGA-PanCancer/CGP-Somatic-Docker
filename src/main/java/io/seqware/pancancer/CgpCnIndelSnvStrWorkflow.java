@@ -37,7 +37,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
                   // ascat memory
                   memAlleleCount, memAscat, memAscatFinalise,
                   // pindel memory
-                  memInputParse, memPindel, memPinVcf, memPinMerge , memPinFlag,
+                  memPindelInput, memPindel, memPindelVcf, memPindelMerge , memPindelFlag,
                   // brass memory
                   memBrassInput, memBrassGroup, memBrassFilter, memBrassSplit,
                   memBrassAssemble, memBrassGrass, memBrassTabix,
@@ -109,14 +109,19 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       // MEMORY //
       memBasFileGet = getProperty("memBasFileGet");
       memGnosDownload = getProperty("memGnosDownload");
+      memPackageResults = getProperty("memPackageResults");
+      
+      
       memAlleleCount = getProperty("memAlleleCount");
       memAscat = getProperty("memAscat");
       memAscatFinalise = getProperty("memAscatFinalise");
-      memInputParse = getProperty("memInputParse");
+      
+      memPindelInput = getProperty("memPindelInput");
       memPindel = getProperty("memPindel");
-      memPinVcf = getProperty("memPinVcf");
-      memPinMerge = getProperty("memPinMerge");
-      memPinFlag = getProperty("memPinFlag");
+      memPindelVcf = getProperty("memPindelVcf");
+      memPindelMerge = getProperty("memPindelMerge");
+      memPindelFlag = getProperty("memPindelFlag");
+      
       memBrassInput = getProperty("memBrassInput");
       memBrassGroup = getProperty("memBrassGroup");
       memBrassFilter = getProperty("memBrassFilter");
@@ -269,7 +274,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     Job[] pindelInputJobs = new Job[2];
     for(int i=0; i<2; i++) {
       Job inputParse = pindelBaseJob("pindelInput", "input", i+1);
-      inputParse.setMaxMemory(memInputParse);
+      inputParse.setMaxMemory(memPindelInput);
       if(testMode == false) {
         inputParse.addParent(basDownloadJobs[0]);
         inputParse.addParent(basDownloadJobs[1]);
@@ -288,7 +293,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       pindelJob.addParent(pindelInputJobs[1]);
       
       Job pinVcfJob = pindelBaseJob("pindelVcf", "pin2vcf", i+1);
-      pinVcfJob.setMaxMemory(memPinVcf);
+      pinVcfJob.setMaxMemory(memPindelVcf);
       pinVcfJob.addParent(pindelJob);
       
       // pinVcf depends on pindelJob so only need have dependency on the pinVcf
@@ -296,13 +301,13 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     }
     
     Job pindelMergeJob = pindelBaseJob("pindelMerge", "merge", 1);
-    pindelMergeJob.setMaxMemory(memPinMerge);
+    pindelMergeJob.setMaxMemory(memPindelMerge);
     for (Job parent : pinVcfJobs) {
       pindelMergeJob.addParent(parent);
     }
     
     Job pindelFlagJob = pindelBaseJob("pindelFlag", "flag", 1);
-    pindelFlagJob.setMaxMemory(memPinFlag);
+    pindelFlagJob.setMaxMemory(memPindelFlag);
     pindelFlagJob.addParent(pindelMergeJob);
     
     Job pindelPackage = packageResults("pindel", "indel", tumourBam, "flagged.vcf.gz");
