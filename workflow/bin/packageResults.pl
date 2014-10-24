@@ -34,11 +34,11 @@ sub get_aliquot_id_from_bam {
   my $bam = shift;
   # samtools view -H PD13491a/PD13491a.bam | grep '^@RG' | perl -ne 'm/\tSM:([^\t]+)/; $x{$1}=1; END{print join("\n",keys %x),"\n";};'
   die "BAM file does not exist: $bam" unless(-e $bam);
-  my $command = q{samtools view -H %s | grep '^@RG'}, $bam;
+  my $command = sprintf q{samtools view -H %s | grep '^@RG'}, $bam;
   my ($stdout, $stderr, $exit) = capture { system($command); };
-  die $stderr if($exit != 0);
+  die "STDOUT: $stdout\n\nSTDERR: $stderr\n" if($exit != 0);
   my %names;
-  for(split $stdout) {
+  for(split "\n", $stdout) {
     chomp $_;
     if($_ =~ m/\tSM:([^\t]+)/) {
       $names{$1}=1;
