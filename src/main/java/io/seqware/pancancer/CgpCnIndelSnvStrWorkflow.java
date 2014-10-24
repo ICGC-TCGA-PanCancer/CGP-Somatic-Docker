@@ -477,8 +477,8 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
               .addArgument(OUTDIR)
               .addArgument(tumourBam)
               .addArgument(OUTDIR + "/" + algName)
-              .addArgument(OUTDIR + "/" + resultType)
-              .addArgument(OUTDIR + "/" + baseVcf)
+              .addArgument(resultType)
+              .addArgument(baseVcf)
       ;
     return thisJob;
   }
