@@ -266,6 +266,35 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     ascatPackage.addParent(ascatFinaliseJob);
     
     /**
+     * CaVEMan setup is here to allow better workflow graph
+     * Messy but necessary
+     */
+    
+    Job caveCnPrepJobs[] = new Job[2];
+    for(int i=0; i<2; i++) {
+      Job caveCnPrepJob;
+      if(i==0) {
+        caveCnPrepJob = caveCnPrep("tumour");
+      }
+      else {
+        caveCnPrepJob = caveCnPrep("normal");
+      }
+       if(testMode == false) {
+        caveCnPrepJob.addParent(basDownloadJobs[0]);
+        caveCnPrepJob.addParent(basDownloadJobs[1]);
+      }
+      caveCnPrepJob.addParent(ascatFinaliseJob); // ASCAT dependency!!!
+      caveCnPrepJobs[i] = caveCnPrepJob;
+    }
+    
+    
+    Job cavemanSetupJob = cavemanBaseJob("cavemanSetup", "setup", 1);
+    cavemanSetupJob.setMaxMemory(memCavemanSetup);
+    cavemanSetupJob.addParent(caveCnPrepJobs[0]);
+    cavemanSetupJob.addParent(caveCnPrepJobs[1]);
+    // some dependencies handled by ascat step
+  
+    /**
      * Pindel - InDel calling
      * Depends on:
      *  - tumour/normal BAMs
@@ -309,7 +338,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     Job pindelFlagJob = pindelBaseJob("pindelFlag", "flag", 1);
     pindelFlagJob.setMaxMemory(memPindelFlag);
     pindelFlagJob.addParent(pindelMergeJob);
-    // see cavemanSetup additional dependency to give better workflow graph
+    pindelFlagJob.addParent(cavemanSetupJob);
     
     Job pindelPackage = packageResults("pindel", "indel", tumourBam, "flagged.vcf.gz");
     pindelPackage.setMaxMemory(memPackageResults);
@@ -366,38 +395,12 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     
     /**
      * CaVEMan - SNV analysis
+     * !! see above as setup done earlier to help with workflow structure !!
      * Depends on:
-     *  - tumour/normal BAMs
+     *  - tumour/normal BAMs (but depend on BAS for better workflow)
      *  - ASCAT from outset
      *  - pindel at flag step
      */
-    
-    Job caveCnPrepJobs[] = new Job[2];
-    for(int i=0; i<2; i++) {
-      Job caveCnPrepJob;
-      if(i==0) {
-        caveCnPrepJob = caveCnPrep("tumour");
-      }
-      else {
-        caveCnPrepJob = caveCnPrep("normal");
-      }
-       if(testMode == false) {
-        caveCnPrepJob.addParent(basDownloadJobs[0]);
-        caveCnPrepJob.addParent(basDownloadJobs[1]);
-      }
-      caveCnPrepJob.addParent(ascatFinaliseJob); // ASCAT dependency!!!
-      caveCnPrepJobs[i] = caveCnPrepJob;
-    }
-    
-    
-    Job cavemanSetupJob = cavemanBaseJob("cavemanSetup", "setup", 1);
-    cavemanSetupJob.setMaxMemory(memCavemanSetup);
-    cavemanSetupJob.addParent(caveCnPrepJobs[0]);
-    cavemanSetupJob.addParent(caveCnPrepJobs[1]);
-    // some dependencies handled by ascat step
-    
-    // This is here to prevent pindel flagging from being paired with short jobs
-    pindelFlagJob.addParent(cavemanSetupJob);
     
     // should really line count the fai file
     Job cavemanSplitJobs[] = new Job[86];
