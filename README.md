@@ -21,3 +21,7 @@ Seqware workflow for Cancer Genome Project core somatic calling pipeline
     sudo qconf -aattr queue slots "[master=`nproc`]" main.q
     sudo qconf -mattr queue load_thresholds "np_load_avg=`nproc`" main.q
     sudo qconf -rattr exechost complex_values h_vmem=`free -b|grep Mem | cut -d" " -f5` master
+
+## Add following to ~seqware/.bash_profile
+
+    export OOZIE_URL=http://master:11000/oozie
