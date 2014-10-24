@@ -221,7 +221,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     try {
       if(testMode) {
         controlBam = getProperty("controlBamT");
-        tumourBams = Arrays.asList(getProperty("controlBamT").split(":"));
+        tumourBams = Arrays.asList(getProperty("tumourBamT").split(":"));
         tumourBasJobs.add(null);
       }
       else {
