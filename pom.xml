@@ -261,6 +261,17 @@
                             <commandlineArgs>-jar ${workflow-dir}/lib/seqware-distribution-${seqware-version}-full.jar --plugin net.sourceforge.seqware.pipeline.plugins.BundleManager -- -t -b ${project.build.directory}/${workflow-full-name}/ </commandlineArgs>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>download_data</id>
+                        <phase>package</phase>
+                        <goals>
+                          <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>perl</executable>
+                            <commandlineArgs>${basedir}/workflow/scripts/download_ref.pl ${basedir}/links</commandlineArgs>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
             <plugin>
@@ -309,5 +320,4 @@
             </plugin>
         </plugins>
     </build>
-
 </project>
