@@ -309,6 +309,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     Job pindelFlagJob = pindelBaseJob("pindelFlag", "flag", 1);
     pindelFlagJob.setMaxMemory(memPindelFlag);
     pindelFlagJob.addParent(pindelMergeJob);
+    // see cavemanSetup additional dependency to give better workflow graph
     
     Job pindelPackage = packageResults("pindel", "indel", tumourBam, "flagged.vcf.gz");
     pindelPackage.setMaxMemory(memPackageResults);
@@ -395,6 +396,9 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     cavemanSetupJob.addParent(caveCnPrepJobs[1]);
     // some dependencies handled by ascat step
     
+    // This is here to prevent pindel flagging from being paired with short jobs
+    pindelFlagJob.addParent(cavemanSetupJob);
+    
     // should really line count the fai file
     Job cavemanSplitJobs[] = new Job[86];
     for(int i=0; i<86; i++) {
@@ -466,7 +470,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
               .addArgument(getWorkflowBaseDir()+ "/bin/wrapper.sh")
               .addArgument(installBase)
               .addArgument(LOGDIR.concat("packageResults.").concat(algName).concat(".log"))
-              .addArgument("packageResults.pl")
+              .addArgument(getWorkflowBaseDir() + "/bin/packageResults.pl")
               .addArgument(OUTDIR)
               .addArgument(tumourBam)
               .addArgument(OUTDIR + "/" + algName)
