@@ -551,7 +551,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     thisJob.getCommand()
       .addArgument("perl -ne '@F=(split q{,}, $_)[1,2,3," + offset + "]; $F[1]-1; print join(\"\\t\",@F).\"\\n\";'")
       .addArgument("< " + cnPath)
-      .addArgument("> " + OUTDIR + "/" + tumourCount + "/"+ tumourCount + "/" + type + ".cn.bed")
+      .addArgument("> " + OUTDIR + "/" + tumourCount + "/" + type + ".cn.bed")
       ;
     thisJob.setMaxMemory(memCaveCnPrep);
     return thisJob;
