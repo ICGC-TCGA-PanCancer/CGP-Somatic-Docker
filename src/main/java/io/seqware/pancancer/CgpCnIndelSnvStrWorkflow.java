@@ -224,6 +224,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
         System.err.println(getProperty("tumourBamT"));
         tumourBams = Arrays.asList(getProperty("tumourBamT").split(","));
         tumourBasJobs.add(null);
+        System.err.println(tumourBams.toString());
       }
       else {
         normalBasJob = bamProvision(getProperty("controlAnalysisId"), getProperty("controlBam"));
