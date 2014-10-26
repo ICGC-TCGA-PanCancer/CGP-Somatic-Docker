@@ -221,17 +221,17 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     try {
       if(testMode) {
         controlBam = getProperty("controlBamT");
-        System.err.println(getProperty("tumourBamT"));
-        tumourBams = Arrays.asList(getProperty("tumourBamT").split(","));
-        tumourBasJobs.add(null);
-        System.err.println(tumourBams.toString());
+        tumourBams = Arrays.asList(getProperty("tumourBamT").split(":"));
+        for(String t : tumourBams) {
+          tumourBasJobs.add(null);
+        }
       }
       else {
         normalBasJob = bamProvision(getProperty("controlAnalysisId"), getProperty("controlBam"));
         controlBam = controlAnalysisId + "/" + getProperty("controlBam");
 
-        List<String> tumourAnalysisIds = Arrays.asList(getProperty("tumourAnalysisId").split(","));
-        List<String> rawBams = Arrays.asList(getProperty("tumourBam").split(","));
+        List<String> tumourAnalysisIds = Arrays.asList(getProperty("tumourAnalysisId").split(":"));
+        List<String> rawBams = Arrays.asList(getProperty("tumourBam").split(":"));
         if(rawBams.size() != tumourAnalysisIds.size()) {
           throw new RuntimeException("Properties tumourAnalysisId and tumourBam decode to lists of different sizes");
         }
