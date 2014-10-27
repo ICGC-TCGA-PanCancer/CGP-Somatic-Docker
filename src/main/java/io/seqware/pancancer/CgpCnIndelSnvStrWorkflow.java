@@ -29,7 +29,6 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   private String catPath, echoPath;
   private String greeting ="";
   private static final String OUTDIR = "outdir";
-  private static final String LOGDIR = "logdir/"; // leave trailing slash on this
   
   private boolean testMode=false;
 
@@ -92,7 +91,6 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     init();
     // creates a dir1 directory in the current working directory where the workflow runs
     addDirectory(OUTDIR);
-    addDirectory(LOGDIR);
   }
 
   @Override
@@ -501,7 +499,6 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     thisJob.getCommand()
               .addArgument(getWorkflowBaseDir()+ "/bin/wrapper.sh")
               .addArgument(installBase)
-              .addArgument(LOGDIR.concat("packageResults.").concat(algName + ".") + tumourCount + ".log")
               .addArgument(getWorkflowBaseDir() + "/bin/packageResults.pl")
               .addArgument(OUTDIR)
               .addArgument(tumourBam)
@@ -525,7 +522,6 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     thisJob.getCommand()
             .addArgument(getWorkflowBaseDir()+ "/bin/wrapper.sh")
             .addArgument(installBase)
-            .addArgument(LOGDIR.concat("basFileGet.").concat(analysisId +".log"))
             .addArgument("xml_to_bas.pl")
             .addArgument("-d " + gnosServer + "/cghub/metadata/analysisFull/" + analysisId)
             .addArgument("-o " + sampleBam + ".bas")
@@ -578,7 +574,6 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     thisJob.getCommand()
               .addArgument(getWorkflowBaseDir()+ "/bin/wrapper.sh")
               .addArgument(installBase)
-              .addArgument(LOGDIR.concat("."+tumourCount+".").concat(name).concat(".").concat(Integer.toString(index)).concat(".log"))
               .addArgument("caveman.pl")
               .addArgument("-p " + process)
               .addArgument("-i " + index)
@@ -620,7 +615,6 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     thisJob.getCommand()
               .addArgument(getWorkflowBaseDir()+ "/bin/wrapper.sh")
               .addArgument(installBase)
-              .addArgument(LOGDIR.concat("."+tumourCount+".").concat(name).concat(".").concat(Integer.toString(index)).concat(".log"))
               .addArgument("ascat.pl")
               .addArgument("-p " + process)
               .addArgument("-i " + index)
@@ -651,7 +645,6 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     thisJob.getCommand()
               .addArgument(getWorkflowBaseDir()+ "/bin/wrapper.sh")
               .addArgument(installBase)
-              .addArgument(LOGDIR.concat("."+tumourCount+".").concat(name).concat(".").concat(Integer.toString(index)).concat(".log"))
               .addArgument("pindel.pl")
               .addArgument("-p " + process)
               .addArgument("-i " + index)
@@ -682,7 +675,6 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     thisJob.getCommand()
               .addArgument(getWorkflowBaseDir()+ "/bin/wrapper.sh")
               .addArgument(installBase)
-              .addArgument(LOGDIR.concat("."+tumourCount+".").concat(name).concat(".").concat(Integer.toString(index)).concat(".log"))
               .addArgument("brass.pl")
               .addArgument("-p " + process)
               .addArgument("-i " + index)
