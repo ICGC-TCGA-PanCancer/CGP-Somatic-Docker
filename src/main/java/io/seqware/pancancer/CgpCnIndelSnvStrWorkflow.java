@@ -57,7 +57,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
                   //GNOS identifiers
                   controlAnalysisId, pemFile, gnosServer,
                   // ascat variables
-                  gender, ascatCn, ascatContam,
+                  gender,
                   // pindel variables
                   refExclude, pindelGermline,
                   //caveman variables
@@ -165,23 +165,9 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       refExclude = getProperty("refExclude");
 
       // test mode
-      if(testMode) {
-        if(hasPropertyAndNotNull("pindelGermline")) {
-          pindelGermline = getProperty("pindelGermline");
-        }
-        if(hasPropertyAndNotNull("ascatCn")) {
-          ascatCn = getProperty("ascatCn");
-        }
-        if(hasPropertyAndNotNull("ascatContam")) {
-          ascatContam = getProperty("ascatContam");
-        }
-      }
-      else {
-        
+      if(!testMode) {
         gnosServer = getProperty("gnosServer");
         pemFile = getProperty("pemFile");
-        
-        
       }
 
       //environment
@@ -530,13 +516,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   }
   
   private Job caveCnPrep(int tumourCount, String type) {
-    String cnPath;
-    if(ascatCn == null) {
-      cnPath = OUTDIR + "/" + tumourCount + "/ascat/*.copynumber.caveman.csv";
-    }
-    else {
-      cnPath = ascatCn;
-    }
+    String cnPath = OUTDIR + "/" + tumourCount + "/ascat/*.copynumber.caveman.csv";
     
     Job thisJob = getWorkflow().createBashJob("CaveCnPrep" + type);
     int offset = 0;
@@ -562,13 +542,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   }
   
   private Job cavemanBaseJob(int tumourCount, String tumourBam, String controlBam, String name, String process, int index) {
-    String ascatContamFile;
-    if(ascatContam == null) {
-      ascatContamFile = OUTDIR + "/" + tumourCount + "/ascat/*.samplestatistics.csv";
-    }
-    else {
-      ascatContamFile = ascatContam;
-    }
+    String ascatContamFile = OUTDIR + "/" + tumourCount + "/ascat/*.samplestatistics.csv";
     
     Job thisJob = getWorkflow().createBashJob(name);
     thisJob.getCommand()
@@ -599,12 +573,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       thisJob.getCommand().addArgument("-l " + coresAddressable);
     }
     else if(name.equals("cavemanFlag")) {
-      if(pindelGermline == null) {
-        thisJob.getCommand().addArgument("-in " + OUTDIR + "/" + tumourCount + "/pindel/*.germline.bed");
-      }
-      else {
-        thisJob.getCommand().addArgument("-in " + pindelGermline);
-      }
+      thisJob.getCommand().addArgument("-in " + OUTDIR + "/" + tumourCount + "/pindel/*.germline.bed");
     }
 
     return thisJob;
@@ -693,13 +662,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
               .addArgument("-n " + controlBam)
             ;
     if(name.equals("brassFilter")) {
-      String cnPath;
-      if(ascatCn == null) {
-        cnPath = OUTDIR + "/" + tumourCount + "/ascat/*.copynumber.caveman.csv";
-      }
-      else {
-        cnPath = ascatCn;
-      }
+      String cnPath = OUTDIR + "/" + tumourCount + "/ascat/*.copynumber.caveman.csv";
       thisJob.getCommand().addArgument("-a " + cnPath);
     }
     else if(name.endsWith("brassAssemble")) {
