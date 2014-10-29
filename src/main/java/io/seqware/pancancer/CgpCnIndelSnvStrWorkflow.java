@@ -99,14 +99,14 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     try {
       if(hasPropertyAndNotNull("testMode")) {
         testMode=Boolean.valueOf(getProperty("testMode"));
-        System.err.println("Running in test mode, direct access BAM files will be used, change testMode in ini file to disable");
+        System.err.println("WARNING\n\tRunning in test mode, direct access BAM files will be used, change 'testMode' in ini file to disable\n");
       }
       
       if(hasPropertyAndNotNull("uploadServer")) {
         uploadServer = getProperty("uploadServer");
       }
       else {
-        System.err.println("uploadServer not defined in workflow.ini, no VCF upload will be attempted");
+        System.err.println("WARNING\n\t'uploadServer' not defined in workflow.ini, no VCF upload will be attempted\n");
       }
       
       // used by steps that can use all available cores
