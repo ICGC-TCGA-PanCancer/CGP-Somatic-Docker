@@ -195,7 +195,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     if(testMode == false) {
       Job gnosDownload = gnosDownloadBaseJob(analysisId);
       gnosDownload.setMaxMemory(memGnosDownload);
-      // the file needs to end up in tumourBam/normalBam
+      // the file needs to end up in tumourBam/controlBam
 
       // get the BAS files
       basJob = basFileBaseJob(analysisId, bamFile);
@@ -207,7 +207,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   
   @Override
   public void buildWorkflow() {
-    Job normalBasJob = null;
+    Job controlBasJob = null;
     String controlBam;
     List<String> tumourBams = new ArrayList<String>();
     List<Job> tumourBasJobs = new ArrayList<Job>();
@@ -226,7 +226,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       }
       else {
         controlAnalysisId = getProperty("controlAnalysisId");
-        normalBasJob = bamProvision(controlAnalysisId, getProperty("controlBam"));
+        controlBasJob = bamProvision(controlAnalysisId, getProperty("controlBam"));
         controlBam = controlAnalysisId + "/" + getProperty("controlBam");
 
         tumourAnalysisIds = Arrays.asList(getProperty("tumourAnalysisIds").split(":"));
@@ -251,7 +251,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     
     Job[] cavemanFlagJobs = new Job [tumourBams.size()];
     for(int i=0; i<tumourBams.size(); i++) {
-      Job cavemanFlagJob = buildPairWorkflow(normalBasJob, tumourBasJobs.get(i), controlBam, tumourBams.get(i), i);
+      Job cavemanFlagJob = buildPairWorkflow(controlBasJob, tumourBasJobs.get(i), controlBam, tumourBams.get(i), i);
       cavemanFlagJobs[i] = cavemanFlagJob;
     }
     
@@ -274,14 +274,14 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   /**
    * This builds the workflow for a pair of samples
    * The generic buildWorkflow section will choose the pair to be processed and 
-   * setup the normal sample download
+   * setup the control sample download
    */
-  public Job buildPairWorkflow(Job normalBasJob, Job tumourBasJob, String controlBam, String tumourBam, int tumourCount) {
+  public Job buildPairWorkflow(Job controlBasJob, Job tumourBasJob, String controlBam, String tumourBam, int tumourCount) {
     
     /**
      * ASCAT - Copynumber
      * Depends on
-     *  - tumour/normal BAMs
+     *  - tumour/control BAMs
      *  - Gender, will attempt to determine if not specified
      */
 
@@ -290,7 +290,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       Job alleleCountJob = cgpAscatBaseJob(tumourCount, tumourBam, controlBam, "ascatAlleleCount", "allele_count", i+1);
       alleleCountJob.setMaxMemory(memAlleleCount);
       if(testMode == false) {
-        alleleCountJob.addParent(normalBasJob);
+        alleleCountJob.addParent(controlBasJob);
         alleleCountJob.addParent(tumourBasJob);
       }
       alleleCountJobs[i] = alleleCountJob;
@@ -324,7 +324,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
         caveCnPrepJob = caveCnPrep(tumourCount, "normal");
       }
        if(testMode == false) {
-        caveCnPrepJob.addParent(normalBasJob);
+        caveCnPrepJob.addParent(controlBasJob);
         caveCnPrepJob.addParent(tumourBasJob);
       }
       caveCnPrepJob.addParent(ascatFinaliseJob); // ASCAT dependency!!!
@@ -341,7 +341,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     /**
      * Pindel - InDel calling
      * Depends on:
-     *  - tumour/normal BAMs
+     *  - tumour/control BAMs
      */
      
     Job[] pindelInputJobs = new Job[2];
@@ -349,7 +349,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       Job inputParse = pindelBaseJob(tumourCount, tumourBam, controlBam, "pindelInput", "input", i+1);
       inputParse.setMaxMemory(memPindelInput);
       if(testMode == false) {
-        inputParse.addParent(normalBasJob);
+        inputParse.addParent(controlBasJob);
         inputParse.addParent(tumourBasJob);
       }
       pindelInputJobs[i] = inputParse;
@@ -391,7 +391,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     /**
      * BRASS - BReakpoint AnalySiS
      * Depends on:
-     *  - tumour/normal BAMs
+     *  - tumour/control BAMs
      *  - ASCAT output at filter step
      */
     
@@ -400,7 +400,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       Job brassInputJob = brassBaseJob(tumourCount, tumourBam, controlBam, "brassInput", "input", i+1);
       brassInputJob.setMaxMemory(memBrassInput);
       if(testMode == false) {
-        brassInputJob.addParent(normalBasJob);
+        brassInputJob.addParent(controlBasJob);
         brassInputJob.addParent(tumourBasJob);
       }
       brassInputJobs[i] = brassInputJob;
@@ -441,7 +441,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
      * CaVEMan - SNV analysis
      * !! see above as setup done earlier to help with workflow structure !!
      * Depends on:
-     *  - tumour/normal BAMs (but depend on BAS for better workflow)
+     *  - tumour/control BAMs (but depend on BAS for better workflow)
      *  - ASCAT from outset
      *  - pindel at flag step
      */
@@ -505,7 +505,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     return cavemanFlagJob;
   }
   
-  private Job vcfUpload(String[] types, String normalAnalysisId, String tumourAnalysisId, String tumourAliquotId) {
+  private Job vcfUpload(String[] types, String controlAnalysisId, String tumourAnalysisId, String tumourAliquotId) {
     Job thisJob = getWorkflow().createBashJob("vcfUpload");
     
     String metadataUrls = new String();
@@ -515,7 +515,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
                               .concat(",")
                               .concat(gnosServer)
                               .concat("/cghub/metadata/analysisFull/")
-                              .concat(normalAnalysisId);
+                              .concat(controlAnalysisId);
     
     String vcfs = new String();
     String tbis = new String();
