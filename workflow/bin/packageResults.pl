@@ -28,6 +28,7 @@ sub tar_output {
   my $tar = sprintf 'tar --exclude=*/logs -zcf %s.tar.gz %s', "$output_folder/$aliquot_id.$type", $to_process;
   my ($stdout, $stderr, $exit) = capture { system($tar); };
   die $stderr if($exit != 0);
+  md5file("$to_process.tar.gz");
 }
 
 sub get_aliquot_id_from_bam {
@@ -69,6 +70,13 @@ sub copy_rename_vcfs {
     }
     my ($stdout, $stderr, $exit) = capture { system("cp $source $dest"); };
     die $stderr if($exit != 0);
+    md5file($dest);
   }
+}
+
+sub md5file {
+  my $file = shift;
+  my ($stdout, $stderr, $exit) = capture { system(qq{md5sum $dest | awk '{print $1}' > $dest.md5}); };
+  die $stderr if($exit != 0);
 }
 

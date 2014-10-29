@@ -7,6 +7,7 @@ import java.util.Map;
 import net.sourceforge.seqware.pipeline.workflowV2.AbstractWorkflowDataModel;
 import net.sourceforge.seqware.pipeline.workflowV2.model.Job;
 import net.sourceforge.seqware.pipeline.workflowV2.model.SqwFile;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * <p>For more information on developing workflows, see the documentation at
@@ -33,7 +34,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   private boolean testMode=false;
 
   // MEMORY variables //
-  private String  memBasFileGet, memGnosDownload, memPackageResults,
+  private String  memBasFileGet, memGnosDownload, memPackageResults, memUpload,
                   // ascat memory
                   memAlleleCount, memAscat, memAscatFinalise,
                   // pindel memory
@@ -55,7 +56,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
                   // sequencing type/protocol
                   seqType, seqProtocol,
                   //GNOS identifiers
-                  controlAnalysisId, pemFile, gnosServer,
+                  pemFile, gnosServer, uploadServer,
                   // ascat variables
                   gender,
                   // pindel variables
@@ -98,6 +99,14 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     try {
       if(hasPropertyAndNotNull("testMode")) {
         testMode=Boolean.valueOf(getProperty("testMode"));
+        System.err.println("Running in test mode, direct access BAM files will be used, change testMode in ini file to disable");
+      }
+      
+      if(hasPropertyAndNotNull("uploadServer")) {
+        uploadServer = getProperty("uploadServer");
+      }
+      else {
+        System.err.println("uploadServer not defined in workflow.ini, no VCF upload will be attempted");
       }
       
       // used by steps that can use all available cores
@@ -107,6 +116,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       memBasFileGet = getProperty("memBasFileGet");
       memGnosDownload = getProperty("memGnosDownload");
       memPackageResults = getProperty("memPackageResults");
+      memUpload = getProperty("memUpload");
       
       
       memAlleleCount = getProperty("memAlleleCount");
@@ -199,8 +209,12 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   public void buildWorkflow() {
     Job normalBasJob = null;
     String controlBam;
-    List<String> tumourBams = null;
+    List<String> tumourBams = new ArrayList<String>();
     List<Job> tumourBasJobs = new ArrayList<Job>();
+    
+    List<String> tumourAnalysisIds = new ArrayList<String>();
+    List<String> tumourAliquotIds = new ArrayList<String>();
+    String controlAnalysisId = new String();
     
     try {
       if(testMode) {
@@ -211,13 +225,18 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
         }
       }
       else {
-        normalBasJob = bamProvision(getProperty("controlAnalysisId"), getProperty("controlBam"));
+        controlAnalysisId = getProperty("controlAnalysisId");
+        normalBasJob = bamProvision(controlAnalysisId, getProperty("controlBam"));
         controlBam = controlAnalysisId + "/" + getProperty("controlBam");
 
-        List<String> tumourAnalysisIds = Arrays.asList(getProperty("tumourAnalysisId").split(":"));
-        List<String> rawBams = Arrays.asList(getProperty("tumourBam").split(":"));
+        tumourAnalysisIds = Arrays.asList(getProperty("tumourAnalysisIds").split(":"));
+        tumourAliquotIds = Arrays.asList(getProperty("tumourAliquotIds").split(":"));
+        List<String> rawBams = Arrays.asList(getProperty("tumourBams").split(":"));
         if(rawBams.size() != tumourAnalysisIds.size()) {
           throw new RuntimeException("Properties tumourAnalysisId and tumourBam decode to lists of different sizes");
+        }
+        if(rawBams.size() != tumourAliquotIds.size()) {
+          throw new RuntimeException("Properties tumourAliquotIds and tumourBam decode to lists of different sizes");
         }
         for(int i=0; i<rawBams.size(); i++) {
           Job tumourBasJob = bamProvision(tumourAnalysisIds.get(i), rawBams.get(i));
@@ -240,6 +259,15 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     cavemanTbiCleanJob.setMaxMemory(memCavemanTbiClean);
     for(Job cavemanFlagJob : cavemanFlagJobs) {
       cavemanTbiCleanJob.addParent(cavemanFlagJob);
+    }
+    
+    if(uploadServer != null) {
+      String[] resultTypes = {"snv_mnv","cnv","sv","indel"};
+      for(int i=0; i<tumourAnalysisIds.size(); i++) {
+        Job uploadJob = vcfUpload(resultTypes, controlAnalysisId, tumourAnalysisIds.get(i), tumourAnalysisIds.get(i));
+        uploadJob.setMaxMemory(memUpload);
+        uploadJob.addParent(cavemanTbiCleanJob);
+      }
     }
   }
 
@@ -473,10 +501,61 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     Job cavemanPackage = packageResults(tumourCount, "caveman", "snv_mnv", tumourBam, "flagged.muts.vcf.gz");
     cavemanPackage.setMaxMemory(memPackageResults);
     cavemanPackage.addParent(cavemanFlagJob);
-
-    // @TODO then we need to write back to GNOS
     
     return cavemanFlagJob;
+  }
+  
+  private Job vcfUpload(String[] types, String normalAnalysisId, String tumourAnalysisId, String tumourAliquotId) {
+    Job thisJob = getWorkflow().createBashJob("vcfUpload");
+    
+    String metadataUrls = new String();
+    metadataUrls = metadataUrls.concat(gnosServer)
+                              .concat("/cghub/metadata/analysisFull/")
+                              .concat(tumourAnalysisId)
+                              .concat(",")
+                              .concat(gnosServer)
+                              .concat("/cghub/metadata/analysisFull/")
+                              .concat(normalAnalysisId);
+    
+    String vcfs = new String();
+    String tbis = new String();
+    String tars = new String();
+    String vcfmd5s = new String();
+    String tbimd5s = new String();
+    String tarmd5s = new String();
+    for(String type: types) {
+      String baseFile = OUTDIR + "/" + tumourAliquotId + "_" + type;
+      if(vcfs.length() > 0) {
+        vcfs = vcfs.concat(",");
+        tbis = tbis.concat(",");
+        tars = tars.concat(",");
+        vcfmd5s = vcfmd5s.concat(",");
+        tbimd5s = tbimd5s.concat(",");
+        tarmd5s = tarmd5s.concat(",");
+      }
+      vcfs = vcfs.concat(baseFile + ".vcf.gz");
+      tbis = tbis.concat(baseFile + ".vcf.gz.tbi");
+      tars = tars.concat(baseFile + ".tar.gz");
+      vcfmd5s = vcfmd5s.concat(baseFile + ".vcf.gz.md5");
+      tbimd5s = tbimd5s.concat(baseFile + ".vcf.gz.tbi.md5");
+      tarmd5s = tarmd5s.concat(baseFile + ".tar.gz.md5");
+    }
+    
+    thisJob.getCommand()
+      .addArgument("gnos_upload_vcf.pl")
+      .addArgument("--metadata-urls " + metadataUrls)
+      .addArgument("--vcfs " + vcfs)
+      .addArgument("--vcf-md5sum-files" + vcfmd5s)
+      .addArgument("--vcf-idxs " + tbis)
+      .addArgument("--vcf-idx-md5sum-files " + tbimd5s)
+      .addArgument("--tarballs " + tars)
+      .addArgument("--tarball-md5sum-files " + tarmd5s)
+      .addArgument("--outdir " + OUTDIR + "/upload")
+      .addArgument("--key " + pemFile)
+      .addArgument("--upload-url " + gnosServer)
+      ;
+    
+    return thisJob;
   }
   
   private Job packageResults(int tumourCount, String algName, String resultType, String tumourBam, String baseVcf) {
@@ -537,7 +616,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   
   private Job cavemanTbiCleanJob() {
     Job thisJob = getWorkflow().createBashJob("CaveTbiClean");
-    thisJob.getCommand().addArgument("rm -f unmatchedNormal.*.vcf.gz.tbi");
+    thisJob.getCommand().addArgument("rm -f " + OUTDIR + "/*/unmatchedNormal.*.vcf.gz.tbi");
     return thisJob;
   }
   
@@ -545,6 +624,10 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     String ascatContamFile = OUTDIR + "/" + tumourCount + "/ascat/*.samplestatistics.csv";
     
     Job thisJob = getWorkflow().createBashJob(name);
+    if(name.equals("cavemanFlag")) {
+      // very simplistic way to get round clash of tabix file downloads
+      thisJob.getCommand().addArgument("cd " + OUTDIR + "/" + tumourCount + ";");
+    }
     thisJob.getCommand()
               .addArgument(getWorkflowBaseDir()+ "/bin/wrapper.sh")
               .addArgument(installBase)
@@ -569,6 +652,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
               .addArgument("-tb " + tumourBam)
               .addArgument("-nb " + controlBam)
             ;
+    
     if(name.equals("cavemanMstep") || name.equals("cavemanEstep")) {
       thisJob.getCommand().addArgument("-l " + coresAddressable);
     }
