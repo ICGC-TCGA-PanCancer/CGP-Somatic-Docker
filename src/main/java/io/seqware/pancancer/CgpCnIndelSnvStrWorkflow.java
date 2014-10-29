@@ -190,7 +190,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     return getFiles();
   }
   
-  public Job bamProvision(String analysisId, String bamFile) {
+  private Job bamProvision(String analysisId, String bamFile) {
     Job basJob = null;
     if(testMode == false) {
       Job gnosDownload = gnosDownloadBaseJob(analysisId);
@@ -276,7 +276,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
    * The generic buildWorkflow section will choose the pair to be processed and 
    * setup the control sample download
    */
-  public Job buildPairWorkflow(Job controlBasJob, Job tumourBasJob, String controlBam, String tumourBam, int tumourCount) {
+  private Job buildPairWorkflow(Job controlBasJob, Job tumourBasJob, String controlBam, String tumourBam, int tumourCount) {
     
     /**
      * ASCAT - Copynumber
