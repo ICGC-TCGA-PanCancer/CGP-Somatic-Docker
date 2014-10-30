@@ -15,7 +15,7 @@ Seqware workflow for Cancer Genome Project core somatic calling pipeline
     sudo apt-get install r-base
     sudo apt-get install r-cran-rcolorbrewer
     sudo apt-get install dh-autoreconf
-    sudo apt-get zlib1g-dev
+    sudo apt-get install zlib1g-dev
 
 ## Building CGP codebase
 
