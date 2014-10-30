@@ -5,6 +5,8 @@ Seqware workflow for Cancer Genome Project core somatic calling pipeline
 
 ## Additional packages for base instance
 
+The following are the packages needed for Ubuntu 12.04:
+
     sudo apt-get install g++
     sudo apt-get install pkg-config
     sudo apt-get install libncurses5-dev
