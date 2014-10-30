@@ -37,7 +37,9 @@ All of these packages have the same installation method.  For installation withi
     wget <package>
     tar zxf vX.X.X.tar.gz
     cd <package>
-    ./setup.pl .../SeqWare-CGP-SomaticCore/workflow/bin/opt
+    ./setup.pl ../SeqWare-CGP-SomaticCore/workflow/bin/opt
+
+Note, PCAP uses a "setup.sh" and not "setup.pl".
 
 Once brass is publicly available I will add a script to automate this fully.
 
