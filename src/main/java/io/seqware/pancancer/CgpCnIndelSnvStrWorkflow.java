@@ -263,11 +263,9 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     
     if(uploadServer != null) {
       String[] resultTypes = {"snv_mnv","cnv","sv","indel"};
-      for(int i=0; i<tumourAnalysisIds.size(); i++) {
-        Job uploadJob = vcfUpload(resultTypes, controlAnalysisId, tumourAnalysisIds.get(i), tumourAnalysisIds.get(i));
-        uploadJob.setMaxMemory(memUpload);
-        uploadJob.addParent(cavemanTbiCleanJob);
-      }
+      Job uploadJob = vcfUpload(resultTypes, controlAnalysisId, tumourAnalysisIds, tumourAliquotIds);
+      uploadJob.setMaxMemory(memUpload);
+      uploadJob.addParent(cavemanTbiCleanJob);
     }
   }
 
@@ -505,17 +503,20 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     return cavemanFlagJob;
   }
   
-  private Job vcfUpload(String[] types, String controlAnalysisId, String tumourAnalysisId, String tumourAliquotId) {
+  private Job vcfUpload(String[] types, String controlAnalysisId, List<String> tumourAnalysisIds, List<String> tumourAliquotIds) {
     Job thisJob = getWorkflow().createBashJob("vcfUpload");
     
     String metadataUrls = new String();
     metadataUrls = metadataUrls.concat(gnosServer)
                               .concat("/cghub/metadata/analysisFull/")
-                              .concat(tumourAnalysisId)
-                              .concat(",")
+                              .concat(controlAnalysisId);
+    for(String tumourAnalysisId : tumourAnalysisIds) {
+      metadataUrls = metadataUrls.concat(",")
                               .concat(gnosServer)
                               .concat("/cghub/metadata/analysisFull/")
-                              .concat(controlAnalysisId);
+                              .concat(tumourAnalysisId);
+                              
+    }
     
     String vcfs = new String();
     String tbis = new String();
@@ -524,21 +525,23 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     String tbimd5s = new String();
     String tarmd5s = new String();
     for(String type: types) {
-      String baseFile = OUTDIR + "/" + tumourAliquotId + "_" + type;
-      if(vcfs.length() > 0) {
-        vcfs = vcfs.concat(",");
-        tbis = tbis.concat(",");
-        tars = tars.concat(",");
-        vcfmd5s = vcfmd5s.concat(",");
-        tbimd5s = tbimd5s.concat(",");
-        tarmd5s = tarmd5s.concat(",");
+      for(String tumourAliquotId : tumourAliquotIds) {
+        String baseFile = OUTDIR + "/" + tumourAliquotId + "_" + type;
+        if(vcfs.length() > 0) {
+          vcfs = vcfs.concat(",");
+          tbis = tbis.concat(",");
+          tars = tars.concat(",");
+          vcfmd5s = vcfmd5s.concat(",");
+          tbimd5s = tbimd5s.concat(",");
+          tarmd5s = tarmd5s.concat(",");
+        }
+        vcfs = vcfs.concat(baseFile + ".vcf.gz");
+        tbis = tbis.concat(baseFile + ".vcf.gz.tbi");
+        tars = tars.concat(baseFile + ".tar.gz");
+        vcfmd5s = vcfmd5s.concat(baseFile + ".vcf.gz.md5");
+        tbimd5s = tbimd5s.concat(baseFile + ".vcf.gz.tbi.md5");
+        tarmd5s = tarmd5s.concat(baseFile + ".tar.gz.md5");
       }
-      vcfs = vcfs.concat(baseFile + ".vcf.gz");
-      tbis = tbis.concat(baseFile + ".vcf.gz.tbi");
-      tars = tars.concat(baseFile + ".tar.gz");
-      vcfmd5s = vcfmd5s.concat(baseFile + ".vcf.gz.md5");
-      tbimd5s = tbimd5s.concat(baseFile + ".vcf.gz.tbi.md5");
-      tarmd5s = tarmd5s.concat(baseFile + ".tar.gz.md5");
     }
     
     thisJob.getCommand()
@@ -554,6 +557,23 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       .addArgument("--key " + pemFile)
       .addArgument("--upload-url " + gnosServer)
       ;
+    try {
+      if(hasPropertyAndNotNull("study-refname-override")) {
+        thisJob.getCommand().addArgument("--study-refname-override " + getProperty("study-refname-override"));
+      }
+      if(hasPropertyAndNotNull("analysis-center-override")) {
+        thisJob.getCommand().addArgument("--analysis-center-override " + getProperty("analysis-center-override"));
+      }
+      
+      if(hasPropertyAndNotNull("upload-test")) {
+        thisJob.getCommand().addArgument("--test ");
+      }
+      if(hasPropertyAndNotNull("upload-skip")) {
+        thisJob.getCommand().addArgument("--skip-upload");
+      }
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
     
     return thisJob;
   }
@@ -616,7 +636,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   
   private Job cavemanTbiCleanJob() {
     Job thisJob = getWorkflow().createBashJob("CaveTbiClean");
-    thisJob.getCommand().addArgument("rm -f " + OUTDIR + "/*/unmatchedNormal.*.vcf.gz.tbi");
+      thisJob.getCommand().addArgument("rm -f " + OUTDIR + "/*/unmatchedNormal.*.vcf.gz.tbi");
     return thisJob;
   }
   
