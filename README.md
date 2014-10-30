@@ -3,7 +3,6 @@ SeqWare-CGP-SomaticCore
 
 Seqware workflow for Cancer Genome Project core somatic calling pipeline
 
-
 ## Additional packages for base instance
 
     sudo apt-get install g++
@@ -15,6 +14,30 @@ Seqware workflow for Cancer Genome Project core somatic calling pipeline
     sudo apt-get install libglib2.0-dev
     sudo apt-get install r-base
     sudo apt-get install r-cran-rcolorbrewer
+
+## Building CGP codebase
+
+You need to build and install the following in this order:
+
+* [PCAP v1.2.2](https://github.com/ICGC-TCGA-PanCancer/PCAP-core/archive/v1.2.2.tar.gz)
+* [cgpVcf v1.2.2](https://github.com/cancerit/cgpVcf/archive/v1.2.2.tar.gz)
+* [alleleCount v1.2.1](https://github.com/cancerit/alleleCount/archive/v1.2.1.tar.gz)
+* [ascatNgs v1.4.1](https://github.com/cancerit/ascatNgs/archive/v1.4.1.tar.gz)
+* [cgpPindel v1.1.1](https://github.com/cancerit/cgpPindel/archive/v1.1.1.tar.gz)
+* [cgpCaVEManWrapper v1.1.3](https://github.com/cancerit/cgpCaVEManWrapper/archive/v1.1.3.tar.gz)
+* [cgpCaVEManPostProcessing v1.0.2](https://github.com/cancerit/cgpCaVEManPostProcessing/archive/v1.0.2.tar.gz)
+* BRASS - contact <mailto:kr2@sanger.ac.uk>
+* [VAGrENT v2.0.0](https://github.com/cancerit/VAGrENT/archive/v2.0.0.tar.gz)
+* [grass v1.0.1](https://github.com/cancerit/grass/archive/v1.0.1.tar.gz)
+
+All of these packages have the same installation method.  For installation within this workflow:
+
+    wget <package>
+    tar zxf vX.X.X.tar.gz
+    cd <package>
+    ./setup.pl .../SeqWare-CGP-SomaticCore/workflow/bin/opt
+
+Once brass is publicly available I will add a script to automate this fully.
 
 ## Host currently needs reconf for SGE
 
