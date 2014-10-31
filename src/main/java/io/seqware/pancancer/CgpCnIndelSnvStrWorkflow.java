@@ -418,13 +418,19 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     brassSplitJob.setMaxMemory(memBrassSplit);
     brassSplitJob.addParent(brassFilterJob);
     
-    Job brassAssembleJob = brassBaseJob(tumourCount, tumourBam, controlBam, "brassAssemble", "assemble", 1);
-    brassAssembleJob.setMaxMemory(memBrassAssemble);
-    brassAssembleJob.addParent(brassSplitJob);
+    List<Job> brassAssembleJobs = new ArrayList<Job>();
+    for(int i=0; i<coresAddressable; i++) {
+      Job brassAssembleJob = brassBaseJob(tumourCount, tumourBam, controlBam, "brassAssemble", "assemble", i+1);
+      brassAssembleJob.setMaxMemory(memBrassAssemble);
+      brassAssembleJob.addParent(brassSplitJob);
+      brassAssembleJobs.add(brassAssembleJob);
+    }
     
     Job brassGrassJob = brassBaseJob(tumourCount, tumourBam, controlBam, "brassGrass", "grass", 1);
     brassGrassJob.setMaxMemory(memBrassGrass);
-    brassGrassJob.addParent(brassAssembleJob);
+    for(Job brassAssembleJob : brassAssembleJobs) {
+      brassGrassJob.addParent(brassAssembleJob);
+    }
     
     Job brassTabixJob = brassBaseJob(tumourCount, tumourBam, controlBam, "brassTabix", "tabix", 1);
     brassTabixJob.setMaxMemory(memBrassTabix);
@@ -644,9 +650,11 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     String ascatContamFile = OUTDIR + "/" + tumourCount + "/ascat/*.samplestatistics.csv";
     
     Job thisJob = getWorkflow().createBashJob(name);
+    String prependLoc = "";
     if(name.equals("cavemanFlag")) {
       // very simplistic way to get round clash of tabix file downloads
       thisJob.getCommand().addArgument("cd " + OUTDIR + "/" + tumourCount + ";");
+      prependLoc = "../../"; // but as we don't have absoulte path need to 
     }
     thisJob.getCommand()
               .addArgument(getWorkflowBaseDir()+ "/bin/wrapper.sh")
@@ -654,8 +662,6 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
               .addArgument("caveman.pl")
               .addArgument("-p " + process)
               .addArgument("-i " + index)
-            
-              .addArgument("-r " + genomeFaGz + ".fai")
               .addArgument("-ig " + refBase + "/caveman/ucscHiDepth_0.01_merge1000_no_exon.tsv")
               .addArgument("-b " + refBase + "/caveman/flagging")
               .addArgument("-u " + tabixSrvUri)
@@ -664,20 +670,26 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
               .addArgument("-sa " + assembly)
               .addArgument("-s " + species)
               .addArgument("-st " + seqProtocol)
-            
-              .addArgument("-o " + OUTDIR + "/" + tumourCount + "/caveman")
-              .addArgument("-tc " + OUTDIR + "/" + tumourCount + "/tumour.cn.bed")
-              .addArgument("-nc " + OUTDIR + "/" + tumourCount + "/normal.cn.bed")
-              .addArgument("-k " + ascatContamFile)
-              .addArgument("-tb " + tumourBam)
-              .addArgument("-nb " + controlBam)
-            ;
+              .addArgument("-o " + prependLoc + OUTDIR + "/" + tumourCount + "/caveman")
+              .addArgument("-tc " + prependLoc + OUTDIR + "/" + tumourCount + "/tumour.cn.bed")
+              .addArgument("-nc " + prependLoc + OUTDIR + "/" + tumourCount + "/normal.cn.bed")
+              .addArgument("-k " + prependLoc + ascatContamFile);
+    if(tumourBam.startsWith("/")) {
+      thisJob.getCommand().addArgument("-tb " + tumourBam)
+                          .addArgument("-nb " + controlBam)
+                          .addArgument("-r " + genomeFaGz + ".fai");
+    }
+    else {
+      thisJob.getCommand().addArgument("-tb " + prependLoc + tumourBam)
+                          .addArgument("-nb " + prependLoc + controlBam)
+                          .addArgument("-r " + prependLoc + genomeFaGz + ".fai");
+    }
     
     if(name.equals("cavemanMstep") || name.equals("cavemanEstep")) {
       thisJob.getCommand().addArgument("-l " + coresAddressable);
     }
     else if(name.equals("cavemanFlag")) {
-      thisJob.getCommand().addArgument("-in " + OUTDIR + "/" + tumourCount + "/pindel/*.germline.bed");
+      thisJob.getCommand().addArgument("-in " + prependLoc + OUTDIR + "/" + tumourCount + "/pindel/*.germline.bed");
     }
 
     return thisJob;
@@ -770,7 +782,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       thisJob.getCommand().addArgument("-a " + cnPath);
     }
     else if(name.endsWith("brassAssemble")) {
-      thisJob.getCommand().addArgument("-l 1"); // regardless of number of splits, run sequentially
+      thisJob.getCommand().addArgument("-l " + coresAddressable);
     }
     return thisJob;
   }
