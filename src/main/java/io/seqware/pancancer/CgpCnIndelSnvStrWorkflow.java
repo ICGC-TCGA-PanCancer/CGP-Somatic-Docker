@@ -662,8 +662,6 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
               .addArgument("caveman.pl")
               .addArgument("-p " + process)
               .addArgument("-i " + index)
-            
-              .addArgument("-r " + prependLoc + genomeFaGz + ".fai")
               .addArgument("-ig " + refBase + "/caveman/ucscHiDepth_0.01_merge1000_no_exon.tsv")
               .addArgument("-b " + refBase + "/caveman/flagging")
               .addArgument("-u " + tabixSrvUri)
@@ -672,18 +670,19 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
               .addArgument("-sa " + assembly)
               .addArgument("-s " + species)
               .addArgument("-st " + seqProtocol)
-            
               .addArgument("-o " + prependLoc + OUTDIR + "/" + tumourCount + "/caveman")
               .addArgument("-tc " + prependLoc + OUTDIR + "/" + tumourCount + "/tumour.cn.bed")
               .addArgument("-nc " + prependLoc + OUTDIR + "/" + tumourCount + "/normal.cn.bed")
               .addArgument("-k " + prependLoc + ascatContamFile);
     if(tumourBam.startsWith("/")) {
       thisJob.getCommand().addArgument("-tb " + tumourBam)
-                          .addArgument("-nb " + controlBam);
+                          .addArgument("-nb " + controlBam)
+                          .addArgument("-r " + genomeFaGz + ".fai");
     }
     else {
       thisJob.getCommand().addArgument("-tb " + prependLoc + tumourBam)
-                          .addArgument("-nb " + prependLoc + controlBam);
+                          .addArgument("-nb " + prependLoc + controlBam)
+                          .addArgument("-r " + prependLoc + genomeFaGz + ".fai");
     }
     
     if(name.equals("cavemanMstep") || name.equals("cavemanEstep")) {
