@@ -5,6 +5,8 @@ Seqware workflow for Cancer Genome Project core somatic calling pipeline
 
 ## Additional packages for base instance
 
+The following are the packages needed for Ubuntu 12.04:
+
     sudo apt-get install g++
     sudo apt-get install pkg-config
     sudo apt-get install libncurses5-dev
@@ -14,6 +16,11 @@ Seqware workflow for Cancer Genome Project core somatic calling pipeline
     sudo apt-get install libglib2.0-dev
     sudo apt-get install r-base
     sudo apt-get install r-cran-rcolorbrewer
+    sudo apt-get install dh-autoreconf
+    sudo apt-get install zlib1g-dev
+    sudo apt-get install zlib1g-dev 
+    sudo apt-get install libncurses5-dev
+    sudo apt-get install libgd2-xpm-dev 
 
 ## Building CGP codebase
 
@@ -35,7 +42,9 @@ All of these packages have the same installation method.  For installation withi
     wget <package>
     tar zxf vX.X.X.tar.gz
     cd <package>
-    ./setup.pl .../SeqWare-CGP-SomaticCore/workflow/bin/opt
+    ./setup.pl ../SeqWare-CGP-SomaticCore/workflow/bin/opt
+
+Note, PCAP uses a "setup.sh" and not "setup.pl".
 
 Once brass is publicly available I will add a script to automate this fully.
 
