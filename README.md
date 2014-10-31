@@ -22,6 +22,7 @@ The following are the packages needed for Ubuntu 12.04:
     sudo apt-get install zlib1g-dev 
     sudo apt-get install libncurses5-dev
     sudo apt-get install libgd2-xpm-dev 
+    sudo apt-get install r-cran-rcolorbrewer
 
 ## Building CGP codebase
 
