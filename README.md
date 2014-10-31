@@ -48,6 +48,11 @@ All of these packages have the same installation method.  For installation withi
 
 Note, PCAP uses a "setup.sh" and not "setup.pl".
 
+Note, the workflow references velveth but it compiles/installs as velvet95h. You need to do something similar to:
+
+    seqware@master:/mnt/SeqWare-CGP-SomaticCore/workflow/bin/opt/bin$ cp velvet95g velvetg
+    seqware@master:/mnt/SeqWare-CGP-SomaticCore/workflow/bin/opt/bin$ cp velvet95h velveth
+
 Once brass is publicly available I will add a script to automate this fully.
 
 ## Host currently needs reconf for SGE
