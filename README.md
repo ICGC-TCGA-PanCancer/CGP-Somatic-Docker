@@ -15,6 +15,7 @@ The following are the packages needed for Ubuntu 12.04:
     sudo apt-get install libpstreams-dev
     sudo apt-get install libglib2.0-dev
     sudo apt-get install r-base
+    sudo apt-get install r-base-core
     sudo apt-get install r-cran-rcolorbrewer
     sudo apt-get install dh-autoreconf
     sudo apt-get install zlib1g-dev
