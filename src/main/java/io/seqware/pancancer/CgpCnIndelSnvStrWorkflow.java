@@ -174,9 +174,13 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       // pindel specific
       refExclude = getProperty("refExclude");
 
+      // used for upload too so always get it
+      if(hasPropertyAndNotNull("gnosServer")) {
+        gnosServer = getProperty("gnosServer");
+      }      
+      
       // test mode
       if(!testMode) {
-        gnosServer = getProperty("gnosServer");
         pemFile = getProperty("pemFile");
       }
 
@@ -561,7 +565,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       .addArgument("--tarball-md5sum-files " + tarmd5s)
       .addArgument("--outdir " + OUTDIR + "/upload")
       .addArgument("--key " + pemFile)
-      .addArgument("--upload-url " + gnosServer)
+      .addArgument("--upload-url " + uploadServer)
       ;
     try {
       if(hasPropertyAndNotNull("study-refname-override")) {
@@ -570,7 +574,6 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       if(hasPropertyAndNotNull("analysis-center-override")) {
         thisJob.getCommand().addArgument("--analysis-center-override " + getProperty("analysis-center-override"));
       }
-      
       if(hasPropertyAndNotNull("upload-test")) {
         thisJob.getCommand().addArgument("--test ");
       }
