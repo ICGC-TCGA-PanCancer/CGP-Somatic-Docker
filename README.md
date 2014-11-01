@@ -15,12 +15,14 @@ The following are the packages needed for Ubuntu 12.04:
     sudo apt-get install libpstreams-dev
     sudo apt-get install libglib2.0-dev
     sudo apt-get install r-base
+    sudo apt-get install r-base-core
     sudo apt-get install r-cran-rcolorbrewer
     sudo apt-get install dh-autoreconf
     sudo apt-get install zlib1g-dev
     sudo apt-get install zlib1g-dev 
     sudo apt-get install libncurses5-dev
     sudo apt-get install libgd2-xpm-dev 
+    sudo apt-get install r-cran-rcolorbrewer
 
 ## Building CGP codebase
 
@@ -45,6 +47,11 @@ All of these packages have the same installation method.  For installation withi
     ./setup.pl ../SeqWare-CGP-SomaticCore/workflow/bin/opt
 
 Note, PCAP uses a "setup.sh" and not "setup.pl".
+
+Note, the workflow references velveth but it compiles/installs as velvet95h. You need to do something similar to:
+
+    seqware@master:/mnt/SeqWare-CGP-SomaticCore/workflow/bin/opt/bin$ cp velvet95g velvetg
+    seqware@master:/mnt/SeqWare-CGP-SomaticCore/workflow/bin/opt/bin$ cp velvet95h velveth
 
 Once brass is publicly available I will add a script to automate this fully.
 
