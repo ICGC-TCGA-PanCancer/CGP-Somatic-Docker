@@ -555,7 +555,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     }
     
     thisJob.getCommand()
-      .addArgument("gnos_upload_vcf.pl")
+      .addArgument(getWorkflowBaseDir()+ "/bin/gnos_upload_vcf.pl")
       .addArgument("--metadata-urls " + metadataUrls)
       .addArgument("--vcfs " + vcfs)
       .addArgument("--vcf-md5sum-files" + vcfmd5s)
