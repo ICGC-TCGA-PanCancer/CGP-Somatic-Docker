@@ -18,9 +18,7 @@ my $in_type = shift @ARGV;
 my $in_base_vcf = shift @ARGV;
 my $in_workflow_name = shift @ARGV;
 my $in_somatic_or_germline = shift @ARGV;
-
-my $currdate = `date +\%Y\%m\%d`;
-chomp $currdate;
+my $in_currdate = @ARGV;
 
 my $aliquot_id_from_bam = get_aliquot_id_from_bam($in_tumour_bam);
 copy_rename_vcfs($in_output_folder, $aliquot_id_from_bam, $in_type, $in_to_process, $in_base_vcf);
@@ -30,10 +28,10 @@ sub tar_output {
   my ($output_folder, $aliquot_id, $type, $to_process) = @_;
   # tar --exclude=*/logs -zcf ascat.tar.gz outdir/ascat
   $to_process =~ s|/$||; # make sure not trailing / as will mess up tar
-  my $tar = sprintf 'tar --exclude=*/logs -zcf %s.tar.gz %s', "$output_folder/$aliquot_id.$in_workflow_name.$currdate.$in_somatic_or_germline.$type", $to_process;
+  my $tar = sprintf 'tar --exclude=*/logs -zcf %s.tar.gz %s', "$output_folder/$aliquot_id.$in_workflow_name.$in_currdate.$in_somatic_or_germline.$type", $to_process;
   my ($stdout, $stderr, $exit) = capture { system($tar); };
   die $stderr if($exit != 0);
-  md5file("$output_folder/$aliquot_id.$in_workflow_name.$currdate.$in_somatic_or_germline.$type.tar.gz");
+  md5file("$output_folder/$aliquot_id.$in_workflow_name.$in_currdate.$in_somatic_or_germline.$type.tar.gz");
 }
 
 sub get_aliquot_id_from_bam {
@@ -63,7 +61,7 @@ sub copy_rename_vcfs {
   my ($output_folder, $aliquot_id, $type, $to_process, $base_vcf) = @_;
   for my $f_type(($base_vcf, "$base_vcf.tbi")) {
     my $source = "$to_process/*".$f_type;
-    my $dest = "$output_folder/$aliquot_id.$in_workflow_name.$currdate.$in_somatic_or_germline.$type";
+    my $dest = "$output_folder/$aliquot_id.$in_workflow_name.$in_currdate.$in_somatic_or_germline.$type";
     if($f_type =~ m/\.vcf\.gz$/) {
       $dest .= '.vcf.gz';
     }

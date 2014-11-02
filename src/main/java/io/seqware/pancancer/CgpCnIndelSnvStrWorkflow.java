@@ -1,7 +1,10 @@
 package io.seqware.pancancer;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 import net.sourceforge.seqware.pipeline.workflowV2.AbstractWorkflowDataModel;
@@ -36,6 +39,10 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   private static final String OUTDIR = "outdir";
   
   private boolean testMode=false;
+  
+  // datetime all upload files will be named with
+  DateFormat df = new SimpleDateFormat("yyyyMMdd");
+  String dateString = df.format(Calendar.getInstance().getTime());
 
   private String workflowName = "svcp_1-0-0";
   
@@ -317,7 +324,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     ascatFinaliseJob.setMaxMemory(memAscatFinalise);
     ascatFinaliseJob.addParent(ascatJob);
     
-    Job ascatPackage = packageResults(tumourCount, "ascat", "cnv", tumourBam, "copynumber.caveman.vcf.gz", workflowName, "somatic");
+    Job ascatPackage = packageResults(tumourCount, "ascat", "cnv", tumourBam, "copynumber.caveman.vcf.gz", workflowName, "somatic", dateString);
     ascatPackage.setMaxMemory(memPackageResults);
     ascatPackage.addParent(ascatFinaliseJob);
     
@@ -396,7 +403,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     pindelFlagJob.addParent(pindelMergeJob);
     pindelFlagJob.addParent(cavemanSetupJob);
     
-    Job pindelPackage = packageResults(tumourCount, "pindel", "indel", tumourBam, "flagged.vcf.gz", workflowName, "somatic");
+    Job pindelPackage = packageResults(tumourCount, "pindel", "indel", tumourBam, "flagged.vcf.gz", workflowName, "somatic", dateString);
     pindelPackage.setMaxMemory(memPackageResults);
     pindelPackage.addParent(pindelFlagJob);
     
@@ -450,7 +457,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     brassTabixJob.setMaxMemory(memBrassTabix);
     brassTabixJob.addParent(brassGrassJob);
     
-    Job brassPackage = packageResults(tumourCount, "brass", "sv", tumourBam, "annot.vcf.gz", workflowName, "somatic");
+    Job brassPackage = packageResults(tumourCount, "brass", "sv", tumourBam, "annot.vcf.gz", workflowName, "somatic", dateString);
     brassPackage.setMaxMemory(memPackageResults);
     brassPackage.addParent(brassTabixJob);
     
@@ -516,7 +523,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     cavemanFlagJob.addParent(pindelFlagJob); // PINDEL dependency
     cavemanFlagJob.addParent(cavemanAddIdsJob);
     
-    Job cavemanPackage = packageResults(tumourCount, "caveman", "snv_mnv", tumourBam, "flagged.muts.vcf.gz", workflowName, "somatic");
+    Job cavemanPackage = packageResults(tumourCount, "caveman", "snv_mnv", tumourBam, "flagged.muts.vcf.gz", workflowName, "somatic", dateString);
     cavemanPackage.setMaxMemory(memPackageResults);
     cavemanPackage.addParent(cavemanFlagJob);
     
@@ -597,7 +604,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     return thisJob;
   }
   
-  private Job packageResults(int tumourCount, String algName, String resultType, String tumourBam, String baseVcf, String workflowName, String somaticOrGermline) {
+  private Job packageResults(int tumourCount, String algName, String resultType, String tumourBam, String baseVcf, String workflowName, String somaticOrGermline, String date) {
     //#packageResults.pl outdir 0772aed3-4df7-403f-802a-808df2935cd1/c007f362d965b32174ec030825262714.bam outdir/caveman snv_mnv flagged.muts.vcf.gz
     Job thisJob = getWorkflow().createBashJob("packageResults");
     thisJob.getCommand()
@@ -611,6 +618,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
               .addArgument(baseVcf)
               .addArgument(workflowName)
               .addArgument(somaticOrGermline)
+              .addArgument(date)
       ;
     return thisJob;
   }
