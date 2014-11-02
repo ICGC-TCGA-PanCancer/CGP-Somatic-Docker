@@ -184,7 +184,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       }      
       
       // test mode
-      if(!testMode) {
+      if(!testMode || (hasPropertyAndNotNull("upload-test") && Boolean.valueOf(getProperty("upload-test")))) {
         pemFile = getProperty("pemFile");
       }
 
@@ -566,7 +566,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       .addArgument("perl " + getWorkflowBaseDir()+ "/bin/gnos_upload_vcf.pl")
       .addArgument("--metadata-urls " + metadataUrls)
       .addArgument("--vcfs " + vcfs)
-      .addArgument("--vcf-md5sum-files" + vcfmd5s)
+      .addArgument("--vcf-md5sum-files " + vcfmd5s)
       .addArgument("--vcf-idxs " + tbis)
       .addArgument("--vcf-idx-md5sum-files " + tbimd5s)
       .addArgument("--tarballs " + tars)
@@ -582,7 +582,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       if(hasPropertyAndNotNull("analysis-center-override")) {
         thisJob.getCommand().addArgument("--analysis-center-override " + getProperty("analysis-center-override"));
       }
-      if(hasPropertyAndNotNull("upload-test")) {
+      if(hasPropertyAndNotNull("upload-test") && Boolean.valueOf(getProperty("upload-test"))) {
         thisJob.getCommand().addArgument("--test ");
       }
       if(hasPropertyAndNotNull("upload-skip")) {
