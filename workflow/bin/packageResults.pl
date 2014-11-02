@@ -33,7 +33,7 @@ sub tar_output {
   my $tar = sprintf 'tar --exclude=*/logs -zcf %s.tar.gz %s', "$output_folder/$aliquot_id.$in_workflow_name.$currdate.$in_somatic_or_germline.$type", $to_process;
   my ($stdout, $stderr, $exit) = capture { system($tar); };
   die $stderr if($exit != 0);
-  md5file("$to_process.tar.gz");
+  md5file("$output_folder/$aliquot_id.$in_workflow_name.$currdate.$in_somatic_or_germline.$type.tar.gz");
 }
 
 sub get_aliquot_id_from_bam {
