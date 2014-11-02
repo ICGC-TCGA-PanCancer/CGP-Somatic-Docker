@@ -23,6 +23,10 @@ import org.apache.commons.lang.StringUtils;
  * See the SeqWare API for
  * <a href="http://seqware.github.io/javadoc/stable/apidocs/net/sourceforge/seqware/pipeline/workflowV2/AbstractWorkflowDataModel.html#setupDirectory%28%29">AbstractWorkflowDataModel</a>
  * for more information.
+ * 
+ * TODO:
+ * - Keiran, I think you want to review what happens when test mode and upload-test mode are active.
+ * 
  */
 public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
 
@@ -227,6 +231,10 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
         for(String t : tumourBams) {
           tumourBasJobs.add(null);
         }
+        // only do this if test mode but upload is enabled, we're cheating a bit here but need the values defined with something to do the test upload
+        controlAnalysisId = getProperty("controlAnalysisId");
+        tumourAnalysisIds = Arrays.asList(getProperty("tumourAnalysisIds").split(":"));
+        tumourAliquotIds = Arrays.asList(getProperty("tumourAliquotIds").split(":"));
       }
       else {
         controlAnalysisId = getProperty("controlAnalysisId");
