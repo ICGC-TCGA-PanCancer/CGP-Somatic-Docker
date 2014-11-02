@@ -20,6 +20,7 @@ my $in_workflow_name = shift @ARGV;
 my $in_somatic_or_germline = shift @ARGV;
 
 my $currdate = `date +\%Y\%m\%d`;
+chomp $currdate;
 
 my $aliquot_id_from_bam = get_aliquot_id_from_bam($in_tumour_bam);
 copy_rename_vcfs($in_output_folder, $aliquot_id_from_bam, $in_type, $in_to_process, $in_base_vcf);
