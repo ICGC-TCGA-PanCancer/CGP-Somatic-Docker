@@ -553,7 +553,8 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     String tarmd5s = new String();
     for(String type: types) {
       for(String tumourAliquotId : tumourAliquotIds) {
-        String baseFile = OUTDIR + "/" + tumourAliquotId + "." + workflowName + "." + dateString + "." + type;
+        // TODO: Hardcoded somatic here, is that correct?
+        String baseFile = OUTDIR + "/" + tumourAliquotId + "." + workflowName + "." + dateString + ".somatic." + type;
         if(vcfs.length() > 0) {
           vcfs = vcfs.concat(",");
           tbis = tbis.concat(",");
