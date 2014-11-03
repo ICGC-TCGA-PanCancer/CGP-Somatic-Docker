@@ -656,9 +656,9 @@ END
 
   # VCF files
   for (my $i=0; $i<scalar(@vcf_arr); $i++) {
-    $vcf_arr[$i] =~ /^\S*\/*([^\/]+)$/;
+    $vcf_arr[$i] =~ /^\S*\/([^\/]+)$/;
     my $curr_vcf = $1;
-    $vcfs_idx_arr[$i] =~ /^\S*\/*([^\/]+)$/;
+    $vcfs_idx_arr[$i] =~ /^\S*\/([^\/]+)$/;
     my $curr_index = $1;
     $analysis_xml .= "          <FILE filename=\"$curr_vcf\" filetype=\"vcf\" checksum_method=\"MD5\" checksum=\"$vcf_checksums[$i]\" />\n";
     $analysis_xml .= "          <FILE filename=\"$curr_index\" filetype=\"idx\" checksum_method=\"MD5\" checksum=\"$idx_checksums[$i]\" />\n";
@@ -666,7 +666,7 @@ END
 
   # Tarball files
   for (my $i=0; $i<scalar(@tarball_arr); $i++) {
-    $tarball_arr[$i] =~ /^\S*\/*([^\/]+)$/;
+    $tarball_arr[$i] =~ /^\S*\/([^\/]+)$/;
     my $curr_tar = $1;
     $analysis_xml .= "          <FILE filename=\"$curr_tar\" filetype=\"tar\" checksum_method=\"MD5\" checksum=\"$tarball_checksums[$i]\" />\n";
   }
