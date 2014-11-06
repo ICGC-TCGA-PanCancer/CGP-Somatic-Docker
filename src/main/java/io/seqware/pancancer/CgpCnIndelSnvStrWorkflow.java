@@ -35,6 +35,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
 
   private static String OUTDIR = "outdir";
   private boolean testMode=false;
+  private boolean cleanup = false;
   
   // datetime all upload files will be named with
   DateFormat df = new SimpleDateFormat("yyyyMMdd");
@@ -111,6 +112,11 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   @Override
   public Map<String, SqwFile> setupFiles() {
     try {
+      
+      if(hasPropertyAndNotNull("cleanup")) {
+        cleanup = Boolean.valueOf(getProperty("cleanup"));
+      }
+      
       if(hasPropertyAndNotNull("testMode")) {
         testMode=Boolean.valueOf(getProperty("testMode"));
         System.err.println("WARNING\n\tRunning in test mode, direct access BAM files will be used, change 'testMode' in ini file to disable\n");
@@ -131,7 +137,6 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       memGnosDownload = getProperty("memGnosDownload");
       memPackageResults = getProperty("memPackageResults");
       memUpload = getProperty("memUpload");
-      
       
       memAlleleCount = getProperty("memAlleleCount");
       memAscat = getProperty("memAscat");
@@ -288,6 +293,19 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       Job uploadJob = vcfUpload(resultTypes, controlAnalysisId, tumourAnalysisIds, tumourAliquotIds);
       uploadJob.setMaxMemory(memUpload);
       uploadJob.addParent(cavemanTbiCleanJob);
+      
+      if (cleanup) {
+        // if we upload to GNOS then go ahead and delete all the large files
+        Job cleanJob = postUploadCleanJob();
+        cleanJob.addParent(uploadJob);
+      }
+      
+    } else {
+      // delete just the BAM inputs and not the output dir
+      if (cleanup) {
+        Job cleanInputsJob = cleanInputsJob();
+        cleanInputsJob.addParent(cavemanTbiCleanJob);
+      }
     }
   }
 
@@ -668,6 +686,18 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   private Job cavemanTbiCleanJob() {
     Job thisJob = getWorkflow().createBashJob("CaveTbiClean");
       thisJob.getCommand().addArgument("rm -f " + OUTDIR + "/*/unmatchedNormal.*.vcf.gz.tbi");
+    return thisJob;
+  }
+  
+  private Job postUploadCleanJob() {
+    Job thisJob = getWorkflow().createBashJob("postUploadClean");
+    thisJob.getCommand().addArgument("rm -rf ./*/*.bam " + OUTDIR);
+    return thisJob;
+  }
+  
+  private Job cleanInputsJob() {
+    Job thisJob = getWorkflow().createBashJob("cleanInputs");
+    thisJob.getCommand().addArgument("rm -f ./*/*.bam");
     return thisJob;
   }
   
