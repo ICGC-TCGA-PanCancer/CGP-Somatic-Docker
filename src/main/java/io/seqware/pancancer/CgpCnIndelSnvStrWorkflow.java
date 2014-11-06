@@ -639,7 +639,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
             .addArgument(installBase)
             .addArgument("xml_to_bas.pl")
             .addArgument("-d " + gnosServer + "/cghub/metadata/analysisFull/" + analysisId)
-            .addArgument("-o " + sampleBam + ".bas")
+            .addArgument("-o " + analysisId + "/" + sampleBam + ".bas")
             ;
     return thisJob;
   }
