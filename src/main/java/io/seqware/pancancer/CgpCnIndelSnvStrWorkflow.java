@@ -33,11 +33,7 @@ import org.apache.commons.lang.StringUtils;
  */
 public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
 
-  private boolean manualOutput=false;
-  private String catPath, echoPath;
-  private String greeting ="";
-  private static final String OUTDIR = "outdir";
-  
+  private static String OUTDIR = "outdir";
   private boolean testMode=false;
   
   // datetime all upload files will be named with
@@ -84,16 +80,21 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   private void init() {
     try {
       //optional properties
-      if (hasPropertyAndNotNull("manual_output")) {
-        manualOutput = Boolean.valueOf(getProperty("manual_output"));
+      String outDir = OUTDIR;
+      String outPrefix = "";
+      if (hasPropertyAndNotNull("output_dir")) {
+        outDir = getProperty("output_dir");
       }
-      if (hasPropertyAndNotNull("greeting")) {
-        greeting = getProperty("greeting");
+      if (hasPropertyAndNotNull("output_prefix")) {
+        outPrefix = getProperty("output_prefix");
       }
-      //these two properties are essential to the workflow. If they are null or do not
-      //exist in the INI, the workflow should exit.
-      catPath = getProperty("cat");
-      echoPath = getProperty("echo");
+      if (!"".equals(outPrefix)) {
+        if (outPrefix.endsWith("/")) {
+          OUTDIR = outPrefix+outDir;
+        } else {
+          OUTDIR = outPrefix + "/" + outDir;
+        }
+      }
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
