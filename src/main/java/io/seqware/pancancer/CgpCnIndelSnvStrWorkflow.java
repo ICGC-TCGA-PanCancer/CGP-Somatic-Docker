@@ -76,7 +76,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
                   //general variables
                   installBase, refBase, genomeFaGz;
   
-  private int pindelInputThreads, coresAddressable;
+  private int coresAddressable;
   
   private void init() {
     try {
@@ -180,12 +180,6 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
 
       // Specific to ASCAT workflow //
       gender = getProperty("gender");
-      
-      // Specific to PINDEL workflow //
-      pindelInputThreads = Integer.valueOf(getProperty("pindelInputThreads"));
-      if(coresAddressable < pindelInputThreads) {
-        pindelInputThreads = 1;
-      }
       
       // Specific to Caveman workflow //
       tabixSrvUri = getProperty("tabixSrvUri");
@@ -804,6 +798,13 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
               .addArgument("-n " + controlBam)
               ;
     if(name.equals("pindelInput")) {
+      int pindelInputThreads;
+      if(coresAddressable > 4) {
+        pindelInputThreads = 4;
+      }
+      else {
+        pindelInputThreads = coresAddressable;
+      }
       thisJob.getCommand().addArgument("-c " + pindelInputThreads);
       thisJob.setThreads(pindelInputThreads);
     }
