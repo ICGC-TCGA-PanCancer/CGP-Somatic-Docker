@@ -1,7 +1,10 @@
 package io.seqware.pancancer;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 import net.sourceforge.seqware.pipeline.workflowV2.AbstractWorkflowDataModel;
@@ -23,16 +26,23 @@ import org.apache.commons.lang.StringUtils;
  * See the SeqWare API for
  * <a href="http://seqware.github.io/javadoc/stable/apidocs/net/sourceforge/seqware/pipeline/workflowV2/AbstractWorkflowDataModel.html#setupDirectory%28%29">AbstractWorkflowDataModel</a>
  * for more information.
+ * 
+ * TODO:
+ * - Keiran, I think you want to review what happens when test mode and upload-test mode are active.
+ * 
  */
 public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
 
-  private boolean manualOutput=false;
-  private String catPath, echoPath;
-  private String greeting ="";
-  private static final String OUTDIR = "outdir";
-  
+  private static String OUTDIR = "outdir";
   private boolean testMode=false;
+  private boolean cleanup = false;
+  
+  // datetime all upload files will be named with
+  DateFormat df = new SimpleDateFormat("yyyyMMdd");
+  String dateString = df.format(Calendar.getInstance().getTime());
 
+  private String workflowName = "svcp_1-0-0";
+  
   // MEMORY variables //
   private String  memBasFileGet, memGnosDownload, memPackageResults, memUpload,
                   // ascat memory
@@ -71,16 +81,21 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   private void init() {
     try {
       //optional properties
-      if (hasPropertyAndNotNull("manual_output")) {
-        manualOutput = Boolean.valueOf(getProperty("manual_output"));
+      String outDir = OUTDIR;
+      String outPrefix = "";
+      if (hasPropertyAndNotNull("output_dir")) {
+        outDir = getProperty("output_dir");
       }
-      if (hasPropertyAndNotNull("greeting")) {
-        greeting = getProperty("greeting");
+      if (hasPropertyAndNotNull("output_prefix")) {
+        outPrefix = getProperty("output_prefix");
       }
-      //these two properties are essential to the workflow. If they are null or do not
-      //exist in the INI, the workflow should exit.
-      catPath = getProperty("cat");
-      echoPath = getProperty("echo");
+      if (!"".equals(outPrefix)) {
+        if (outPrefix.endsWith("/")) {
+          OUTDIR = outPrefix+outDir;
+        } else {
+          OUTDIR = outPrefix + "/" + outDir;
+        }
+      }
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
@@ -97,6 +112,11 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   @Override
   public Map<String, SqwFile> setupFiles() {
     try {
+      
+      if(hasPropertyAndNotNull("cleanup")) {
+        cleanup = Boolean.valueOf(getProperty("cleanup"));
+      }
+      
       if(hasPropertyAndNotNull("testMode")) {
         testMode=Boolean.valueOf(getProperty("testMode"));
         System.err.println("WARNING\n\tRunning in test mode, direct access BAM files will be used, change 'testMode' in ini file to disable\n");
@@ -117,7 +137,6 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       memGnosDownload = getProperty("memGnosDownload");
       memPackageResults = getProperty("memPackageResults");
       memUpload = getProperty("memUpload");
-      
       
       memAlleleCount = getProperty("memAlleleCount");
       memAscat = getProperty("memAscat");
@@ -174,9 +193,13 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       // pindel specific
       refExclude = getProperty("refExclude");
 
-      // test mode
-      if(!testMode) {
+      // used for upload too so always get it
+      if(hasPropertyAndNotNull("gnosServer")) {
         gnosServer = getProperty("gnosServer");
+      }      
+      
+      // test mode
+      if(!testMode || (hasPropertyAndNotNull("upload-test") && Boolean.valueOf(getProperty("upload-test")))) {
         pemFile = getProperty("pemFile");
       }
 
@@ -223,6 +246,10 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
         for(String t : tumourBams) {
           tumourBasJobs.add(null);
         }
+        // only do this if test mode but upload is enabled, we're cheating a bit here but need the values defined with something to do the test upload
+        controlAnalysisId = getProperty("controlAnalysisId");
+        tumourAnalysisIds = Arrays.asList(getProperty("tumourAnalysisIds").split(":"));
+        tumourAliquotIds = Arrays.asList(getProperty("tumourAliquotIds").split(":"));
       }
       else {
         controlAnalysisId = getProperty("controlAnalysisId");
@@ -266,6 +293,19 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       Job uploadJob = vcfUpload(resultTypes, controlAnalysisId, tumourAnalysisIds, tumourAliquotIds);
       uploadJob.setMaxMemory(memUpload);
       uploadJob.addParent(cavemanTbiCleanJob);
+      
+      if (cleanup) {
+        // if we upload to GNOS then go ahead and delete all the large files
+        Job cleanJob = postUploadCleanJob();
+        cleanJob.addParent(uploadJob);
+      }
+      
+    } else {
+      // delete just the BAM inputs and not the output dir
+      if (cleanup) {
+        Job cleanInputsJob = cleanInputsJob();
+        cleanInputsJob.addParent(cavemanTbiCleanJob);
+      }
     }
   }
 
@@ -303,7 +343,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     ascatFinaliseJob.setMaxMemory(memAscatFinalise);
     ascatFinaliseJob.addParent(ascatJob);
     
-    Job ascatPackage = packageResults(tumourCount, "ascat", "cnv", tumourBam, "copynumber.caveman.vcf.gz");
+    Job ascatPackage = packageResults(tumourCount, "ascat", "cnv", tumourBam, "copynumber.caveman.vcf.gz", workflowName, "somatic", dateString);
     ascatPackage.setMaxMemory(memPackageResults);
     ascatPackage.addParent(ascatFinaliseJob);
     
@@ -382,7 +422,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     pindelFlagJob.addParent(pindelMergeJob);
     pindelFlagJob.addParent(cavemanSetupJob);
     
-    Job pindelPackage = packageResults(tumourCount, "pindel", "indel", tumourBam, "flagged.vcf.gz");
+    Job pindelPackage = packageResults(tumourCount, "pindel", "indel", tumourBam, "flagged.vcf.gz", workflowName, "somatic", dateString);
     pindelPackage.setMaxMemory(memPackageResults);
     pindelPackage.addParent(pindelFlagJob);
     
@@ -436,7 +476,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     brassTabixJob.setMaxMemory(memBrassTabix);
     brassTabixJob.addParent(brassGrassJob);
     
-    Job brassPackage = packageResults(tumourCount, "brass", "sv", tumourBam, "annot.vcf.gz");
+    Job brassPackage = packageResults(tumourCount, "brass", "sv", tumourBam, "annot.vcf.gz", workflowName, "somatic", dateString);
     brassPackage.setMaxMemory(memPackageResults);
     brassPackage.addParent(brassTabixJob);
     
@@ -502,7 +542,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     cavemanFlagJob.addParent(pindelFlagJob); // PINDEL dependency
     cavemanFlagJob.addParent(cavemanAddIdsJob);
     
-    Job cavemanPackage = packageResults(tumourCount, "caveman", "snv_mnv", tumourBam, "flagged.muts.vcf.gz");
+    Job cavemanPackage = packageResults(tumourCount, "caveman", "snv_mnv", tumourBam, "flagged.muts.vcf.gz", workflowName, "somatic", dateString);
     cavemanPackage.setMaxMemory(memPackageResults);
     cavemanPackage.addParent(cavemanFlagJob);
     
@@ -532,7 +572,8 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     String tarmd5s = new String();
     for(String type: types) {
       for(String tumourAliquotId : tumourAliquotIds) {
-        String baseFile = OUTDIR + "/" + tumourAliquotId + "_" + type;
+        // TODO: Hardcoded somatic here, is that correct?
+        String baseFile = OUTDIR + "/" + tumourAliquotId + "." + workflowName + "." + dateString + ".somatic." + type;
         if(vcfs.length() > 0) {
           vcfs = vcfs.concat(",");
           tbis = tbis.concat(",");
@@ -551,17 +592,17 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     }
     
     thisJob.getCommand()
-      .addArgument("gnos_upload_vcf.pl")
+      .addArgument("perl " + getWorkflowBaseDir()+ "/bin/gnos_upload_vcf.pl")
       .addArgument("--metadata-urls " + metadataUrls)
       .addArgument("--vcfs " + vcfs)
-      .addArgument("--vcf-md5sum-files" + vcfmd5s)
+      .addArgument("--vcf-md5sum-files " + vcfmd5s)
       .addArgument("--vcf-idxs " + tbis)
       .addArgument("--vcf-idx-md5sum-files " + tbimd5s)
       .addArgument("--tarballs " + tars)
       .addArgument("--tarball-md5sum-files " + tarmd5s)
       .addArgument("--outdir " + OUTDIR + "/upload")
       .addArgument("--key " + pemFile)
-      .addArgument("--upload-url " + gnosServer)
+      .addArgument("--upload-url " + uploadServer)
       ;
     try {
       if(hasPropertyAndNotNull("study-refname-override")) {
@@ -570,8 +611,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       if(hasPropertyAndNotNull("analysis-center-override")) {
         thisJob.getCommand().addArgument("--analysis-center-override " + getProperty("analysis-center-override"));
       }
-      
-      if(hasPropertyAndNotNull("upload-test")) {
+      if(hasPropertyAndNotNull("upload-test") && Boolean.valueOf(getProperty("upload-test"))) {
         thisJob.getCommand().addArgument("--test ");
       }
       if(hasPropertyAndNotNull("upload-skip")) {
@@ -584,7 +624,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     return thisJob;
   }
   
-  private Job packageResults(int tumourCount, String algName, String resultType, String tumourBam, String baseVcf) {
+  private Job packageResults(int tumourCount, String algName, String resultType, String tumourBam, String baseVcf, String workflowName, String somaticOrGermline, String date) {
     //#packageResults.pl outdir 0772aed3-4df7-403f-802a-808df2935cd1/c007f362d965b32174ec030825262714.bam outdir/caveman snv_mnv flagged.muts.vcf.gz
     Job thisJob = getWorkflow().createBashJob("packageResults");
     thisJob.getCommand()
@@ -596,6 +636,9 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
               .addArgument(OUTDIR + "/" + tumourCount + "/" + algName)
               .addArgument(resultType)
               .addArgument(baseVcf)
+              .addArgument(workflowName)
+              .addArgument(somaticOrGermline)
+              .addArgument(date)
       ;
     return thisJob;
   }
@@ -615,7 +658,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
             .addArgument(installBase)
             .addArgument("xml_to_bas.pl")
             .addArgument("-d " + gnosServer + "/cghub/metadata/analysisFull/" + analysisId)
-            .addArgument("-o " + sampleBam + ".bas")
+            .addArgument("-o " + analysisId + "/" + sampleBam + ".bas")
             ;
     return thisJob;
   }
@@ -643,6 +686,18 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   private Job cavemanTbiCleanJob() {
     Job thisJob = getWorkflow().createBashJob("CaveTbiClean");
       thisJob.getCommand().addArgument("rm -f " + OUTDIR + "/*/unmatchedNormal.*.vcf.gz.tbi");
+    return thisJob;
+  }
+  
+  private Job postUploadCleanJob() {
+    Job thisJob = getWorkflow().createBashJob("postUploadClean");
+    thisJob.getCommand().addArgument("rm -rf ./*/*.bam " + OUTDIR);
+    return thisJob;
+  }
+  
+  private Job cleanInputsJob() {
+    Job thisJob = getWorkflow().createBashJob("cleanInputs");
+    thisJob.getCommand().addArgument("rm -f ./*/*.bam");
     return thisJob;
   }
   
