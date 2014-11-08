@@ -737,7 +737,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     else {
       thisJob.getCommand().addArgument("-tb " + prependLoc + tumourBam)
                           .addArgument("-nb " + prependLoc + controlBam)
-                          .addArgument("-r " + prependLoc + genomeFaGz + ".fai");
+                          .addArgument("-r " + genomeFaGz + ".fai");
     }
     
     if(name.equals("cavemanMstep") || name.equals("cavemanEstep")) {
