@@ -698,7 +698,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   private Job cavemanBaseJob(int tumourCount, String tumourBam, String controlBam, String name, String process, int index) {
     String ascatContamFile = OUTDIR + "/" + tumourCount + "/ascat/*.samplestatistics.csv";
     
-    Job thisJob = getWorkflow().createBashJob(name);
+    Job thisJob = prepTimedJob(tumourCount, name, process, index);
     String prependLoc = "";
     if(name.equals("cavemanFlag")) {
       // very simplistic way to get round clash of tabix file downloads
@@ -745,7 +745,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   }
 
   private Job cgpAscatBaseJob(int tumourCount, String tumourBam, String controlBam, String name, String process, int index) {
-    Job thisJob = getWorkflow().createBashJob(name);
+    Job thisJob = prepTimedJob(tumourCount, name, process, index);
     thisJob.getCommand()
               .addArgument(getWorkflowBaseDir()+ "/bin/wrapper.sh")
               .addArgument(installBase)
@@ -775,7 +775,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   }
 
   private Job pindelBaseJob(int tumourCount, String tumourBam, String controlBam, String name, String process, int index) {
-    Job thisJob = getWorkflow().createBashJob(name);
+    Job thisJob = prepTimedJob(tumourCount, name, process, index);
     thisJob.getCommand()
               .addArgument(getWorkflowBaseDir()+ "/bin/wrapper.sh")
               .addArgument(installBase)
@@ -811,8 +811,16 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     return thisJob;
   }
 
-  private Job brassBaseJob(int tumourCount, String tumourBam, String controlBam, String name, String process, int index) {
+  private Job prepTimedJob(int tumourCount, String name, String process, int index) {
+    String timeFile = OUTDIR + "/time_" + tumourCount + "_" + name + "_" + process + "_" + index;
     Job thisJob = getWorkflow().createBashJob(name);
+    thisJob.getCommand()
+      .addArgument("/usr/bin/time /usr/bin/time --format=\"Wall %e\\nUser %U\\nSystem %S\\nMaxKb %M\\n\" --output=" + timeFile);
+    return thisJob;
+  }
+  
+  private Job brassBaseJob(int tumourCount, String tumourBam, String controlBam, String name, String process, int index) {
+    Job thisJob = prepTimedJob(tumourCount, name, process, index);
     thisJob.getCommand()
               .addArgument(getWorkflowBaseDir()+ "/bin/wrapper.sh")
               .addArgument(installBase)

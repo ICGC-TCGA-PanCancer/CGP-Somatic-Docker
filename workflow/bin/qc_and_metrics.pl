@@ -10,8 +10,6 @@ use autodie qw(:all);
 use Capture::Tiny qw(capture);
 use JSON;
 
-use Data::Dumper;
-
 if(@ARGV < 3) {
   die "USAGE: path_for_out.json root_of_outdir ordered.bam [ordered.bam2]";
 }
@@ -20,7 +18,6 @@ my $json_out = shift @ARGV;
 my $base_dir = shift @ARGV;
 my @ordered_bams = @ARGV;
 my $final_qc = qc_data($base_dir, @ordered_bams);
-warn Dumper($final_qc);
 my $encoded = encode_json $final_qc;
 open my $JOUT, '>', $json_out;
 print $JOUT $encoded;
@@ -80,7 +77,7 @@ sub _qc_brass {
   die "Error occurred while counting $to_process/*.annot.bedpe" if($stderr);
   chomp $stdout;
   $stdout=~ m/^([[:digit:]]+)/;
-  $qc{'assembled'} = $stdout;
+  $qc{'assembled'} = $1;
   return \%qc;
 }
 
@@ -123,7 +120,8 @@ sub _qc_pindel {
   ($stdout, $stderr, $exit) = capture { system(qq{wc -l $to_process/*.germline.bed}); } ;
   die "Error occurred while counting records in $to_process/*.germline.bed" if($stderr);
   chomp $stdout;
-  $qc{'likely_germline'} = $stdout;
+  $stdout=~ m/^([[:digit:]]+)/;
+  $qc{'likely_germline'} = $1;
   return \%qc;
 }
 
