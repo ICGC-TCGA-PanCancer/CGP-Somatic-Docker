@@ -7,22 +7,18 @@ Seqware workflow for Cancer Genome Project core somatic calling pipeline
 
 The following are the packages needed for Ubuntu 12.04:
 
-    sudo apt-get install g++
-    sudo apt-get install pkg-config
+    # added due to some issues during setup of the new HVM host
+    sudo apt-get autoclean
+    sudo apt-get update
+    sudo apt-get upgrade
+    sudo apt-get install g++ pkg-config dh-autoreconf
     sudo apt-get install libncurses5-dev
     sudo apt-get install libgd2-xpm-dev
     sudo apt-get install libboost-all-dev
     sudo apt-get install libpstreams-dev
     sudo apt-get install libglib2.0-dev
-    sudo apt-get install r-base
-    sudo apt-get install r-base-core
-    sudo apt-get install r-cran-rcolorbrewer
-    sudo apt-get install dh-autoreconf
+    sudo apt-get install r-base r-base-core r-cran-rcolorbrewer
     sudo apt-get install zlib1g-dev
-    sudo apt-get install zlib1g-dev 
-    sudo apt-get install libncurses5-dev
-    sudo apt-get install libgd2-xpm-dev 
-    sudo apt-get install r-cran-rcolorbrewer
     # for the vcf-uploader
     sudo apt-get install libxml-dom-perl libxml-xpath-perl libjson-perl libxml-libxml-perl
 
@@ -55,8 +51,6 @@ Note, the workflow references velveth but it compiles/installs as velvet95h. You
     seqware@master:/mnt/SeqWare-CGP-SomaticCore/workflow/bin/opt/bin$ cp velvet95g velvetg
     seqware@master:/mnt/SeqWare-CGP-SomaticCore/workflow/bin/opt/bin$ cp velvet95h velveth
 
-Once brass is publicly available I will add a script to automate this fully.
-
 ## Host currently needs reconf for SGE
 
     sudo qconf -aattr queue slots "[master=`nproc`]" main.q
@@ -64,5 +58,7 @@ Once brass is publicly available I will add a script to automate this fully.
     sudo qconf -rattr exechost complex_values h_vmem=`free -b|grep Mem | cut -d" " -f5` master
 
 ## Add following to ~seqware/.bash_profile
+
+This is fixed on the HVM AMI
 
     export OOZIE_URL=http://master:11000/oozie
