@@ -34,6 +34,7 @@ import org.apache.commons.lang.StringUtils;
 public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
 
   private static String OUTDIR = "outdir";
+  private static String TIMEDIR;
   private boolean testMode=false;
   private boolean cleanup = false;
   
@@ -99,6 +100,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
+    TIMEDIR = OUTDIR + "/timings";
   }
 
   @Override
@@ -107,6 +109,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     init();
     // creates a dir1 directory in the current working directory where the workflow runs
     addDirectory(OUTDIR);
+    addDirectory(TIMEDIR);
   }
 
   @Override
@@ -812,7 +815,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   }
 
   private Job prepTimedJob(int tumourCount, String name, String process, int index) {
-    String timeFile = OUTDIR + "/time_" + tumourCount + "_" + name + "_" + process + "_" + index;
+    String timeFile = TIMEDIR + "/" + tumourCount + "_" + name + "_" + process + "_" + index;
     Job thisJob = getWorkflow().createBashJob(name);
     thisJob.getCommand()
       .addArgument("/usr/bin/time /usr/bin/time --format=\"Wall %e\\nUser %U\\nSystem %S\\nMaxKb %M\\n\" --output=" + timeFile);
