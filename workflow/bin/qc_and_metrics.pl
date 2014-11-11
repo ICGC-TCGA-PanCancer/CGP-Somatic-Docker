@@ -19,9 +19,9 @@ if(@ARGV < 3) {
 my $json_out = shift @ARGV;
 my $base_dir = shift @ARGV;
 my @ordered_bams = @ARGV;
-my $qc = qc_data($base_dir, @ordered_bams);
-warn Dumper($qc);
-my $encoded = encode_json $qc;
+my $final_qc = qc_data($base_dir, @ordered_bams);
+warn Dumper($final_qc);
+my $encoded = encode_json $final_qc;
 open my $JOUT, '>', $json_out;
 print $JOUT $encoded;
 close $JOUT;
@@ -73,11 +73,13 @@ sub _qc_brass {
   my ($stdout, $stderr, $exit) = capture { system(qq{wc -l $to_process/*.groups.filtered.bedpe}) };
   die "Error occurred while counting $to_process/*.groups.filtered.bedpe" if($stderr);
   chomp $stdout;
-  $qc{'groups'} = $stdout;
+  $stdout=~ m/^([[:digit:]]+)/;
+  $qc{'groups'} = $1;
 
   ($stdout, $stderr, $exit) = capture { system(qq{wc -l $to_process/*.annot.bedpe}) };
   die "Error occurred while counting $to_process/*.annot.bedpe" if($stderr);
   chomp $stdout;
+  $stdout=~ m/^([[:digit:]]+)/;
   $qc{'assembled'} = $stdout;
   return \%qc;
 }
@@ -151,5 +153,5 @@ sub _qc_caveman {
   chomp $stdout;
   $qc{'real_copynumber'} = $stdout ? 0 : 1;
 
-  return \$qc;
+  return \%qc;
 }
