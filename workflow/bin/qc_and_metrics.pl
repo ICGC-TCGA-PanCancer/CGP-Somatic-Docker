@@ -32,10 +32,10 @@ sub qc_data {
   for my $bam(@bams) {
     my $aliqout_id = get_aliquot_id_from_bam($bam);
     my $to_process = "$base_dir/$count";
-    $full_qc{$aliqout_id}{'sv'} = _qc_brass("$to_process/brass")
-    $full_qc{$aliqout_id}{'snv_mnv'} = _qc_caveman("$to_process/caveman")
-    $full_qc{$aliqout_id}{'indel'} = _qc_pindel("$to_process/pindel")
-    $full_qc{$aliqout_id}{'cnv'} = _qc_ascat("$to_process/ascat")
+    $full_qc{$aliqout_id}{'sv'} = _qc_brass("$to_process/brass");
+    $full_qc{$aliqout_id}{'snv_mnv'} = _qc_caveman("$to_process/caveman");
+    $full_qc{$aliqout_id}{'indel'} = _qc_pindel("$to_process/pindel");
+    $full_qc{$aliqout_id}{'cnv'} = _qc_ascat("$to_process/ascat");
     $count++;
   }
   return \%full_qc;
