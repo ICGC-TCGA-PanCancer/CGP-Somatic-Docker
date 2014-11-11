@@ -6,6 +6,7 @@ use Capture::Tiny qw(capture);
 
 # Will process the specified folder, expects to find a *.vcf.gz and *.vcf.gz.tbi file
 # then tar.gz whole folder (content is not renamed in anyway)
+# also generates the json QC and timing metrics files
 
 if(@ARGV < 5) {
   die "USAGE: ./packageResults.pl output_folder tumour.bam to_process type primary_vcf_extension\n"
@@ -34,6 +35,7 @@ sub tar_output {
   md5file("$output_folder/$aliquot_id.$in_workflow_name.$in_currdate.$in_somatic_or_germline.$type.tar.gz");
 }
 
+# code duplication in qc_and_metrics.pl
 sub get_aliquot_id_from_bam {
   my $bam = shift;
   # samtools view -H PD13491a/PD13491a.bam | grep '^@RG' | perl -ne 'm/\tSM:([^\t]+)/; $x{$1}=1; END{print join("\n",keys %x),"\n";};'
