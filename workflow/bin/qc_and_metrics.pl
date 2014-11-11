@@ -10,16 +10,21 @@ use autodie qw(:all);
 use Capture::Tiny qw(capture);
 use JSON;
 
-if(@ARGV < 3) {
-  die "USAGE: path_for_out.json root_of_outdir ordered.bam [ordered.bam2]";
+if(@ARGV < 2) {
+  die "USAGE: rootOfOutdir ordered.bam [ordered.bam2]";
 }
 
-my $json_out = shift @ARGV;
 my $base_dir = shift @ARGV;
 my @ordered_bams = @ARGV;
 my $final_qc = qc_data($base_dir, @ordered_bams);
 my $encoded = encode_json $final_qc;
-open my $JOUT, '>', $json_out;
+open my $JOUT, '>', "$base_dir/qc_metrics.json";
+print $JOUT $encoded;
+close $JOUT;
+
+my $final_met = rum_metrics($base_dir, @ordered_bams);
+$encoded = encode_json $final_met;
+open my $JOUT, '>', "$base_dir/process_metrics.json";
 print $JOUT $encoded;
 close $JOUT;
 
@@ -62,6 +67,70 @@ sub get_aliquot_id_from_bam {
   die "Multiple different SM entries: .".join(q{,},@keys)."\n\tfrom: $bam\n" if(scalar @keys > 1);
   die "No SM entry found in: $bam\n" if(scalar @keys == 0);
   return $keys[0];
+}
+
+sub rum_metrics {
+  my ($base_dir, @bams) = @_;
+  my %run_met;
+  my $count=0;
+  my $timings = "$base_dir/timings";
+  for my $bam(@bams) {
+    my $aliqout_id = get_aliquot_id_from_bam($bam);
+    $run_met{'pairs'}{$aliqout_id}{'sv'} = _run_met($count, $timings, 'BRASS');
+    $run_met{'pairs'}{$aliqout_id}{'snv_mnv'} = _run_met($count, $timings, 'CaVEMan');
+    $run_met{'pairs'}{$aliqout_id}{'indel'} = _run_met($count, $timings, 'cgpPindel');
+    $run_met{'pairs'}{$aliqout_id}{'cnv'} = _run_met($count, $timings, 'ASCAT');
+    $count++;
+  }
+  $run_met{'workflow'}{'Wall_s'} = _workflow_met($timings);
+  return \%run_met;
+}
+
+sub _workflow_met {
+  my $folder = shift;
+  my ($stdout, $stderr, $exit) = capture { system(qq{cat $folder/start}) };
+  die "Error occurred while capturing content of $folder/start" if($stderr);
+  chomp $stdout;
+  my ($started) = $stdout=~ m/^([[:digit:]]+)/;
+
+  ($stdout, $stderr, $exit) = capture { system(qq{cat $folder/end}) };
+  die "Error occurred while capturing content of $folder/end" if($stderr);
+  chomp $stdout;
+  my ($ended) = $stdout=~ m/^([[:digit:]]+)/;
+  
+  my $elapsed = $ended - $started;
+  return $elapsed;
+}
+
+sub _run_met {
+  my ($inc, $folder, $alg) = @_;
+  my ($total_cpu, $max_mem) = (0, 0);
+  my %met;
+  opendir(my $dh, $folder);
+  while(my $x = readdir($dh)) {
+    my $stub = $inc.'_'.$alg.'_';
+    next unless(index($x, $stub) == 0);
+    my ($process, $index) = $x =~ m/_([^_]+)_([[:digit:]]+)$/;
+    my $file = "$folder/$x";
+    open my $fh, '<', $file;
+    while(my $line = <$fh>) {
+      chomp $line;
+      my ($key, $value) = split /\s+/, $line;
+      $met{'detailed'}{$process}{$key}[$index-1] = $value;
+      if($key eq 'User_s' || $key eq 'System_s') {
+        $total_cpu += $value;
+      }
+      elsif($key eq 'Max_kb' && $value > $max_mem) {
+        $max_mem = $value ;
+      }
+    }
+    close $fh;
+    $met{'caller'} = $alg;
+    $met{'total_cpu_s'} = $total_cpu;
+    $met{'max_mem_mb'} = int 1 + ($max_mem / 1024); # round up
+  }
+  closedir($dh);
+  return \%met;
 }
 
 sub _qc_brass {
