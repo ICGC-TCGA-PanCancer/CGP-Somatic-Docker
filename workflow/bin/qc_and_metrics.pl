@@ -10,6 +10,8 @@ use autodie qw(:all);
 use Capture::Tiny qw(capture);
 use JSON;
 
+use Data::Dumper;
+
 if(@ARGV < 3) {
   die "USAGE: path_for_out.json root_of_outdir ordered.bam [ordered.bam2]";
 }
@@ -18,7 +20,7 @@ my $json_out = shift @ARGV;
 my $base_dir = shift @ARGV;
 my @ordered_bams = @ARGV;
 my $qc = qc_data($base_dir, @ordered_bams);
-
+warn Dumper($qc);
 my $encoded = encode_json $qc;
 open my $JOUT, '>', $json_out;
 print $JOUT $encoded;
