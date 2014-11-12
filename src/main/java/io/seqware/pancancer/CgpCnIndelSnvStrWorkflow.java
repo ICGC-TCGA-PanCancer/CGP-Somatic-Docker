@@ -212,8 +212,6 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       throw new RuntimeException(ex);
     }
     
-    System.err.println("NOTE: completed setup\n");
-    
     return getFiles();
   }
   
@@ -235,7 +233,6 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   
   @Override
   public void buildWorkflow() {
-    System.err.println("NOTE: starting buildWorkflow\n");
     Job controlBasJob = null;
     String controlBam;
     List<String> tumourBams = new ArrayList<String>();
@@ -248,15 +245,10 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     Job startWorkflow = markTime("start");
     startWorkflow.setMaxMemory(memMarkTime);
     
-    System.err.println("NOTE: startWorkflow\n");
-    
     try {
       if(testMode) {
         controlBam = getProperty("controlBamT");
         tumourBams = Arrays.asList(getProperty("tumourBamT").split(":"));
-        for(String t : tumourBams) {
-          tumourBasJobs.add(null);
-        }
         // only do this if test mode but upload is enabled, we're cheating a bit here but need the values defined with something to do the test upload
         controlAnalysisId = getProperty("controlAnalysisId");
         tumourAnalysisIds = Arrays.asList(getProperty("tumourAnalysisIds").split(":"));
@@ -287,8 +279,6 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       throw new RuntimeException(e);
     }
     
-    System.err.println("NOTE: done file setup\n");
-    
     Job getTbiJob = stageTbi();
     getTbiJob.setMaxMemory(memGetTbi);
     getTbiJob.addParent(startWorkflow);
@@ -299,11 +289,8 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       }
     }
     
-    System.err.println("NOTE: getTbiJob done\n");
-    
     Job[] cavemanFlagJobs = new Job [tumourBams.size()];
     for(int i=0; i<tumourBams.size(); i++) {
-      System.err.println("NOTE: setup pair" + i + "\n");
       Job cavemanFlagJob = buildPairWorkflow(getTbiJob, controlBam, tumourBams.get(i), i);
       cavemanFlagJobs[i] = cavemanFlagJob;
     }
@@ -862,7 +849,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     thisJob.getCommand()
       .addArgument(getWorkflowBaseDir()+ "/bin/wrapper.sh")
       .addArgument(installBase)
-      .addArgument("getTbi.pl")
+      .addArgument(getWorkflowBaseDir() + "/bin/getTbi.pl")
       .addArgument(genomeFaGz + ".fai")
       .addArgument(tabixSrvUri)
       ;
