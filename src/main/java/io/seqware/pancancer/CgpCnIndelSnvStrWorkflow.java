@@ -46,7 +46,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   
   // MEMORY variables //
   private String  memBasFileGet, memGnosDownload, memPackageResults, memMarkTime,
-                  memQcMetrics, memUpload,
+                  memQcMetrics, memUpload, memGetTbi,
                   // ascat memory
                   memAlleleCount, memAscat, memAscatFinalise,
                   // pindel memory
@@ -143,6 +143,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       memMarkTime = getProperty("memMarkTime");
       memQcMetrics = getProperty("memQcMetrics");
       memUpload = getProperty("memUpload");
+      memGetTbi = getProperty("memGetTbi");
       
       memAlleleCount = getProperty("memAlleleCount");
       memAscat = getProperty("memAscat");
@@ -279,9 +280,16 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       throw new RuntimeException(e);
     }
     
+    Job getTbiJob = stageTbi();
+    getTbiJob.setMaxMemory(memGetTbi);
+    getTbiJob.addParent(controlBasJob);
+    for(Job job : tumourBasJobs) {
+      getTbiJob.addParent(job);
+    }
+    
     Job[] cavemanFlagJobs = new Job [tumourBams.size()];
     for(int i=0; i<tumourBams.size(); i++) {
-      Job cavemanFlagJob = buildPairWorkflow(controlBasJob, tumourBasJobs.get(i), controlBam, tumourBams.get(i), i, startWorkflow);
+      Job cavemanFlagJob = buildPairWorkflow(getTbiJob, controlBasJob, tumourBasJobs.get(i), controlBam, tumourBams.get(i), i, startWorkflow);
       cavemanFlagJobs[i] = cavemanFlagJob;
     }
     
@@ -325,7 +333,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
    * The generic buildWorkflow section will choose the pair to be processed and 
    * setup the control sample download
    */
-  private Job buildPairWorkflow(Job controlBasJob, Job tumourBasJob, String controlBam, String tumourBam, int tumourCount, Job startTiming) {
+  private Job buildPairWorkflow(Job getTbiJob, Job controlBasJob, Job tumourBasJob, String controlBam, String tumourBam, int tumourCount, Job startTiming) {
     
     /**
      * ASCAT - Copynumber
@@ -562,6 +570,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     
     Job cavemanFlagJob = cavemanBaseJob(tumourCount, tumourBam, controlBam, "CaVEMan", "flag", 1);
     cavemanFlagJob.setMaxMemory(memCavemanFlag);
+    cavemanFlagJob.addParent(getTbiJob);
     cavemanFlagJob.addParent(pindelFlagJob); // PINDEL dependency
     cavemanFlagJob.addParent(cavemanAddIdsJob);
     
@@ -724,7 +733,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   
   private Job cavemanTbiCleanJob() {
     Job thisJob = getWorkflow().createBashJob("CaveTbiClean");
-      thisJob.getCommand().addArgument("rm -f " + OUTDIR + "/*/unmatchedNormal.*.vcf.gz.tbi");
+      thisJob.getCommand().addArgument("rm -f " + OUTDIR + "/unmatchedNormal.*.vcf.gz.tbi");
     return thisJob;
   }
   
@@ -733,7 +742,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     thisJob.getCommand().addArgument("rm -rf ./*/*.bam " + OUTDIR);
     return thisJob;
   }
-  
+
   private Job cleanInputsJob() {
     Job thisJob = getWorkflow().createBashJob("cleanInputs");
     thisJob.getCommand().addArgument("rm -f ./*/*.bam");
@@ -743,14 +752,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   private Job cavemanBaseJob(int tumourCount, String tumourBam, String controlBam, String alg, String process, int index) {
     String ascatContamFile = OUTDIR + "/" + tumourCount + "/ascat/*.samplestatistics.csv";
     
-    String prependLoc = "";
-    String prependCmd = "";
-    if(process.equals("flag")) {
-      // very simplistic way to get round clash of tabix file downloads
-      prependCmd = "cd " + OUTDIR + "/" + tumourCount;
-      prependLoc = "../../"; // but as we don't have absoulte path need to 
-    }
-    Job thisJob = prepTimedJob(tumourCount, alg, process, index, prependCmd);
+    Job thisJob = prepTimedJob(tumourCount, alg, process, index);
     thisJob.getCommand()
               .addArgument(getWorkflowBaseDir()+ "/bin/wrapper.sh")
               .addArgument(installBase)
@@ -765,18 +767,18 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
               .addArgument("-sa " + assembly)
               .addArgument("-s " + species)
               .addArgument("-st " + seqProtocol)
-              .addArgument("-o " + prependLoc + OUTDIR + "/" + tumourCount + "/caveman")
-              .addArgument("-tc " + prependLoc + OUTDIR + "/" + tumourCount + "/tumour.cn.bed")
-              .addArgument("-nc " + prependLoc + OUTDIR + "/" + tumourCount + "/normal.cn.bed")
-              .addArgument("-k " + prependLoc + ascatContamFile);
+              .addArgument("-o " + OUTDIR + "/" + tumourCount + "/caveman")
+              .addArgument("-tc " + OUTDIR + "/" + tumourCount + "/tumour.cn.bed")
+              .addArgument("-nc " + OUTDIR + "/" + tumourCount + "/normal.cn.bed")
+              .addArgument("-k " + ascatContamFile);
     if(tumourBam.startsWith("/")) {
       thisJob.getCommand().addArgument("-tb " + tumourBam)
                           .addArgument("-nb " + controlBam)
                           .addArgument("-r " + genomeFaGz + ".fai");
     }
     else {
-      thisJob.getCommand().addArgument("-tb " + prependLoc + tumourBam)
-                          .addArgument("-nb " + prependLoc + controlBam)
+      thisJob.getCommand().addArgument("-tb " + tumourBam)
+                          .addArgument("-nb " + controlBam)
                           .addArgument("-r " + genomeFaGz + ".fai");
     }
     
@@ -784,14 +786,14 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       thisJob.getCommand().addArgument("-l " + coresAddressable);
     }
     else if(process.equals("flag")) {
-      thisJob.getCommand().addArgument("-in " + prependLoc + OUTDIR + "/" + tumourCount + "/pindel/*.germline.bed");
+      thisJob.getCommand().addArgument("-in " + OUTDIR + "/" + tumourCount + "/pindel/*.germline.bed");
     }
 
     return thisJob;
   }
 
   private Job cgpAscatBaseJob(int tumourCount, String tumourBam, String controlBam, String alg, String process, int index) {
-    Job thisJob = prepTimedJob(tumourCount, alg, process, index, null);
+    Job thisJob = prepTimedJob(tumourCount, alg, process, index);
     thisJob.getCommand()
               .addArgument(getWorkflowBaseDir()+ "/bin/wrapper.sh")
               .addArgument(installBase)
@@ -821,7 +823,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   }
 
   private Job pindelBaseJob(int tumourCount, String tumourBam, String controlBam, String alg, String process, int index) {
-    Job thisJob = prepTimedJob(tumourCount, alg, process, index, null);
+    Job thisJob = prepTimedJob(tumourCount, alg, process, index);
     thisJob.getCommand()
               .addArgument(getWorkflowBaseDir()+ "/bin/wrapper.sh")
               .addArgument(installBase)
@@ -863,19 +865,28 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     thisJob.getCommand().addArgument("date +%s > " + timeFile);
     return thisJob;
   }
+  
+  private Job stageTbi() {
+    Job thisJob = getWorkflow().createBashJob("getTbi");
+    thisJob.getCommand()
+      .addArgument(getWorkflowBaseDir()+ "/bin/wrapper.sh")
+      .addArgument(installBase)
+      .addArgument("getTbi.pl")
+      .addArgument(genomeFaGz + ".fai")
+      .addArgument(tabixSrvUri)
+      ;
+    return thisJob;
+  }
 
-  private Job prepTimedJob(int tumourCount, String alg, String process, int index, String prepend) {
+  private Job prepTimedJob(int tumourCount, String alg, String process, int index) {
     String timeFile = TIMEDIR + "/" + tumourCount + "_" + alg + "_" + process + "_" + index;
     Job thisJob = getWorkflow().createBashJob(alg + "_" + process);
-    if(prepend != null && prepend.length() > 0) {
-      thisJob.getCommand().addArgument(prepend + ";");
-    }
     thisJob.getCommand().addArgument("/usr/bin/time /usr/bin/time --format=\"Wall_s %e\\nUser_s %U\\nSystem_s %S\\nMax_kb %M\" --output=" + timeFile);
     return thisJob;
   }
   
   private Job brassBaseJob(int tumourCount, String tumourBam, String controlBam, String alg, String process, int index) {
-    Job thisJob = prepTimedJob(tumourCount, alg, process, index, null);
+    Job thisJob = prepTimedJob(tumourCount, alg, process, index);
     thisJob.getCommand()
               .addArgument(getWorkflowBaseDir()+ "/bin/wrapper.sh")
               .addArgument(installBase)
