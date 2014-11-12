@@ -211,6 +211,9 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     } catch (Exception ex) {
       throw new RuntimeException(ex);
     }
+    
+    System.err.println("NOTE: completed setup\n");
+    
     return getFiles();
   }
   
@@ -232,6 +235,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   
   @Override
   public void buildWorkflow() {
+    System.err.println("NOTE: starting buildWorkflow\n");
     Job controlBasJob = null;
     String controlBam;
     List<String> tumourBams = new ArrayList<String>();
@@ -243,6 +247,8 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     
     Job startWorkflow = markTime("start");
     startWorkflow.setMaxMemory(memMarkTime);
+    
+    System.err.println("NOTE: startWorkflow\n");
     
     try {
       if(testMode) {
@@ -281,18 +287,23 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       throw new RuntimeException(e);
     }
     
+    System.err.println("NOTE: done file setup\n");
+    
     Job getTbiJob = stageTbi();
     getTbiJob.setMaxMemory(memGetTbi);
     getTbiJob.addParent(startWorkflow);
     if(controlBasJob != null) {
       getTbiJob.addParent(controlBasJob);
+      for(Job job : tumourBasJobs) {
+        getTbiJob.addParent(job);
+      }
     }
-    for(Job job : tumourBasJobs) {
-      getTbiJob.addParent(job);
-    }
+    
+    System.err.println("NOTE: getTbiJob done\n");
     
     Job[] cavemanFlagJobs = new Job [tumourBams.size()];
     for(int i=0; i<tumourBams.size(); i++) {
+      System.err.println("NOTE: setup pair" + i + "\n");
       Job cavemanFlagJob = buildPairWorkflow(getTbiJob, controlBam, tumourBams.get(i), i);
       cavemanFlagJobs[i] = cavemanFlagJob;
     }
