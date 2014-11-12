@@ -242,6 +242,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     String controlAnalysisId = new String();
     
     Job startWorkflow = markTime("start");
+    startWorkflow.setMaxMemory(memMarkTime);
     
     try {
       if(testMode) {
@@ -282,14 +283,17 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     
     Job getTbiJob = stageTbi();
     getTbiJob.setMaxMemory(memGetTbi);
-    getTbiJob.addParent(controlBasJob);
+    getTbiJob.addParent(startWorkflow);
+    if(controlBasJob != null) {
+      getTbiJob.addParent(controlBasJob);
+    }
     for(Job job : tumourBasJobs) {
       getTbiJob.addParent(job);
     }
     
     Job[] cavemanFlagJobs = new Job [tumourBams.size()];
     for(int i=0; i<tumourBams.size(); i++) {
-      Job cavemanFlagJob = buildPairWorkflow(getTbiJob, controlBasJob, tumourBasJobs.get(i), controlBam, tumourBams.get(i), i, startWorkflow);
+      Job cavemanFlagJob = buildPairWorkflow(getTbiJob, controlBam, tumourBams.get(i), i);
       cavemanFlagJobs[i] = cavemanFlagJob;
     }
     
@@ -333,7 +337,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
    * The generic buildWorkflow section will choose the pair to be processed and 
    * setup the control sample download
    */
-  private Job buildPairWorkflow(Job getTbiJob, Job controlBasJob, Job tumourBasJob, String controlBam, String tumourBam, int tumourCount, Job startTiming) {
+  private Job buildPairWorkflow(Job getTbiJob, String controlBam, String tumourBam, int tumourCount) {
     
     /**
      * ASCAT - Copynumber
@@ -346,13 +350,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     for(int i=0; i<2; i++) {
       Job alleleCountJob = cgpAscatBaseJob(tumourCount, tumourBam, controlBam, "ASCAT", "allele_count", i+1);
       alleleCountJob.setMaxMemory(memAlleleCount);
-      if(testMode) {
-          alleleCountJob.addParent(startTiming);
-      }
-      else {
-        alleleCountJob.addParent(controlBasJob);
-        alleleCountJob.addParent(tumourBasJob);
-      }
+      alleleCountJob.addParent(getTbiJob);
       alleleCountJobs[i] = alleleCountJob;
     }
 
@@ -383,13 +381,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       else {
         caveCnPrepJob = caveCnPrep(tumourCount, "normal");
       }
-      if(testMode) {
-          caveCnPrepJob.addParent(startTiming);
-      }
-      else {
-        caveCnPrepJob.addParent(controlBasJob);
-        caveCnPrepJob.addParent(tumourBasJob);
-      }
+      caveCnPrepJob.addParent(getTbiJob);
       caveCnPrepJob.addParent(ascatFinaliseJob); // ASCAT dependency!!!
       caveCnPrepJobs[i] = caveCnPrepJob;
     }
@@ -411,13 +403,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     for(int i=0; i<2; i++) {
       Job inputParse = pindelBaseJob(tumourCount, tumourBam, controlBam, "cgpPindel", "input", i+1);
       inputParse.setMaxMemory(memPindelInput);
-      if(testMode) {
-          inputParse.addParent(startTiming);
-      }
-      else {
-        inputParse.addParent(controlBasJob);
-        inputParse.addParent(tumourBasJob);
-      }
+      inputParse.addParent(getTbiJob);
       pindelInputJobs[i] = inputParse;
     }
     
@@ -465,13 +451,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     for(int i=0; i<2; i++) {
       Job brassInputJob = brassBaseJob(tumourCount, tumourBam, controlBam, "BRASS", "input", i+1);
       brassInputJob.setMaxMemory(memBrassInput);
-      if(testMode) {
-          brassInputJob.addParent(startTiming);
-      }
-      else {
-        brassInputJob.addParent(controlBasJob);
-        brassInputJob.addParent(tumourBasJob);
-      }
+      brassInputJob.addParent(getTbiJob);
       brassInputJobs[i] = brassInputJob;
     }
     
