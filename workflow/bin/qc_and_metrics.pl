@@ -19,13 +19,13 @@ my @ordered_bams = @ARGV;
 my $final_qc = qc_data( $base_dir, @ordered_bams );
 my $encoded = encode_json $final_qc;
 open my $JOUT, '>', "$base_dir/qc_metrics.json";
-print $JOUT $encoded;
+print $JOUT $encoded,"\n";
 close $JOUT;
 
 my $final_met = rum_metrics( $base_dir, @ordered_bams );
 $encoded = encode_json $final_met;
 open my $JOUT, '>', "$base_dir/process_metrics.json";
-print $JOUT $encoded;
+print $JOUT $encoded,"\n";
 close $JOUT;
 
 sub qc_data {
