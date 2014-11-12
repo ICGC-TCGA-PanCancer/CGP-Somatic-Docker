@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-#
+
 # @File getTbi.pl
 # @Author kr2
 # @Created 12-Nov-2014 12:52:49
@@ -13,7 +13,7 @@ my $fai = shift @ARGV;
 my $tbxSrv = shift @ARGV;
 
 my ($stdout, $stderr, $exit) = capture { system(qq{wc -l $fai}) };
-die "Error occurred while capturing content of $folder/start" if($stderr);
+die "Error occurred while capturing line count of $fai" if($stderr);
 chomp $stdout;
 my ($max) = $stdout=~ m/^([[:digit:]]+)/;
 
