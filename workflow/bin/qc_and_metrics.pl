@@ -116,7 +116,7 @@ sub _run_met {
     while(my $line = <$fh>) {
       chomp $line;
       my ($key, $value) = split /\s+/, $line;
-      $met{'detailed'}{$process}{$key}[$index-1] = $value;
+      $met{'detailed'}{$process}[$index-1]{$key} = $value;
       if($key eq 'User_s' || $key eq 'System_s') {
         $total_cpu += $value;
       }
