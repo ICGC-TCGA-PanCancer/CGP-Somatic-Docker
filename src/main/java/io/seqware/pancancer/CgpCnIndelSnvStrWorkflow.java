@@ -791,10 +791,6 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
               .addArgument("-n " + controlBam)
               .addArgument("-f") // force completion, even when ascat fails
               ;
-    // this is used when gender is not specified
-    if(gender.equals("L")) {
-      thisJob.getCommand().addArgument("-l Y:2654896-2655740");
-    }
     thisJob.getCommand().addArgument("-g " + gender);
 
     return thisJob;
