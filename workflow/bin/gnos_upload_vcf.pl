@@ -111,8 +111,8 @@ GetOptions(
      "study-refname-override=s" => \$study_ref_name,
      "analysis-center-override=s" => \$analysis_center,
      "pipeline-json=s" => \$pipeline_json_file,
-     "qc-json=s" => \$qc_json_file,
-     "timing-json=s" => \$timing_json_file,
+     "qc-metrics-json=s" => \$qc_json_file,
+     "timing-metrics-json=s" => \$timing_json_file,
      "make-runxml" => \$make_runxml,
      "make-expxml" => \$make_expxml,
      "force-copy" => \$force_copy,
@@ -1007,49 +1007,18 @@ sub getVals {
 
 # Sheldon TODO: will need to be updated to support a more generic format
 sub getRuntimeInfo {
-  # detect all the timing files by checking file name pattern, read QC data
-  # to pull back the read group and associate with timing
-
-  opendir(DIR, ".");
-
-  my @qc_result_files = grep { /^out_\d+\.bam\.stats\.txt/ } readdir(DIR);
-
-  close(DIR);
-
-  my $ret = { "timing_metrics" => [] };
-
-  foreach (@qc_result_files) {
-
-    # find the index number so we can match with timing info
-    $_ =~ /out_(\d+)\.bam\.stats\.txt/;
-    my $i = $1;
-
-    open (QC, "< $_");
-
-    my @header = split /\t/, <QC>;
-    my @data = split /\t/, <QC>;
-    chomp ((@header, @data));
-
-    close (QC);
-
-    my $qc_metrics = {};
-    $qc_metrics->{$_} = shift @data for (@header);
-
-    my $read_group = $qc_metrics->{readgroup};
-
-    # now go ahead and read that index file for timing
-    my $download_timing = read_timing("download_timing_$i.txt");
-    my $bwa_timing = read_timing("bwa_timing_$i.txt");
-    my $qc_timing = read_timing("qc_timing_$i.txt");
-    my $merge_timing = read_timing("merge_timing.txt");
-
-    # fill in the data structure
-    push @{ $ret->{timing_metrics} }, { "read_group_id" => $read_group, "metrics" => { "download_timing_seconds" => $download_timing, "bwa_timing_seconds" => $bwa_timing, "qc_timing_seconds" => $qc_timing, "merge_timing_seconds" => $merge_timing } };
-
+  my $ret;
+  if(defined $timing_json_file && -e $timing_json_file) {
+    open my $qc_fh, '<', $timing_json_file or die $!;
+    my $json = <$qc_fh>;
+    chomp $json;
+    $ret = qq{{"timing_metrics":$json}};
   }
-
-  # and return hash
-  return to_json $ret;
+  else {
+    my $object = { "timing_metrics" => {} };
+    $ret = to_json $object;
+  }
+  return $ret;
 
 }
 
@@ -1067,33 +1036,18 @@ sub read_timing {
 
 # TODO
 sub getQcResult {
-  # detect all the QC report files by checking file name pattern
-
-  opendir(DIR, ".");
-
-  my @qc_result_files = grep { /^out_\d+\.bam\.stats\.txt/ } readdir(DIR);
-
-  close(DIR);
-
-  my $ret = { "qc_metrics" => [] };
-
-  foreach (@qc_result_files) {
-
-    open (QC, "< $_");
-
-    my @header = split /\t/, <QC>;
-    my @data = split /\t/, <QC>;
-    chomp ((@header, @data));
-
-    close (QC);
-
-    my $qc_metrics = {};
-    $qc_metrics->{$_} = shift @data for (@header);
-
-    push @{ $ret->{qc_metrics} }, {"read_group_id" => $qc_metrics->{readgroup}, "metrics" => $qc_metrics};
+  my $ret;
+  if(defined $qc_json_file && -e $qc_json_file) {
+    open my $qc_fh, '<', $qc_json_file or die $!;
+    my $json = <$qc_fh>;
+    chomp $json;
+    $ret = qq{{"qc_metrics":$json}};
   }
-
-  return to_json $ret;
+  else {
+    my $object = { "qc_metrics" => {} };
+    $ret = to_json $object;
+  }
+  return $ret;
 }
 
 sub run {
