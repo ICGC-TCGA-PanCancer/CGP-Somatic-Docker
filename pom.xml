@@ -26,6 +26,12 @@
 
     <dependencies>
         <dependency>
+            <groupId>SeqWare-CGP-SomaticCore</groupId>
+            <artifactId>SeqWare-CGP-SomaticCore_opt</artifactId>
+            <version>1.0.0</version>
+            <type>tar.gz</type>
+        </dependency>
+        <dependency>
           <groupId>SeqWare-PanCancer</groupId>
           <artifactId>vcf-uploader</artifactId>
           <version>1.1.0</version>

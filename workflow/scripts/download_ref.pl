@@ -10,6 +10,7 @@ check_tools();
 
 download("$link_dir/reference", "http://s3.amazonaws.com/pan-cancer-data/pan-cancer-reference/genome.fa.gz");
 download("$link_dir/reference", "http://s3.amazonaws.com/pan-cancer-data/pan-cancer-reference/genome.fa.gz.fai");
+download("$link_dir/reference", "https://s3.amazonaws.com/pan-cancer-data/pan-cancer-reference/cgp_reference.tar.gz");
 
 sub download {
   my ($dir, $url) = @_;
