@@ -10,7 +10,9 @@ check_tools();
 
 download("$link_dir/reference", "http://s3.amazonaws.com/pan-cancer-data/pan-cancer-reference/genome.fa.gz");
 download("$link_dir/reference", "http://s3.amazonaws.com/pan-cancer-data/pan-cancer-reference/genome.fa.gz.fai");
-download("$link_dir/reference", "https://s3.amazonaws.com/pan-cancer-data/pan-cancer-reference/cgp_reference.tar.gz");
+download("$link_dir/", "https://s3.amazonaws.com/pan-cancer-data/pan-cancer-reference/cgp_reference.tar.gz");
+
+untar("$link_dir", "cgp_reference.tar.gz");
 
 sub download {
   my ($dir, $url) = @_;
@@ -39,6 +41,15 @@ sub download {
         die ("+SECOND DOWNLOAD FAILED! GIVING UP!\n");
       }
     }
+  }
+}
+
+sub untar {
+  my ($dir, $tar) = @_;
+  print "\nUNTARRING $tar\n";
+  my $r = system("cd $dir && tar zxf $tar");
+  if ($r) {
+    die "UNTAR of $tar FAILED\n";
   }
 }
 
