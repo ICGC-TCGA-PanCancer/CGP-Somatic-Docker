@@ -16,7 +16,7 @@ expand("$link_dir/reference/", "$link_dir/reference/cgp_reference.tar.gz");
 
 sub expand {
   my ($changeTo, $archive) = @_;
-  my $res = system("tar -C $changeTo -zxvf $archive");
+  my $res = system("tar -C $changeTo -kzxvf $archive");
   die ("Failed to unpack $archive!\n") if($res != 0);
 }
 
