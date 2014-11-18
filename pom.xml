@@ -28,7 +28,7 @@
         <dependency>
             <groupId>SeqWare-CGP-SomaticCore</groupId>
             <artifactId>SeqWare-CGP-SomaticCore_opt</artifactId>
-            <version>1.0.0</version>
+            <version>1.0.1</version>
             <type>tar.gz</type>
         </dependency>
         <dependency>
