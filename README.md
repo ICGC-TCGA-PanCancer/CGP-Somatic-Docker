@@ -36,6 +36,10 @@ The following are the packages needed for Ubuntu 12.04:
     # for the vcf-uploader
     sudo apt-get install libxml-dom-perl libxml-xpath-perl libjson-perl libxml-libxml-perl
 
+## Tabix Server
+
+You need a tabix HTTP server serving up controlled access data that's used in the variant calling pipeline.  We can't share this publicaly so email the authors for information about this component. 
+
 ## Building the Workflow
 
 Now that you have a VM built and system-level dependencies installed it's time to build the workflow.  Clone the project in git and cd into SeqWare-CGP-SomaticCore.  Now build with Maven:
@@ -60,7 +64,7 @@ Once you build this on a SeqWare VM the next thing you'll want to do is actually
 
     # number of cores to use, you want 4.5G/core or more
     coresAddressable=32
-    # the server that has various tabix-indexed files on it, see below, update with your URL
+    # the server that has various tabix-indexed files on it, see above, update with your URL
     tabixSrvUri=http://10.89.9.50/
     # in non local test mode make sure this path is valid
     pemFile=/mnt/seqware-build/ebi.pem
@@ -81,10 +85,6 @@ Once you've modified (or copied and modified) the .ini file you can launch the w
     seqware bundle launch --dir <path>/target/Workflow_Bundle_CgpCnIndelSnvStr_1.0.0_SeqWare_1.1.0-alpha.5 --ini <path_to_modified_ini>
 
 This will launch the workflow and print out some key debugging information that will help you if things go wrong.
-
-## Tabix Server
-
-You need a tabix HTTP server serving up controlled access data that's used in the variant calling pipeline.  We can't share this publicaly so email the authors for information about this component. 
 
 ## Building CGP Workflow Dependencies - Optional
 
