@@ -47,9 +47,13 @@ sub download {
 sub untar {
   my ($dir, $tar) = @_;
   print "\nUNTARRING $tar\n";
-  my $r = system("cd $dir && tar zxf $tar");
-  if ($r) {
-    die "UNTAR of $tar FAILED\n";
+  my $output = "$dir/$tar";
+  $output =~ s/\.tar.gz//;
+  if (!-e "$output") {
+    my $r = system("cd $dir && tar zxf $tar");
+    if ($r) {
+      die "UNTAR of $tar FAILED\n";
+    }
   }
 }
 
