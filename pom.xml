@@ -69,6 +69,12 @@
             <classifier>full</classifier>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+          <groupId>SeqWare-CGP-SomaticCore</groupId>
+          <artifactId>SeqWare-CGP-SomaticCore_opt</artifactId>
+          <version>1.0.0</version>
+          <type>tar.gz</type>
+        </dependency>
     </dependencies>
 
     <repositories>
