@@ -8,11 +8,11 @@
     </prerequisites>
 
     <groupId>io.seqware</groupId>
-    <artifactId>CgpCnIndelSnvStr</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <artifactId>SangerPancancerCgpCnIndelSnvStr</artifactId>
+    <version>1.0.0</version>
     <packaging>jar</packaging>
 
-    <name>CgpCnIndelSnvStr</name>
+    <name>SangerPancancerCgpCnIndelSnvStr</name>
     <url>http://maven.apache.org</url>
 
     <properties>
