@@ -12,11 +12,11 @@ download("$link_dir/reference", "http://s3.amazonaws.com/pan-cancer-data/pan-can
 download("$link_dir/reference", "http://s3.amazonaws.com/pan-cancer-data/pan-cancer-reference/genome.fa.gz.fai");
 download("$link_dir/reference", "https://s3.amazonaws.com/pan-cancer-data/pan-cancer-reference/cgp_reference.tar.gz");
 # need to unpack cgp_reference.tar.gz (unpack is a keyword)
-expand("$link_dir/reference/cgp_reference.tar.gz");
+expand("$link_dir/reference/", "$link_dir/reference/cgp_reference.tar.gz");
 
 sub expand {
-  my $archive = shift;
-  my $res = system("tar zxvf $archive");
+  my ($changeTo, $archive) = @_;
+  my $res = system("tar -C $changeTo zxvf $archive");
   die ("Failed to unpack $archive!\n");
 }
 
