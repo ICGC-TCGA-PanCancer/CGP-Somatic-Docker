@@ -20,8 +20,8 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <seqware-version>1.1.0-alpha.5</seqware-version>
         <skipITs>true</skipITs>
-        <workflow-full-name>Workflow_Bundle_CgpCnIndelSnvStr_${workflow-version}_SeqWare_${seqware-version}</workflow-full-name>
-        <workflow-dir>${project.build.directory}/${workflow-full-name}/Workflow_Bundle_CgpCnIndelSnvStr/${workflow-version}</workflow-dir>
+        <workflow-full-name>Workflow_Bundle_SangerPancancerCgpCnIndelSnvStr_${workflow-version}_SeqWare_${seqware-version}</workflow-full-name>
+        <workflow-dir>${project.build.directory}/${workflow-full-name}/Workflow_Bundle_SangerPancancerCgpCnIndelSnvStr/${workflow-version}</workflow-dir>
     </properties>
 
     <dependencies>
