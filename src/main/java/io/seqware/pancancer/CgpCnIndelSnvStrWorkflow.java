@@ -644,6 +644,8 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       .addArgument(OUTDIR + "/" + sample + ".bam")
       .addArgument("; cp " + testBase + "/" + sample + ".bam.*")
       .addArgument(OUTDIR + "/.")
+      .addArgument("; rm " + OUTDIR + "/" + sample + ".bam.bai")
+      .addArgument("; samtools index " + OUTDIR + "/" + sample + ".bam")
       ;
     return thisJob;
   }
