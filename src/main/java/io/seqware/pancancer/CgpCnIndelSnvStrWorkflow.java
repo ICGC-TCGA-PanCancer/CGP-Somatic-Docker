@@ -259,12 +259,20 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     
     try {
       if(testMode) {
-        controlBam = getProperty("controlBamT");
-        tumourBams = Arrays.asList(getProperty("tumourBamT").split(":"));
-        // only do this if test mode but upload is enabled, we're cheating a bit here but need the values defined with something to do the test upload
-        controlAnalysisId = getProperty("controlAnalysisId");
-        tumourAnalysisIds = Arrays.asList(getProperty("tumourAnalysisIds").split(":"));
-        tumourAliquotIds = Arrays.asList(getProperty("tumourAliquotIds").split(":"));
+        controlBam = OUTDIR + "HCC1143_BL.bam";
+        controlAnalysisId = "HCC1143_BL";
+        tumourBams.add(OUTDIR + "HCC1143.bam");
+        tumourAnalysisIds.add("HCC1143");
+        tumourAliquotIds.add("HCC1143");
+        
+        controlBasJob = prepareTestData("HCC1143_BL");
+        controlBasJob.setMaxMemory("4000");
+        controlBasJob.addParent(startWorkflow);
+        
+        Job prepTum = prepareTestData("HCC1143");
+        prepTum.setMaxMemory("4000");
+        prepTum.addParent(startWorkflow);
+        tumourBasJobs.add(prepTum);
       }
       else {
         controlAnalysisId = getProperty("controlAnalysisId");
@@ -294,11 +302,9 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     Job getTbiJob = stageTbi();
     getTbiJob.setMaxMemory(memGetTbi);
     getTbiJob.addParent(startWorkflow);
-    if(controlBasJob != null) {
-      getTbiJob.addParent(controlBasJob);
-      for(Job job : tumourBasJobs) {
-        getTbiJob.addParent(job);
-      }
+    getTbiJob.addParent(controlBasJob);
+    for(Job job : tumourBasJobs) {
+      getTbiJob.addParent(job);
     }
     
     // these are not paired but per individual sample
@@ -363,11 +369,21 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     metricsJob.setMaxMemory(memQcMetrics);
     metricsJob.addParent(endWorkflow);
     
+    Job renameImputeJob = renameSampleFile(tumourBams, OUTDIR, "imputeCounts.tar.gz");
+    renameImputeJob.setMaxMemory("3000");
+    renameImputeJob.addParent(bbAlleleMergeJob);
+    
+    Job renameCountsJob = renameSampleFile(tumourBams, OUTDIR, "binnedReadCounts.tar.gz");
+    renameCountsJob.setMaxMemory("3000");
+    renameCountsJob.addParent(ngsCountMergeJob);
+    
     if(uploadServer != null) {
       String[] resultTypes = {"snv_mnv","cnv","sv","indel"};
       Job uploadJob = vcfUpload(resultTypes, controlAnalysisId, tumourAnalysisIds, tumourAliquotIds);
       uploadJob.setMaxMemory(memUpload);
       uploadJob.addParent(metricsJob);
+      uploadJob.addParent(renameImputeJob);
+      uploadJob.addParent(ngsCountMergeJob);
       
       if (cleanup) {
         // if we upload to GNOS then go ahead and delete all the large files
@@ -613,6 +629,21 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     return cavemanFlagJob;
   }
   
+  private Job prepareTestData(String sample) {
+    Job thisJob = getWorkflow().createBashJob("prepTest");
+    thisJob.getCommand()
+      .addArgument(getWorkflowBaseDir()+ "/bin/wrapper.sh")
+      .addArgument(installBase)
+      .addArgument("scramble -I cram -O bam")
+      .addArgument("-r " + getWorkflowBaseDir() + "/data/testdata/genome.fa")
+      .addArgument(getWorkflowBaseDir() + "/" + sample + ".cram")
+      .addArgument(OUTDIR + "/" + sample + ".bam")
+      .addArgument("; cp " + getWorkflowBaseDir() + "/" + sample + ".bam.*")
+      .addArgument(OUTDIR + "/.")
+      ;
+    return thisJob;
+  }
+  
   private Job ngsCountMerge(String controlBam) {
     Job thisJob = prepTimedJob(0, "binCount", "merge", 0);
     thisJob.getCommand()
@@ -668,11 +699,25 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     thisJob.getCommand()
               .addArgument(getWorkflowBaseDir()+ "/bin/wrapper.sh")
               .addArgument(installBase)
-              .addArgument("packageImpute.pl")
+              .addArgument(getWorkflowBaseDir()+ "/bin/packageImpute.pl")
               .addArgument(controlBam)
               .addArgument(BBDIR)
-              .addArgument(";rm -f " + BBDIR + "/1000genomesloci2012_chr*.txt")
               ;
+    return thisJob;
+  }
+  
+  private Job renameSampleFile(List<String> bams, String dir, String extension) {
+    Job thisJob = getWorkflow().createBashJob("renameSampleFile");
+    for(String bam : bams) {
+    thisJob.getCommand()
+      .addArgument(getWorkflowBaseDir()+ "/bin/wrapper.sh")
+      .addArgument(installBase)
+      .addArgument(getWorkflowBaseDir()+ "/bin/execute_with_sample.pl " + bam)
+      .addArgument(dir + "/" + "%SM%." + extension)
+      .addArgument(OUTDIR + "/" + "%SM%." + workflowName + "." + dateString + ".somatic." + extension)
+      .addArgument(";")
+      ;
+    }
     return thisJob;
   }
   
@@ -716,6 +761,16 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
         tbimd5s = tbimd5s.concat(baseFile + ".vcf.gz.tbi.md5");
         tarmd5s = tarmd5s.concat(baseFile + ".tar.gz.md5");
       }
+    }
+    
+    
+    // specific to CGP data
+    for(String tumourAliquotId : tumourAliquotIds) {
+      String baseFile = OUTDIR + "/" + tumourAliquotId + "." + workflowName + "." + dateString + ".somatic.";
+      tars = tars.concat("," + baseFile + "imputeCounts.tar.gz");
+      tars = tars.concat("," + baseFile + "binnedReadCounts.tar.gz");
+      tarmd5s = tarmd5s.concat("," + baseFile + "imputeCounts.tar.gz.md5");
+      tarmd5s = tarmd5s.concat("," + baseFile + "binnedReadCounts.tar.gz.md5");
     }
     
     thisJob.getCommand()
