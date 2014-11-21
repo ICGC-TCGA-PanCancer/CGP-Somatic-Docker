@@ -638,32 +638,14 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     thisJob.getCommand()
       .addArgument(getWorkflowBaseDir()+ "/bin/wrapper.sh")
       .addArgument(installBase)
-      // the cram file is missing the sample name for some reason
-      // this fixes it temporarily
-      
-      // regen the header first
-      // having to stop after the header causes a pipefail so wrap to allow
-      .addArgument(getWorkflowBaseDir()+ "/bin/wrapPipeFail.pl")
       .addArgument("scramble -I cram -O bam")
       .addArgument("-r " + testBase + "/genome.fa")
+      .addArgument("-t 2")
       .addArgument(testBase + "/" + sample + ".cram")
-      .addArgument("| samtools view -H - |")
-      .addArgument("perl -ane 'if($_ =~ m/^\\@RG/) {chomp $_; $_ .= qq{\\tSM:HCC1147\\n};} print $_;'")
-      .addArgument("> " + OUTDIR + "/" + sample + "_head.sam")
-      // then send all data through samtools reheader
-      .addArgument(";" + getWorkflowBaseDir()+ "/bin/wrapper.sh")
-      .addArgument(installBase)
-      .addArgument("scramble -I cram -O bam")
-      .addArgument("-r " + testBase + "/genome.fa")
-      .addArgument("-t 2") // threads
-      .addArgument("-m") // generate MD/NM
-      .addArgument(testBase + "/" + sample + ".cram")
-      .addArgument("| samtools reheader "+ OUTDIR + "/" + sample + "_head.sam -")
-      .addArgument("> " + OUTDIR + "/" + sample + ".bam")
-      
-      .addArgument(";cp " + testBase + "/" + sample + ".bam.bas")
+      .addArgument(OUTDIR + "/" + sample + ".bam")
+      .addArgument("; cp " + testBase + "/" + sample + ".bam.bas")
       .addArgument(OUTDIR + "/.")
-      .addArgument(";samtools index " + OUTDIR + "/" + sample + ".bam")
+      .addArgument("; samtools index " + OUTDIR + "/" + sample + ".bam")
       ;
     return thisJob;
   }
