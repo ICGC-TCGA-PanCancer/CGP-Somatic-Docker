@@ -644,21 +644,23 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       .addArgument("scramble -I cram -O bam")
       .addArgument("-r " + testBase + "/genome.fa")
       .addArgument(testBase + "/" + sample + ".cram")
-      .addArgument("samtools view -H - |")
+      .addArgument(" | samtools view -H - |")
       .addArgument("perl -ane 'if($_ =~ m/^\\@RG/) {chomp $_; $_ .= q{\\tSM:HCC1147\\n};} print $_;'")
       .addArgument(OUTDIR + "/" + sample + "_head.sam")
       // then send all data through samtools reheader
-      .addArgument("; scramble -I cram -O bam")
+      .addArgument("\n" + getWorkflowBaseDir()+ "/bin/wrapper.sh")
+      .addArgument(installBase)
+      .addArgument("scramble -I cram -O bam")
       .addArgument("-r " + testBase + "/genome.fa")
       .addArgument("-t 2") // threads
       .addArgument("-m") // generate MD/NM
       .addArgument(testBase + "/" + sample + ".cram")
-      .addArgument("samtools reheader "+ OUTDIR + "/" + sample + "_head.sam -")
+      .addArgument("| samtools reheader "+ OUTDIR + "/" + sample + "_head.sam -")
       .addArgument("> " + OUTDIR + "/" + sample + ".bam")
       
-      .addArgument("; cp " + testBase + "/" + sample + ".bam.bas")
+      .addArgument("\ncp " + testBase + "/" + sample + ".bam.bas")
       .addArgument(OUTDIR + "/.")
-      .addArgument("; samtools index " + OUTDIR + "/" + sample + ".bam")
+      .addArgument("\nsamtools index " + OUTDIR + "/" + sample + ".bam")
       ;
     return thisJob;
   }
