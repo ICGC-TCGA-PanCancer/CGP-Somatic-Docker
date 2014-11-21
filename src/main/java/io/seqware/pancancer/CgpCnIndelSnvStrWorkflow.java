@@ -649,15 +649,15 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   }
   
   private Job bbAlleleCount(int sampleIndex, String bam, String process, int index) {
-    Job thisJob = prepTimedJob(sampleIndex, "bbAllele", process, index-1);
+    Job thisJob = prepTimedJob(sampleIndex, "bbAllele", process, index);
+    int chr = index+1;
     thisJob.getCommand()
               .addArgument(getWorkflowBaseDir()+ "/bin/wrapper.sh")
               .addArgument(installBase)
               .addArgument(getWorkflowBaseDir()+ "/bin/execute_with_sample.pl " + bam)
-              .addArgument(installBase)
               .addArgument("alleleCounter")
-              .addArgument("-l " + refBase + "/battenberg/1000genomesloci/1000genomesloci2012_chr" + index + ".txt")
-              .addArgument("-o " + BBDIR + "/%SM%." + index + ".tsv")
+              .addArgument("-l " + refBase + "/battenberg/1000genomesloci/1000genomesloci2012_chr" + chr + ".txt")
+              .addArgument("-o " + BBDIR + "/%SM%." + chr + ".tsv")
               .addArgument("-b " + bam)
               ;
     return thisJob;
