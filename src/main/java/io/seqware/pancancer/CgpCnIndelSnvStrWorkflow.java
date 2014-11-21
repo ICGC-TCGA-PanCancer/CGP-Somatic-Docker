@@ -261,9 +261,9 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     
     try {
       if(testMode) {
-        controlBam = OUTDIR + "HCC1143_BL.bam";
+        controlBam = OUTDIR + "/HCC1143_BL.bam";
         controlAnalysisId = "HCC1143_BL";
-        tumourBams.add(OUTDIR + "HCC1143.bam");
+        tumourBams.add(OUTDIR + "/HCC1143.bam");
         tumourAnalysisIds.add("HCC1143");
         tumourAliquotIds.add("HCC1143");
         
