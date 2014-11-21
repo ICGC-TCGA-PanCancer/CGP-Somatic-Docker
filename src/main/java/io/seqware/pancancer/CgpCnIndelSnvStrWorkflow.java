@@ -640,7 +640,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
               .addArgument(installBase)
               .addArgument("ngs_bin_allele.pl")
               .addArgument(refBase + "/picnic/cn_bins.csv.gz")
-              .addArgument(refBase + "/picnic/snp6.txt.gz")
+              .addArgument(refBase + "/picnic/snp6.csv.gz")
               .addArgument(COUNTDIR)
               .addArgument(bam)
               .addArgument(chr)
