@@ -644,7 +644,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       .addArgument("scramble -I cram -O bam")
       .addArgument("-r " + testBase + "/genome.fa")
       .addArgument(testBase + "/" + sample + ".cram")
-      .addArgument(" | samtools view -H - |")
+      .addArgument("| samtools view -H - |")
       .addArgument("perl -ane 'if($_ =~ m/^\\@RG/) {chomp $_; $_ .= qq{\\tSM:HCC1147\\n};} print $_;'")
       .addArgument("> " + OUTDIR + "/" + sample + "_head.sam")
       // then send all data through samtools reheader
@@ -652,7 +652,6 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       .addArgument(installBase)
       .addArgument("scramble -I cram -O bam")
       .addArgument("-r " + testBase + "/genome.fa")
-      .addArgument(testBase + "/" + sample + ".cram")
       .addArgument("-t 2") // threads
       .addArgument("-m") // generate MD/NM
       .addArgument(testBase + "/" + sample + ".cram")
