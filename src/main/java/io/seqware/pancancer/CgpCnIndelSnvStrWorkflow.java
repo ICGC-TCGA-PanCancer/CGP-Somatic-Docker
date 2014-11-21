@@ -652,6 +652,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     Job thisJob = prepTimedJob(sampleIndex, "bbAllele", process, index-1);
     thisJob.getCommand()
               .addArgument(getWorkflowBaseDir()+ "/bin/wrapper.sh")
+              .addArgument(installBase)
               .addArgument(getWorkflowBaseDir()+ "/bin/execute_with_sample.pl " + bam)
               .addArgument(installBase)
               .addArgument("alleleCounter")
