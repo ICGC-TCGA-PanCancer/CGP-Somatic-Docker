@@ -26,10 +26,6 @@ import org.apache.commons.lang.StringUtils;
  * See the SeqWare API for
  * <a href="http://seqware.github.io/javadoc/stable/apidocs/net/sourceforge/seqware/pipeline/workflowV2/AbstractWorkflowDataModel.html#setupDirectory%28%29">AbstractWorkflowDataModel</a>
  * for more information.
- * 
- * TODO:
- * - Keiran, I think you want to review what happens when test mode and upload-test mode are active.
- * 
  */
 public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
 
@@ -138,6 +134,11 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       }
       else {
         System.err.println("WARNING\n\t'uploadServer' not defined in workflow.ini, no VCF upload will be attempted\n");
+      }
+      
+      if(testMode && uploadServer != null) {
+        System.err.println("WARNING\n\t'uploadServer' has been cleared as testMode is in effect\n");
+        uploadServer = null;
       }
       
       // used by steps that can use all available cores
