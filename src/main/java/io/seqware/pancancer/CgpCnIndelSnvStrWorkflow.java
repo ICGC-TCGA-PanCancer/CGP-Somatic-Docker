@@ -640,7 +640,10 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       .addArgument(installBase)
       // the cram file is missing the sample name for some reason
       // this fixes it temporarily
+      
       // regen the header first
+      // having to stop after the header causes a pipefail so wrap to allow
+      .addArgument(getWorkflowBaseDir()+ "/bin/wrapPipeFail.pl")
       .addArgument("scramble -I cram -O bam")
       .addArgument("-r " + testBase + "/genome.fa")
       .addArgument(testBase + "/" + sample + ".cram")
