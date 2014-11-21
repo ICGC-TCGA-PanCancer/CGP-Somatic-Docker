@@ -268,10 +268,12 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
         
         controlBasJob = prepareTestData("HCC1143_BL");
         controlBasJob.setMaxMemory("4000");
+        controlBasJob.setThreads(2);
         controlBasJob.addParent(startWorkflow);
         
         Job prepTum = prepareTestData("HCC1143");
         prepTum.setMaxMemory("4000");
+        prepTum.setThreads(2);
         prepTum.addParent(startWorkflow);
         tumourBasJobs.add(prepTum);
       }
@@ -637,6 +639,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       .addArgument(installBase)
       .addArgument("scramble -I cram -O bam")
       .addArgument("-r " + testBase + "/genome.fa")
+      .addArgument("-t 2")
       .addArgument(testBase + "/" + sample + ".cram")
       .addArgument(OUTDIR + "/" + sample + ".bam")
       .addArgument("; cp " + getWorkflowBaseDir() + "/" + sample + ".bam.*")
