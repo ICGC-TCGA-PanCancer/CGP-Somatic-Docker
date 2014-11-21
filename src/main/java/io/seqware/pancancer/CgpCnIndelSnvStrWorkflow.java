@@ -79,7 +79,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
                   //caveman variables
                   tabixSrvUri,
                   //general variables
-                  installBase, refBase, genomeFaGz;
+                  installBase, refBase, genomeFaGz, testBase;
   
   private int coresAddressable;
   
@@ -219,6 +219,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       //environment
       installBase = getWorkflowBaseDir() + "/bin/opt";
       refBase = getWorkflowBaseDir() + "/data/reference/cgp_reference";
+      testBase = getWorkflowBaseDir() + "/data/testdata";
       genomeFaGz = getWorkflowBaseDir() + "/data/reference/genome.fa.gz";
     } catch (Exception ex) {
       throw new RuntimeException(ex);
@@ -635,8 +636,8 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       .addArgument(getWorkflowBaseDir()+ "/bin/wrapper.sh")
       .addArgument(installBase)
       .addArgument("scramble -I cram -O bam")
-      .addArgument("-r " + getWorkflowBaseDir() + "/data/testdata/genome.fa")
-      .addArgument(getWorkflowBaseDir() + "/" + sample + ".cram")
+      .addArgument("-r " + testBase + "/genome.fa")
+      .addArgument(testBase + "/" + sample + ".cram")
       .addArgument(OUTDIR + "/" + sample + ".bam")
       .addArgument("; cp " + getWorkflowBaseDir() + "/" + sample + ".bam.*")
       .addArgument(OUTDIR + "/.")
