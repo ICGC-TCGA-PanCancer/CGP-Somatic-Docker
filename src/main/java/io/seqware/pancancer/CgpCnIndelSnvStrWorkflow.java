@@ -291,14 +291,6 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       throw new RuntimeException(e);
     }
     
-    Job[] unpackBbJobs = new Job[23];
-    for(int i=0; i<23; i++) { // not 1-22+X
-      Job unpackBbJob = unpackBbAllele(i+1);
-      unpackBbJob.setMaxMemory(memUnpack);
-      unpackBbJob.addParent(startWorkflow);
-      unpackBbJobs[i] = unpackBbJob;
-    }
-    
     Job getTbiJob = stageTbi();
     getTbiJob.setMaxMemory(memGetTbi);
     getTbiJob.addParent(startWorkflow);
@@ -336,13 +328,11 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
         Job bbAlleleCountJob = bbAlleleCount(i, tumourBams.get(j), "tumour"+j, i);
         bbAlleleCountJob.setMaxMemory(memAlleleCount);
         bbAlleleCountJob.addParent(getTbiJob);
-        bbAlleleCountJob.addParent(unpackBbJobs[i]);
         bbAlleleCountJobs.add(bbAlleleCountJob);
       }
       Job bbAlleleCountJob = bbAlleleCount(i, controlBam, "control", i);
       bbAlleleCountJob.setMaxMemory(memAlleleCount);
       bbAlleleCountJob.addParent(getTbiJob);
-      bbAlleleCountJob.addParent(unpackBbJobs[i]);
       bbAlleleCountJobs.add(bbAlleleCountJob);
     }
     
@@ -658,15 +648,6 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     return thisJob;
   }
   
-  private Job unpackBbAllele(int index) {
-    Job thisJob = getWorkflow().createBashJob("alleleGunzip");
-    thisJob.getCommand()
-      .addArgument("gunzip -c " + refBase + "/battenberg/1000genomesloci2012_chr" + index + ".txt.gz")
-      .addArgument(" > " + BBDIR + "/1000genomesloci2012_chr" + index + ".txt")
-      ;
-    return thisJob;
-  }
-  
   private Job bbAlleleCount(int sampleIndex, String bam, String process, int index) {
     Job thisJob = prepTimedJob(sampleIndex, "bbAllele", process, index-1);
     thisJob.getCommand()
@@ -674,7 +655,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
               .addArgument(getWorkflowBaseDir()+ "/bin/execute_with_sample.pl " + bam)
               .addArgument(installBase)
               .addArgument("alleleCounter")
-              .addArgument("-l " + BBDIR + "/1000genomesloci2012_chr" + index + ".txt")
+              .addArgument("-l " + refBase + "/battenberg/1000genomesloci/1000genomesloci2012_chr" + index + ".txt")
               .addArgument("-o " + BBDIR + "/%SM%." + index + ".tsv")
               .addArgument("-b " + bam)
               ;
