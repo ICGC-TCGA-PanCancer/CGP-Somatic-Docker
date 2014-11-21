@@ -35,6 +35,8 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
 
   private static String OUTDIR = "outdir";
   private static String TIMEDIR;
+  private static String COUNTDIR;
+  private static String BBDIR;
   private boolean testMode=false;
   private boolean cleanup = false;
   
@@ -47,6 +49,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   // MEMORY variables //
   private String  memBasFileGet, memGnosDownload, memPackageResults, memMarkTime,
                   memQcMetrics, memUpload, memGetTbi,
+                  memPicnicCounts, memPicnicMerge, memUnpack, memBbMerge,
                   // ascat memory
                   memAlleleCount, memAscat, memAscatFinalise,
                   // pindel memory
@@ -102,6 +105,8 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       throw new RuntimeException(e);
     }
     TIMEDIR = OUTDIR + "/timings";
+    COUNTDIR = OUTDIR + "/ngsCounts";
+    BBDIR = OUTDIR + "/bbCounts";
   }
 
   @Override
@@ -111,6 +116,8 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     // creates a dir1 directory in the current working directory where the workflow runs
     addDirectory(OUTDIR);
     addDirectory(TIMEDIR);
+    addDirectory(COUNTDIR);
+    addDirectory(BBDIR);
   }
 
   @Override
@@ -144,6 +151,11 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       memQcMetrics = getProperty("memQcMetrics");
       memUpload = getProperty("memUpload");
       memGetTbi = getProperty("memGetTbi");
+      
+      memPicnicCounts = getProperty("memPicnicCounts");
+      memPicnicMerge = getProperty("memPicnicMerge");
+      memUnpack = getProperty("memUnpack");
+      memBbMerge = getProperty("memBbMerge");
       
       memAlleleCount = getProperty("memAlleleCount");
       memAscat = getProperty("memAscat");
@@ -279,6 +291,14 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       throw new RuntimeException(e);
     }
     
+    Job[] unpackBbJobs = new Job[23];
+    for(int i=0; i<23; i++) { // not 1-22+X
+      Job unpackBbJob = unpackBbAllele(i+1);
+      unpackBbJob.setMaxMemory(memUnpack);
+      unpackBbJob.addParent(startWorkflow);
+      unpackBbJobs[i] = unpackBbJob;
+    }
+    
     Job getTbiJob = stageTbi();
     getTbiJob.setMaxMemory(memGetTbi);
     getTbiJob.addParent(startWorkflow);
@@ -288,6 +308,50 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
         getTbiJob.addParent(job);
       }
     }
+    
+    // these are not paired but per individual sample
+    List<Job> ngsCountJobs = new ArrayList<Job>();
+    for(int i=1; i<=24; i++) {
+      for(int j=0; j<tumourBams.size(); j++) {
+        Job ngsCountJob = ngsCount(i, tumourBams.get(j), "tumour"+j, i);
+        ngsCountJob.setMaxMemory(memPicnicCounts);
+        ngsCountJob.addParent(getTbiJob);
+        ngsCountJobs.add(ngsCountJob);
+      }
+      Job ngsCountJob = ngsCount(i, controlBam, "control", i);
+      ngsCountJob.setMaxMemory(memPicnicCounts);
+      ngsCountJob.addParent(getTbiJob);
+      ngsCountJobs.add(ngsCountJob);
+    }
+    
+    Job ngsCountMergeJob = ngsCountMerge(controlBam);
+    ngsCountMergeJob.setMaxMemory(memPicnicMerge);
+    for(Job j : ngsCountJobs) {
+      ngsCountMergeJob.addParent(j);
+    }
+    
+    List<Job> bbAlleleCountJobs = new ArrayList<Job>();
+    for(int i=0; i<23; i++) { // not 1-22+X
+      for(int j=0; j<tumourBams.size(); j++) {
+        Job bbAlleleCountJob = bbAlleleCount(i, tumourBams.get(j), "tumour"+j, i);
+        bbAlleleCountJob.setMaxMemory(memAlleleCount);
+        bbAlleleCountJob.addParent(getTbiJob);
+        bbAlleleCountJob.addParent(unpackBbJobs[i]);
+        bbAlleleCountJobs.add(bbAlleleCountJob);
+      }
+      Job bbAlleleCountJob = bbAlleleCount(i, controlBam, "control", i);
+      bbAlleleCountJob.setMaxMemory(memAlleleCount);
+      bbAlleleCountJob.addParent(getTbiJob);
+      bbAlleleCountJob.addParent(unpackBbJobs[i]);
+      bbAlleleCountJobs.add(bbAlleleCountJob);
+    }
+    
+    Job bbAlleleMergeJob = bbAlleleMerge(controlBam);
+    bbAlleleMergeJob.setMaxMemory(memBbMerge);
+    for(Job j : bbAlleleCountJobs) {
+      bbAlleleMergeJob.addParent(j);
+    }
+    
     
     Job[] cavemanFlagJobs = new Job [tumourBams.size()];
     for(int i=0; i<tumourBams.size(); i++) {
@@ -557,6 +621,77 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     cavemanPackage.addParent(cavemanFlagJob);
     
     return cavemanFlagJob;
+  }
+  
+  private Job ngsCountMerge(String controlBam) {
+    Job thisJob = prepTimedJob(0, "binCount", "merge", 0);
+    thisJob.getCommand()
+              .addArgument(getWorkflowBaseDir()+ "/bin/wrapper.sh")
+              .addArgument(installBase)
+              .addArgument("ngs_bin_allele_merge.pl")
+              .addArgument(controlBam)
+              .addArgument(COUNTDIR)
+              ;
+    return thisJob;
+  }
+  
+  private Job ngsCount(int sampleIndex, String bam, String process, int index) {
+    String chr = Integer.toString(index+1);
+    if(index+1 == 23) {
+      chr = "X";
+    }
+    else if(index+1 == 24) {
+      chr = "Y";
+    }
+    
+    Job thisJob = prepTimedJob(sampleIndex, "binCounts", process, index);
+    thisJob.getCommand()
+              .addArgument(getWorkflowBaseDir()+ "/bin/wrapper.sh")
+              .addArgument(installBase)
+              .addArgument("ngs_bin_allele.pl")
+              .addArgument(refBase + "/picnic/cn_bins.csv.gz")
+              .addArgument(refBase + "/picnic/snp6.txt.gz")
+              .addArgument(COUNTDIR)
+              .addArgument(bam)
+              .addArgument(chr)
+              ;
+    return thisJob;
+  }
+  
+  private Job unpackBbAllele(int index) {
+    Job thisJob = getWorkflow().createBashJob("alleleGunzip");
+    thisJob.getCommand()
+      .addArgument("gunzip -c " + refBase + "/battenberg/1000genomesloci2012_chr" + index + ".txt.gz")
+      .addArgument(" > " + BBDIR + "/1000genomesloci2012_chr" + index + ".txt")
+      ;
+    return thisJob;
+  }
+  
+  private Job bbAlleleCount(int sampleIndex, String bam, String process, int index) {
+    Job thisJob = prepTimedJob(sampleIndex, "bbAllele", process, index-1);
+    thisJob.getCommand()
+              .addArgument(getWorkflowBaseDir()+ "/bin/wrapper.sh")
+              .addArgument(getWorkflowBaseDir()+ "/bin/execute_with_sample.pl " + bam)
+              .addArgument(installBase)
+              .addArgument("alleleCounter")
+              .addArgument("-l " + BBDIR + "/1000genomesloci2012_chr" + index + ".txt")
+              .addArgument("-o " + BBDIR + "/%SM%." + index + ".tsv")
+              .addArgument("-b " + bam)
+              ;
+    return thisJob;
+  }
+  
+  private Job bbAlleleMerge(String controlBam) {
+    Job thisJob = prepTimedJob(0, "bbAllele", "merge", 0);
+    thisJob.getCommand()
+              .addArgument(getWorkflowBaseDir()+ "/bin/wrapper.sh")
+              .addArgument(installBase)
+              .addArgument("packageImpute.pl")
+              .addArgument(controlBam)
+              .addArgument(BBDIR)
+              .addArgument(";rm -f " + BBDIR + "/1000genomesloci2012_chr*.txt")
+              ;
+    return thisJob;
   }
   
   private Job vcfUpload(String[] types, String controlAnalysisId, List<String> tumourAnalysisIds, List<String> tumourAliquotIds) {

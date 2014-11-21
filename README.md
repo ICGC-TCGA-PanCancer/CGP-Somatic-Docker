@@ -32,10 +32,13 @@ The following are the packages needed for Ubuntu 12.04:
     sudo apt-get install libboost-all-dev
     sudo apt-get install libpstreams-dev
     sudo apt-get install libglib2.0-dev
-    sudo apt-get install r-base r-base-core r-cran-rcolorbrewer
     sudo apt-get install zlib1g-dev
     # for the vcf-uploader
     sudo apt-get install libxml-dom-perl libxml-xpath-perl libjson-perl libxml-libxml-perl
+
+These packages are needed for execution, **even when pulling from Artifactory**:
+
+    sudo apt-get install r-base r-base-core r-cran-rcolorbrewer
 
 ## Building the Workflow
 
@@ -62,6 +65,7 @@ The workflow build process pulls the various binary dependencies hosted on our A
 You need to build and install the following in this order:
 
 * [PCAP v1.2.2](https://github.com/ICGC-TCGA-PanCancer/PCAP-core/archive/v1.2.2.tar.gz)
+* [cgpBinCounts v1.0.0](https://github.com/cancerit/cgpBinCounts/archive/v1.0.0.tar.gz)
 * [cgpVcf v1.2.2](https://github.com/cancerit/cgpVcf/archive/v1.2.2.tar.gz)
 * [alleleCount v1.2.1](https://github.com/cancerit/alleleCount/archive/v1.2.1.tar.gz)
 * [ascatNgs v1.5.0](https://github.com/cancerit/ascatNgs/archive/v1.5.0.tar.gz)
@@ -72,19 +76,13 @@ You need to build and install the following in this order:
 * [VAGrENT v2.0.0](https://github.com/cancerit/VAGrENT/archive/v2.0.0.tar.gz)
 * [grass v1.0.1](https://github.com/cancerit/grass/archive/v1.0.1.tar.gz)
 
-All of these packages have the same installation method.  For installation within this workflow:
+There is a script included in this package that automates this process, just run:
 
-    wget <package>
-    tar zxf vX.X.X.tar.gz
-    cd <package>
-    ./setup.pl ../SeqWare-CGP-SomaticCore/workflow/bin/opt
+    workflow/bin/setup.sh
 
-Note, PCAP uses a "setup.sh" and not "setup.pl".
+This creates ``workflow/bin/opt`` which should then be packaged (``tar.gz``) and deployed to Artifactory.
 
-Note, the workflow references velveth but it compiles/installs as velvet95h. You need to do something similar to:
-
-    seqware@master:/mnt/SeqWare-CGP-SomaticCore/workflow/bin/opt/bin$ cp velvet95g velvetg
-    seqware@master:/mnt/SeqWare-CGP-SomaticCore/workflow/bin/opt/bin$ cp velvet95h velveth
+If you find there is a problem following upgrade please reference this script.
 
 ## Host currently needs reconf for SGE - Optional
 
