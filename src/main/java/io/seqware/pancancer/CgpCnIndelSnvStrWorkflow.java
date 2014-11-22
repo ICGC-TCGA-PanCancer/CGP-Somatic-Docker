@@ -374,17 +374,17 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     metricsJob.addParent(endWorkflow);
     
     Job renameImputeJob = renameSampleFile(tumourBams, OUTDIR + "/bbCounts", "imputeCounts.tar.gz");
-    renameImputeJob.setMaxMemory("3000");
+    renameImputeJob.setMaxMemory("4000");
     renameImputeJob.addParent(bbAlleleMergeJob);
     Job renameImputeMd5Job = renameSampleFile(tumourBams, OUTDIR + "/bbCounts", "imputeCounts.tar.gz.md5");
-    renameImputeMd5Job.setMaxMemory("3000");
+    renameImputeMd5Job.setMaxMemory("4000");
     renameImputeMd5Job.addParent(bbAlleleMergeJob);
     
     Job renameCountsJob = renameSampleFile(tumourBams, OUTDIR + "/ngsCounts", "binnedReadCounts.tar.gz");
-    renameCountsJob.setMaxMemory("3000");
+    renameCountsJob.setMaxMemory("4000");
     renameCountsJob.addParent(ngsCountMergeJob);
     Job renameCountsMd5Job = renameSampleFile(tumourBams, OUTDIR + "/ngsCounts", "binnedReadCounts.tar.gz.md5");
-    renameCountsMd5Job.setMaxMemory("3000");
+    renameCountsMd5Job.setMaxMemory("4000");
     renameCountsMd5Job.addParent(ngsCountMergeJob);
     
     if(uploadServer != null) {
@@ -394,8 +394,8 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       uploadJob.addParent(metricsJob);
       uploadJob.addParent(renameImputeJob);
       uploadJob.addParent(renameImputeMd5Job);
-      uploadJob.addParent(ngsCountMergeJob);
-      uploadJob.addParent(ngsCountMergeMd5Job);
+      uploadJob.addParent(renameCountsJob);
+      uploadJob.addParent(renameCountsMd5Job);
       
       if (cleanup) {
         // if we upload to GNOS then go ahead and delete all the large files
@@ -727,7 +727,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       .addArgument(getWorkflowBaseDir()+ "/bin/wrapper.sh")
       .addArgument(installBase)
       .addArgument(getWorkflowBaseDir()+ "/bin/execute_with_sample.pl " + bam)
-      .addArgument(dir + "/" + "%SM%." + extension)
+      .addArgument("cp " + dir + "/" + "%SM%." + extension)
       .addArgument(OUTDIR + "/" + "%SM%." + workflowName + "." + dateString + ".somatic." + extension)
       ;
     }
