@@ -373,13 +373,19 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     metricsJob.setMaxMemory(memQcMetrics);
     metricsJob.addParent(endWorkflow);
     
-    Job renameImputeJob = renameSampleFile(tumourBams, OUTDIR, "imputeCounts.tar.gz");
+    Job renameImputeJob = renameSampleFile(tumourBams, OUTDIR + "/bbCounts", "imputeCounts.tar.gz");
     renameImputeJob.setMaxMemory("3000");
     renameImputeJob.addParent(bbAlleleMergeJob);
+    Job renameImputeMd5Job = renameSampleFile(tumourBams, OUTDIR + "/bbCounts", "imputeCounts.tar.gz.md5");
+    renameImputeMd5Job.setMaxMemory("3000");
+    renameImputeMd5Job.addParent(bbAlleleMergeJob);
     
-    Job renameCountsJob = renameSampleFile(tumourBams, OUTDIR, "binnedReadCounts.tar.gz");
+    Job renameCountsJob = renameSampleFile(tumourBams, OUTDIR + "/ngsCounts", "binnedReadCounts.tar.gz");
     renameCountsJob.setMaxMemory("3000");
     renameCountsJob.addParent(ngsCountMergeJob);
+    Job renameCountsMd5Job = renameSampleFile(tumourBams, OUTDIR + "/ngsCounts", "binnedReadCounts.tar.gz.md5");
+    renameCountsMd5Job.setMaxMemory("3000");
+    renameCountsMd5Job.addParent(ngsCountMergeJob);
     
     if(uploadServer != null) {
       String[] resultTypes = {"snv_mnv","cnv","sv","indel"};
@@ -387,7 +393,9 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       uploadJob.setMaxMemory(memUpload);
       uploadJob.addParent(metricsJob);
       uploadJob.addParent(renameImputeJob);
+      uploadJob.addParent(renameImputeMd5Job);
       uploadJob.addParent(ngsCountMergeJob);
+      uploadJob.addParent(ngsCountMergeMd5Job);
       
       if (cleanup) {
         // if we upload to GNOS then go ahead and delete all the large files
@@ -721,7 +729,6 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       .addArgument(getWorkflowBaseDir()+ "/bin/execute_with_sample.pl " + bam)
       .addArgument(dir + "/" + "%SM%." + extension)
       .addArgument(OUTDIR + "/" + "%SM%." + workflowName + "." + dateString + ".somatic." + extension)
-      .addArgument(";")
       ;
     }
     return thisJob;
