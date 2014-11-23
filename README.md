@@ -52,6 +52,10 @@ These packages are needed for execution, **even when pulling from Artifactory**:
 
     sudo apt-get install r-base r-base-core r-cran-rcolorbrewer
 
+All of the above on one line to make it easy to cut and paste into a terminal:
+
+    sudo apt-get autoclean; sudo apt-get update; sudo apt-get upgrade; sudo apt-get install libxml-dom-perl libxml-xpath-perl libjson-perl libxml-libxml-perl zlib1g-dev libglib2.0-dev libpstreams-dev libboost-all-dev libgd2-xpm-dev libncurses5-dev g++ pkg-config dh-autoreconf r-base r-base-core r-cran-rcolorbrewer
+
 ## Building the Workflow
 
 Now that you have a VM built and system-level dependencies installed it's time to build the workflow.  Clone the project in git and cd into SeqWare-CGP-SomaticCore.  Now build with Maven:
