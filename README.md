@@ -54,7 +54,7 @@ These packages are needed for execution, **even when pulling from Artifactory**:
 
 All of the above on one line to make it easy to cut and paste into a terminal:
 
-    sudo apt-get autoclean; sudo apt-get update; sudo apt-get upgrade; sudo apt-get install libxml-dom-perl libxml-xpath-perl libjson-perl libxml-libxml-perl zlib1g-dev libglib2.0-dev libpstreams-dev libboost-all-dev libgd2-xpm-dev libncurses5-dev g++ pkg-config dh-autoreconf r-base r-base-core r-cran-rcolorbrewer
+    sudo apt-get autoclean; sudo apt-get update; sudo apt-get -y upgrade; sudo apt-get -y install libxml-dom-perl libxml-xpath-perl libjson-perl libxml-libxml-perl zlib1g-dev libglib2.0-dev libpstreams-dev libboost-all-dev libgd2-xpm-dev libncurses5-dev g++ pkg-config dh-autoreconf r-base r-base-core r-cran-rcolorbrewer
 
 ## Building the Workflow
 
