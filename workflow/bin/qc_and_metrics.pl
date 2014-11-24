@@ -85,8 +85,8 @@ sub rum_metrics {
     $run_met{'pairs'}{$aliqout_id}{'snv_mnv'} = _run_met( $count, $timings, 'CaVEMan' );
     $run_met{'pairs'}{$aliqout_id}{'indel'} = _run_met( $count, $timings, 'cgpPindel' );
     $run_met{'pairs'}{$aliqout_id}{'cnv'} = _run_met( $count, $timings, 'ASCAT' );
-    $run_met{'pairs'}{$aliqout_id}{'other'}{'binCounts'} = _run_met( $count, $timings, 'binCounts' );
-    $run_met{'pairs'}{$aliqout_id}{'other'}{'bbAllele'} = _run_met( $count, $timings, 'bbAllele' );
+    $run_met{'pairs'}{$aliqout_id}{'binCounts'} = _run_met( $count, $timings, 'binCounts' );
+    $run_met{'pairs'}{$aliqout_id}{'bbAllele'} = _run_met( $count, $timings, 'bbAllele' );
     $count++;
   }
   $run_met{'workflow'}{'Wall_s'} = _workflow_met($timings);
