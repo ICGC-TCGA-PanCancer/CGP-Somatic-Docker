@@ -315,12 +315,12 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     List<Job> bbAlleleCountJobs = new ArrayList<Job>();
     for(int i=0; i<23; i++) { // not 1-22+X
       for(int j=0; j<tumourBams.size(); j++) {
-        Job bbAlleleCountJob = bbAlleleCount(i, tumourBams.get(j), "tumour"+j, i);
+        Job bbAlleleCountJob = bbAlleleCount(j, tumourBams.get(j), "tumour", i);
         bbAlleleCountJob.setMaxMemory(memAlleleCount);
         bbAlleleCountJob.addParent(getTbiJob);
         bbAlleleCountJobs.add(bbAlleleCountJob);
       }
-      Job bbAlleleCountJob = bbAlleleCount(i, controlBam, "control", i);
+      Job bbAlleleCountJob = bbAlleleCount(1, controlBam, "control", i);
       bbAlleleCountJob.setMaxMemory(memAlleleCount);
       bbAlleleCountJob.addParent(getTbiJob);
       bbAlleleCountJobs.add(bbAlleleCountJob);
@@ -336,12 +336,12 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     List<Job> ngsCountJobs = new ArrayList<Job>();
     for(int i=1; i<=24; i++) {
       for(int j=0; j<tumourBams.size(); j++) {
-        Job ngsCountJob = ngsCount(i, tumourBams.get(j), "tumour"+j, i);
+        Job ngsCountJob = ngsCount(j, tumourBams.get(j), "tumour", i);
         ngsCountJob.setMaxMemory(memPicnicCounts);
         ngsCountJob.addParent(getTbiJob);
         ngsCountJobs.add(ngsCountJob);
       }
-      Job ngsCountJob = ngsCount(i, controlBam, "control", i);
+      Job ngsCountJob = ngsCount(1, controlBam, "control", i);
       ngsCountJob.setMaxMemory(memPicnicCounts);
       ngsCountJob.addParent(getTbiJob);
       ngsCountJobs.add(ngsCountJob);
@@ -660,7 +660,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   }
   
   private Job ngsCountMerge(String controlBam) {
-    Job thisJob = prepTimedJob(0, "binCount", "merge", 0);
+    Job thisJob = prepTimedJob(0, "binCount", "merge", 1);
     thisJob.getCommand()
               .addArgument(getWorkflowBaseDir()+ "/bin/wrapper.sh")
               .addArgument(installBase)
@@ -710,7 +710,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   }
   
   private Job bbAlleleMerge(String controlBam) {
-    Job thisJob = prepTimedJob(0, "bbAllele", "merge", 0);
+    Job thisJob = prepTimedJob(0, "bbAllele", "merge", 1);
     thisJob.getCommand()
               .addArgument(getWorkflowBaseDir()+ "/bin/wrapper.sh")
               .addArgument(installBase)
