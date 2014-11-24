@@ -16,6 +16,18 @@ This workflow assumes you are working on a VM (running on Amazon, in VirtualBox,
 
 Again, this is a bit complex but in the future we will distributed pre-created VMs as OVA files or AMIs that should make this process go much more smoothly.
 
+### Hardware Requirements
+
+This workflow recommends:
+
+* 16-32 cores (make sure you set the coresAddressable variable correctly in the ini file)
+* 4.5G per core, so, ideally 72GB+ for 16 cores, for 32 cores 144GB+, on Amazon we recommend r3.8xlarge or r3.4xlarge
+* 1TB of local disk space
+
+### Other Requirements
+
+This workflow requires an HTTP server to serve tabix-indexed data files, the location is controlled by the tabixSrvUri variable in the ini file
+
 ## Additional Packages for Base Instance
 
 The directions above at our PanCancer SOP docs site will build a base SeqWare 1.1.0 box.  Over time we wil add these packages to the base configuration but for now you will want to install the following on your SeqWare 1.1.0 VM once Bindle 2.0 has created it.
@@ -39,6 +51,12 @@ The following are the packages needed for Ubuntu 12.04:
 These packages are needed for execution, **even when pulling from Artifactory**:
 
     sudo apt-get install r-base r-base-core r-cran-rcolorbrewer
+
+All of the above on one line to make it easy to cut and paste into a terminal:
+
+    sudo apt-get autoclean; sudo apt-get update; sudo apt-get -y upgrade; sudo apt-get -y install libxml-dom-perl libxml-xpath-perl libjson-perl libxml-libxml-perl zlib1g-dev libglib2.0-dev libpstreams-dev libboost-all-dev libgd2-xpm-dev libncurses5-dev g++ pkg-config dh-autoreconf r-base r-base-core r-cran-rcolorbrewer
+
+Note: on BioNimbus I ran into an issue with r-cran-rcolorbrewer not being up to date with R 3.x.  See http://stackoverflow.com/questions/16503554/r-3-0-0-update-has-left-loads-of-2-x-packages-incompatible
 
 ## Building the Workflow
 
