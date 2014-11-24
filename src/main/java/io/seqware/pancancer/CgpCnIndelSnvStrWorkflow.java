@@ -312,26 +312,6 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     }
     
     // these are not paired but per individual sample
-    List<Job> ngsCountJobs = new ArrayList<Job>();
-    for(int i=1; i<=24; i++) {
-      for(int j=0; j<tumourBams.size(); j++) {
-        Job ngsCountJob = ngsCount(i, tumourBams.get(j), "tumour"+j, i);
-        ngsCountJob.setMaxMemory(memPicnicCounts);
-        ngsCountJob.addParent(getTbiJob);
-        ngsCountJobs.add(ngsCountJob);
-      }
-      Job ngsCountJob = ngsCount(i, controlBam, "control", i);
-      ngsCountJob.setMaxMemory(memPicnicCounts);
-      ngsCountJob.addParent(getTbiJob);
-      ngsCountJobs.add(ngsCountJob);
-    }
-    
-    Job ngsCountMergeJob = ngsCountMerge(controlBam);
-    ngsCountMergeJob.setMaxMemory(memPicnicMerge);
-    for(Job j : ngsCountJobs) {
-      ngsCountMergeJob.addParent(j);
-    }
-    
     List<Job> bbAlleleCountJobs = new ArrayList<Job>();
     for(int i=0; i<23; i++) { // not 1-22+X
       for(int j=0; j<tumourBams.size(); j++) {
@@ -352,7 +332,28 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       bbAlleleMergeJob.addParent(j);
     }
     
+    // these are not paired but per individual sample
+    List<Job> ngsCountJobs = new ArrayList<Job>();
+    for(int i=1; i<=24; i++) {
+      for(int j=0; j<tumourBams.size(); j++) {
+        Job ngsCountJob = ngsCount(i, tumourBams.get(j), "tumour"+j, i);
+        ngsCountJob.setMaxMemory(memPicnicCounts);
+        ngsCountJob.addParent(getTbiJob);
+        ngsCountJobs.add(ngsCountJob);
+      }
+      Job ngsCountJob = ngsCount(i, controlBam, "control", i);
+      ngsCountJob.setMaxMemory(memPicnicCounts);
+      ngsCountJob.addParent(getTbiJob);
+      ngsCountJobs.add(ngsCountJob);
+    }
     
+    Job ngsCountMergeJob = ngsCountMerge(controlBam);
+    ngsCountMergeJob.setMaxMemory(memPicnicMerge);
+    for(Job j : ngsCountJobs) {
+      ngsCountMergeJob.addParent(j);
+    }
+    
+    // donor based workflow section
     Job[] cavemanFlagJobs = new Job [tumourBams.size()];
     for(int i=0; i<tumourBams.size(); i++) {
       Job cavemanFlagJob = buildPairWorkflow(getTbiJob, controlBam, tumourBams.get(i), i);

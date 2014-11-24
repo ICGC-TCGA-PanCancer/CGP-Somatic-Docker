@@ -90,7 +90,7 @@ You need to build and install the following in this order:
 * [cgpPindel v1.1.2](https://github.com/cancerit/cgpPindel/archive/v1.1.2.tar.gz)
 * [cgpCaVEManPostProcessing v1.0.2](https://github.com/cancerit/cgpCaVEManPostProcessing/archive/v1.0.2.tar.gz)
 * [cgpCaVEManWrapper v1.2.0](https://github.com/cancerit/cgpCaVEManWrapper/archive/v1.2.0.tar.gz)
-* [BRASS v2.0.0](https://github.com/cancerit/BRASS/archive/v2.0.0.tar.gz)
+* [BRASS v2.0.1](https://github.com/cancerit/BRASS/archive/v2.0.1.tar.gz)
 * [VAGrENT v2.0.0](https://github.com/cancerit/VAGrENT/archive/v2.0.0.tar.gz)
 * [grass v1.0.1](https://github.com/cancerit/grass/archive/v1.0.1.tar.gz)
 
