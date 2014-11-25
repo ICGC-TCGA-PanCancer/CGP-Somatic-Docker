@@ -19,8 +19,8 @@ uploadServer=[% uploadServer %]
 
 study-refname-override=icgc_pancancer_vcf_test
 #analysis-center-override=
-upload-test=[% upload\-test %]
-upload-skip=[% upload\-skip %]
+upload-test=[% item('upload-test') %]
+upload-skip=[% item('upload-skip') %]
 
 assembly=GRCh37
 species=human
