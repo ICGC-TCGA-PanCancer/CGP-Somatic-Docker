@@ -14,7 +14,7 @@ my $tt = Template->new;
 
 GetOptions(
   "tsv=s" => \$tsv,
-  "output_dir=s" => \$output_dir,
+  "output-dir=s" => \$output_dir,
   "defaults=s" => \$defaults,
   "template=s" => \$template,
 ) or die ("Getopt error");
