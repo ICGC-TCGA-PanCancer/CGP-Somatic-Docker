@@ -127,28 +127,3 @@ sub fill_values {
 
   return($r);
 }
-
-
-pemFile=/mnt/seqware-build/ebi.pem
-gnosServer=https://gtrepo-ebi.annailabs.com
-## comment out upload server to block vcfUpload
-uploadServer=https://gtrepo-ebi.annailabs.com
-uploadPemFile=/mnt/seqware-build/ebi.pem
-
-study-refname-override=icgc_pancancer_vcf_test
-#analysis-center-override=
-#upload-test=true
-#upload-skip=true
-
-assembly=GRCh37
-species=human
-seqType=WGS
-gender=L
-
-
-# PD4116a 30x vs PD4116b 30x
-tumourAliquotIds=f393bb07-270c-2c93-e040-11ac0d484533
-tumourAnalysisIds=ef26d046-e88a-4f21-a232-16ccb43637f2
-tumourBams=7723a85b59ebce340fe43fc1df504b35.bam
-controlAnalysisId=1b9215ab-3634-4108-9db7-7e63139ef7e9
-controlBam=8f957ddae66343269cb9b854c02eee2f.bam
