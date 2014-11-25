@@ -50,6 +50,7 @@ my @scripts;
 open IN, "<$tsv" or die;
 while(<IN>) {
   chomp;
+  next if (/^Study/);
   push @scripts, process($_, $def);
 }
 close IN;
