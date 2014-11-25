@@ -67,7 +67,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
                   // sequencing type/protocol
                   seqType, seqProtocol,
                   //GNOS identifiers
-                  pemFile, gnosServer, uploadServer,
+                  pemFile, uploadPemFile, gnosServer, uploadServer,
                   // ascat variables
                   gender,
                   // pindel variables
@@ -215,6 +215,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       // test mode
       if(!testMode || (hasPropertyAndNotNull("upload-test") && Boolean.valueOf(getProperty("upload-test")))) {
         pemFile = getProperty("pemFile");
+        uploadPemFile = getProperty("uploadPemFile");
       }
 
       //environment
@@ -798,7 +799,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       .addArgument("--tarballs " + tars)
       .addArgument("--tarball-md5sum-files " + tarmd5s)
       .addArgument("--outdir " + OUTDIR + "/upload")
-      .addArgument("--key " + pemFile)
+      .addArgument("--key " + uploadPemFile)
       .addArgument("--upload-url " + uploadServer)
       .addArgument("--qc-metrics-json " + OUTDIR + "/qc_metrics.json")
       .addArgument("--timing-metrics-json " + OUTDIR + "/process_metrics.json")
