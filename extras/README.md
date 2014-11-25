@@ -7,3 +7,6 @@ decider is ready.
 
 See https://docs.google.com/spreadsheets/d/1fM3j5eJB42iVIhTTqtcgddalUb8HJEY_CZ2x5bdPeCg/edit#gid=886811499
 
+## Dependencies
+
+    sudo apt-get install libtemplate-perl

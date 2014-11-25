@@ -28,7 +28,7 @@ while(<DEF>) {
   if(/(\S+)\s*=\s*(\S+)/) {
     my $key = $1;
     my $val = $2;
-    $def->{$key} = $value;
+    $def->{$key} = $val;
   }
 }
 # now deal with hash values
