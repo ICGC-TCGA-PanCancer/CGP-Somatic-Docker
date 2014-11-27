@@ -10,6 +10,8 @@ check_tools();
 
 download("$link_dir/reference", "http://s3.amazonaws.com/pan-cancer-data/pan-cancer-reference/genome.fa.gz");
 download("$link_dir/reference", "http://s3.amazonaws.com/pan-cancer-data/pan-cancer-reference/genome.fa.gz.fai");
+#download("$link_dir/", "https://s3.amazonaws.com/pan-cancer-data/pan-cancer-reference/cgp_reference.tar.gz");
+#untar("$link_dir", "cgp_reference.tar.gz");
 download("$link_dir/reference", "https://s3.amazonaws.com/pan-cancer-data/pan-cancer-reference/cgp_reference.tar.gz");
 download("$link_dir/", "https://s3.amazonaws.com/pan-cancer-data/workflow-data/SangerPancancerCgpCnIndelSnvStr/testdata.tar.gz");
 # need to unpack cgp_reference.tar.gz (unpack is a keyword)
@@ -52,6 +54,19 @@ sub download {
   }
 }
 
+# not used anymore but left it in for time being
+sub untar {
+  my ($dir, $tar) = @_;
+  print "\nUNTARRING $tar\n";
+  my $output = "$dir/$tar";
+  $output =~ s/\.tar.gz//;
+  if (!-e "$output") {
+    my $r = system("cd $dir && tar zxf $tar");
+    if ($r) {
+      die "UNTAR of $tar FAILED\n";
+    }
+  }
+}
 
 sub check_tools {
   if (system("which curl") || (system("which lwp-download") && system("which wget"))) {

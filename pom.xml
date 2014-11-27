@@ -8,11 +8,11 @@
     </prerequisites>
 
     <groupId>io.seqware</groupId>
-    <artifactId>CgpCnIndelSnvStr</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <artifactId>SangerPancancerCgpCnIndelSnvStr</artifactId>
+    <version>1.0.0</version>
     <packaging>jar</packaging>
 
-    <name>CgpCnIndelSnvStr</name>
+    <name>SangerPancancerCgpCnIndelSnvStr</name>
     <url>http://maven.apache.org</url>
 
     <properties>
@@ -20,8 +20,8 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <seqware-version>1.1.0-alpha.5</seqware-version>
         <skipITs>true</skipITs>
-        <workflow-full-name>Workflow_Bundle_CgpCnIndelSnvStr_${workflow-version}_SeqWare_${seqware-version}</workflow-full-name>
-        <workflow-dir>${project.build.directory}/${workflow-full-name}/Workflow_Bundle_CgpCnIndelSnvStr/${workflow-version}</workflow-dir>
+        <workflow-full-name>Workflow_Bundle_SangerPancancerCgpCnIndelSnvStr_${workflow-version}_SeqWare_${seqware-version}</workflow-full-name>
+        <workflow-dir>${project.build.directory}/${workflow-full-name}/Workflow_Bundle_SangerPancancerCgpCnIndelSnvStr/${workflow-version}</workflow-dir>
     </properties>
 
     <dependencies>
@@ -34,26 +34,6 @@
         <dependency>
             <groupId>io.seqware</groupId>
             <artifactId>seqware-bin-linux-x86-64-jre-7.0.51</artifactId>
-            <version>1.0.0</version>
-        </dependency>
-        <dependency>
-            <groupId>net.sourceforge.seqware</groupId>
-            <artifactId>seqware-bin-linux-x86-64-cat-5.67</artifactId>
-            <version>1.0.0</version>
-        </dependency>
-        <dependency>
-            <groupId>net.sourceforge.seqware</groupId>
-            <artifactId>seqware-bin-linux-x86-64-echo-5.67</artifactId>
-            <version>1.0.0</version>
-        </dependency>
-        <dependency>
-            <groupId>net.sourceforge.seqware</groupId>
-            <artifactId>seqware-bin-linux-x86-64-perl-5.14.1</artifactId>
-            <version>1.0.0</version>
-        </dependency>
-        <dependency>
-            <groupId>net.sourceforge.seqware</groupId>
-            <artifactId>seqware-bin-noarch-pegasus-dirmanager</artifactId>
             <version>1.0.0</version>
         </dependency>
         <dependency>
