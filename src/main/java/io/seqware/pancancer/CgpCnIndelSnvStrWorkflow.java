@@ -945,7 +945,6 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
               .addArgument(installBase)
               .addArgument("caveman.pl")
               .addArgument("-p " + process)
-              .addArgument("-i " + index)
               .addArgument("-ig " + refBase + "/caveman/ucscHiDepth_0.01_merge1000_no_exon.tsv")
               .addArgument("-b " + refBase + "/caveman/flagging")
               .addArgument("-u " + tabixSrvUri)
@@ -967,6 +966,10 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       thisJob.getCommand().addArgument("-tb " + tumourBam)
                           .addArgument("-nb " + controlBam)
                           .addArgument("-r " + genomeFaGz + ".fai");
+    }
+    
+    if(!process.equals("mstep") && !process.equals("estep")) {
+      thisJob.getCommand().addArgument("-i " + index);
     }
     
     if(process.equals("flag")) {
@@ -1072,7 +1075,6 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
               .addArgument(installBase)
               .addArgument("brass.pl")
               .addArgument("-p " + process)
-              .addArgument("-i " + index)
               .addArgument("-g " + genomeFaGz)
               .addArgument("-e " + refExclude)
               .addArgument("-pr " + seqType)
@@ -1087,6 +1089,9 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
               .addArgument("-t " + tumourBam)
               .addArgument("-n " + controlBam)
             ;
+    if(!process.equals("assemble")) {
+      thisJob.getCommand().addArgument("-i " + index);
+    }
     if(process.equals("filter")) {
       String cnPath = OUTDIR + "/" + tumourCount + "/ascat/*.copynumber.caveman.csv";
       thisJob.getCommand().addArgument("-a " + cnPath);
