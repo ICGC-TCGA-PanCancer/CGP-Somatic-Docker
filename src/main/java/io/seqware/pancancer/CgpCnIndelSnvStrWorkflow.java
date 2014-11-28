@@ -562,6 +562,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     Job brassAssembleJob = brassBaseJob(tumourCount, tumourBam, controlBam, "BRASS", "assemble", 1);
     brassAssembleJob.setMaxMemory(Integer.toString(totalBrassAssMem));
     brassAssembleJob.getCommand().addArgument("-l " + brassAssNormalisedThreads);
+    brassAssembleJob.getCommand().addArgument("-c " + brassAssNormalisedThreads);
     brassAssembleJob.setMaxMemory(Integer.toString(totalBrassAssMem));
     brassAssembleJob.setThreads(brassAssNormalisedThreads);
     brassAssembleJob.addParent(brassSplitJob);
@@ -608,6 +609,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     
     Job cavemanMstepJob = cavemanBaseJob(tumourCount, tumourBam, controlBam, "CaVEMan", "mstep", 1);
     cavemanMstepJob.getCommand().addArgument("-l " + mstepNormalisedThreads);
+    cavemanMstepJob.getCommand().addArgument("-t " + mstepNormalisedThreads);
     cavemanMstepJob.setMaxMemory(Integer.toString(totalMstepMem));
     cavemanMstepJob.setThreads(mstepNormalisedThreads);
     cavemanMstepJob.addParent(cavemanSplitConcatJob);
@@ -621,6 +623,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     
     Job cavemanEstepJob = cavemanBaseJob(tumourCount, tumourBam, controlBam, "CaVEMan", "estep", 1);
     cavemanEstepJob.getCommand().addArgument("-l " + estepNormalisedThreads);
+    cavemanEstepJob.getCommand().addArgument("-t " + estepNormalisedThreads);
     cavemanMstepJob.setMaxMemory(Integer.toString(totalEstepMem));
     cavemanMstepJob.setThreads(estepNormalisedThreads);
     cavemanEstepJob.addParent(cavemanMergeJob);
