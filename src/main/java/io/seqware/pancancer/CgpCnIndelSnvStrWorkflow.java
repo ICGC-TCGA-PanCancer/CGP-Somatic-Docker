@@ -851,7 +851,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     
     int memoryAvail = memHostMbAvailable - memWorkflowOverhead;
     
-    if(Integer.divideUnsigned(memoryAvail, threads) > Integer.valueOf(perThreadMemory)) {
+    if((memoryAvail / threads) > Integer.valueOf(perThreadMemory)) {
       usableThreads = threads;
     }
     else {
