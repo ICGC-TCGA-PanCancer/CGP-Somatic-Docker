@@ -52,11 +52,11 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
                   memPindelInput, memPindel, memPindelVcf, memPindelMerge , memPindelFlag,
                   // brass memory
                   memBrassInput, memBrassGroup, memBrassFilter, memBrassSplit,
-                  memBrassAssemble, memBrassGrass, memBrassTabix,
+                  memBrassAssemblePerThread, memBrassGrass, memBrassTabix,
                   // caveman memory
                   memCaveCnPrep,
                   memCavemanSetup, memCavemanSplit, memCavemanSplitConcat,
-                  memCavemanMstep, memCavemanMerge, memCavemanEstep,
+                  memCavemanMstepPerThread, memCavemanMerge, memCavemanEstepPerThread,
                   memCavemanMergeResults, memCavemanAddIds, memCavemanFlag,
                   memCavemanTbiClean
           ;
@@ -77,7 +77,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
                   //general variables
                   installBase, refBase, genomeFaGz, testBase;
   
-  private int coresAddressable;
+  private int coresAddressable, memWorkflowOverhead, memHostMbAvailable;
   
   private void init() {
     try {
@@ -172,7 +172,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       memBrassGroup = getProperty("memBrassGroup");
       memBrassFilter = getProperty("memBrassFilter");
       memBrassSplit = getProperty("memBrassSplit");
-      memBrassAssemble = getProperty("memBrassAssemble");
+      memBrassAssemblePerThread = getProperty("memBrassAssemblePerThread");
       memBrassGrass = getProperty("memBrassGrass");
       memBrassTabix = getProperty("memBrassTabix");
       
@@ -180,13 +180,16 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       memCavemanSetup = getProperty("memCavemanSetup");
       memCavemanSplit = getProperty("memCavemanSplit");
       memCavemanSplitConcat = getProperty("memCavemanSplitConcat");
-      memCavemanMstep = getProperty("memCavemanMstep");
+      memCavemanMstepPerThread = getProperty("memCavemanMstepPerThread");
       memCavemanMerge = getProperty("memCavemanMerge");
-      memCavemanEstep = getProperty("memCavemanEstep");
+      memCavemanEstepPerThread = getProperty("memCavemanEstepPerThread");
       memCavemanMergeResults = getProperty("memCavemanMergeResults");
       memCavemanAddIds = getProperty("memCavemanAddIds");
       memCavemanFlag = getProperty("memCavemanFlag");
       memCavemanTbiClean = getProperty("memCavemanTbiClean");
+      
+      memWorkflowOverhead = Integer.valueOf(getProperty("memWorkflowOverhead"));
+      memHostMbAvailable = Integer.valueOf(getProperty("memHostMbAvailable"));
 
       // REFERENCE INFO //
       species = getProperty("species");
@@ -551,20 +554,21 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     Job brassSplitJob = brassBaseJob(tumourCount, tumourBam, controlBam, "BRASS", "split", 1);
     brassSplitJob.setMaxMemory(memBrassSplit);
     brassSplitJob.addParent(brassFilterJob);
+
     
-    List<Job> brassAssembleJobs = new ArrayList<Job>();
-    for(int i=0; i<coresAddressable; i++) {
-      Job brassAssembleJob = brassBaseJob(tumourCount, tumourBam, controlBam, "BRASS", "assemble", i+1);
-      brassAssembleJob.setMaxMemory(memBrassAssemble);
-      brassAssembleJob.addParent(brassSplitJob);
-      brassAssembleJobs.add(brassAssembleJob);
-    }
+    int brassAssNormalisedThreads = getMemNormalisedThread(memBrassAssemblePerThread, coresAddressable);
+    int totalBrassAssMem = (Integer.valueOf(memBrassAssemblePerThread) * brassAssNormalisedThreads) + memWorkflowOverhead;
+    
+    Job brassAssembleJob = brassBaseJob(tumourCount, tumourBam, controlBam, "BRASS", "assemble", 1);
+    brassAssembleJob.setMaxMemory(Integer.toString(totalBrassAssMem));
+    brassAssembleJob.getCommand().addArgument("-l " + brassAssNormalisedThreads);
+    brassAssembleJob.setMaxMemory(Integer.toString(totalBrassAssMem));
+    brassAssembleJob.setThreads(brassAssNormalisedThreads);
+    brassAssembleJob.addParent(brassSplitJob);
     
     Job brassGrassJob = brassBaseJob(tumourCount, tumourBam, controlBam, "BRASS", "grass", 1);
     brassGrassJob.setMaxMemory(memBrassGrass);
-    for(Job brassAssembleJob : brassAssembleJobs) {
-      brassGrassJob.addParent(brassAssembleJob);
-    }
+    brassGrassJob.addParent(brassAssembleJob);
     
     Job brassTabixJob = brassBaseJob(tumourCount, tumourBam, controlBam, "BRASS", "tabix", 1);
     brassTabixJob.setMaxMemory(memBrassTabix);
@@ -599,33 +603,31 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       cavemanSplitConcatJob.addParent(cavemanSplitJob);
     }
     
-    List<Job> cavemanMstepJobs = new ArrayList<Job>();
-    for(int i=0; i<coresAddressable; i++) {
-      Job cavemanMstepJob = cavemanBaseJob(tumourCount, tumourBam, controlBam, "CaVEMan", "mstep", i+1);
-      cavemanMstepJob.setMaxMemory(memCavemanMstep);
-      cavemanMstepJob.addParent(cavemanSplitConcatJob);
-      cavemanMstepJobs.add(cavemanMstepJob);
-    }
+    int mstepNormalisedThreads = getMemNormalisedThread(memCavemanMstepPerThread, coresAddressable);
+    int totalMstepMem = (Integer.valueOf(memCavemanMstepPerThread) * mstepNormalisedThreads) + memWorkflowOverhead;
+    
+    Job cavemanMstepJob = cavemanBaseJob(tumourCount, tumourBam, controlBam, "CaVEMan", "mstep", 1);
+    cavemanMstepJob.getCommand().addArgument("-l " + mstepNormalisedThreads);
+    cavemanMstepJob.setMaxMemory(Integer.toString(totalMstepMem));
+    cavemanMstepJob.setThreads(mstepNormalisedThreads);
+    cavemanMstepJob.addParent(cavemanSplitConcatJob);
     
     Job cavemanMergeJob = cavemanBaseJob(tumourCount, tumourBam, controlBam, "CaVEMan", "merge", 1);
     cavemanMergeJob.setMaxMemory(memCavemanMerge);
-    for(Job cavemanMstepJob : cavemanMstepJobs) {
-      cavemanMergeJob.addParent(cavemanMstepJob);
-    }
+    cavemanMergeJob.addParent(cavemanMstepJob);
     
-    List<Job> cavemanEstepJobs = new ArrayList<Job>();
-    for(int i=0; i<coresAddressable; i++) {
-      Job cavemanEstepJob = cavemanBaseJob(tumourCount, tumourBam, controlBam, "CaVEMan", "estep", i+1);
-      cavemanEstepJob.setMaxMemory(memCavemanEstep);
-      cavemanEstepJob.addParent(cavemanMergeJob);
-      cavemanEstepJobs.add(cavemanEstepJob);
-    }
+    int estepNormalisedThreads = getMemNormalisedThread(memCavemanEstepPerThread, coresAddressable);
+    int totalEstepMem = (Integer.valueOf(memCavemanEstepPerThread) * estepNormalisedThreads) + memWorkflowOverhead;
+    
+    Job cavemanEstepJob = cavemanBaseJob(tumourCount, tumourBam, controlBam, "CaVEMan", "estep", 1);
+    cavemanEstepJob.getCommand().addArgument("-l " + estepNormalisedThreads);
+    cavemanMstepJob.setMaxMemory(Integer.toString(totalEstepMem));
+    cavemanMstepJob.setThreads(estepNormalisedThreads);
+    cavemanEstepJob.addParent(cavemanMergeJob);
     
     Job cavemanMergeResultsJob = cavemanBaseJob(tumourCount, tumourBam, controlBam, "CaVEMan", "merge_results", 1);
     cavemanMergeResultsJob.setMaxMemory(memCavemanMergeResults);
-    for(Job cavemanEstepJob : cavemanEstepJobs) {
-      cavemanMergeResultsJob.addParent(cavemanEstepJob);
-    }
+    cavemanMergeResultsJob.addParent(cavemanEstepJob);
     
     Job cavemanAddIdsJob = cavemanBaseJob(tumourCount, tumourBam, controlBam, "CaVEMan", "add_ids", 1);
     cavemanAddIdsJob.setMaxMemory(memCavemanAddIds);
@@ -843,6 +845,22 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     return thisJob;
   }
   
+  private int getMemNormalisedThread(String perThreadMemory, int threads) {
+    int usableThreads = 0;
+    // memWorkflowOverhead, memHostMbAvailable
+    
+    int memoryAvail = memHostMbAvailable - memWorkflowOverhead;
+    
+    if(Integer.divideUnsigned(memoryAvail, threads) > Integer.valueOf(perThreadMemory)) {
+      usableThreads = threads;
+    }
+    else {
+      usableThreads = memoryAvail / Integer.valueOf(perThreadMemory);
+    }
+    
+    return usableThreads;
+  }
+  
   private Job gnosDownloadBaseJob(String analysisId) {
     Job thisJob = getWorkflow().createBashJob("GNOSDownload");
     thisJob.getCommand()
@@ -948,10 +966,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
                           .addArgument("-r " + genomeFaGz + ".fai");
     }
     
-    if(process.equals("mstep") || process.equals("estep")) {
-      thisJob.getCommand().addArgument("-l " + coresAddressable);
-    }
-    else if(process.equals("flag")) {
+    if(process.equals("flag")) {
       thisJob.getCommand().addArgument("-in " + OUTDIR + "/" + tumourCount + "/pindel/*.germline.bed");
     }
 
@@ -1072,9 +1087,6 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     if(process.equals("filter")) {
       String cnPath = OUTDIR + "/" + tumourCount + "/ascat/*.copynumber.caveman.csv";
       thisJob.getCommand().addArgument("-a " + cnPath);
-    }
-    else if(process.endsWith("assemble")) {
-      thisJob.getCommand().addArgument("-l " + coresAddressable);
     }
     return thisJob;
   }
