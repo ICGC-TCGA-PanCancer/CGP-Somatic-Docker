@@ -557,7 +557,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
 
     
     int brassAssNormalisedThreads = getMemNormalisedThread(memBrassAssemblePerThread, coresAddressable);
-    int totalBrassAssMem = (Integer.valueOf(memBrassAssemblePerThread) * brassAssNormalisedThreads) + memWorkflowOverhead;
+    int totalBrassAssMem = Integer.valueOf(memBrassAssemblePerThread) + (Integer.valueOf(memWorkflowOverhead) / brassAssNormalisedThreads);
     
     Job brassAssembleJob = brassBaseJob(tumourCount, tumourBam, controlBam, "BRASS", "assemble", 1);
     brassAssembleJob.setMaxMemory(Integer.toString(totalBrassAssMem));
@@ -605,7 +605,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     }
     
     int mstepNormalisedThreads = getMemNormalisedThread(memCavemanMstepPerThread, coresAddressable);
-    int totalMstepMem = (Integer.valueOf(memCavemanMstepPerThread) * mstepNormalisedThreads) + memWorkflowOverhead;
+    int totalMstepMem = Integer.valueOf(memCavemanMstepPerThread) + (Integer.valueOf(memWorkflowOverhead) / mstepNormalisedThreads);
     
     Job cavemanMstepJob = cavemanBaseJob(tumourCount, tumourBam, controlBam, "CaVEMan", "mstep", 1);
     cavemanMstepJob.getCommand().addArgument("-l " + mstepNormalisedThreads);
@@ -619,13 +619,13 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     cavemanMergeJob.addParent(cavemanMstepJob);
     
     int estepNormalisedThreads = getMemNormalisedThread(memCavemanEstepPerThread, coresAddressable);
-    int totalEstepMem = (Integer.valueOf(memCavemanEstepPerThread) * estepNormalisedThreads) + memWorkflowOverhead;
+    int totalEstepMem = Integer.valueOf(memCavemanEstepPerThread) + (Integer.valueOf(memWorkflowOverhead) / estepNormalisedThreads);
     
     Job cavemanEstepJob = cavemanBaseJob(tumourCount, tumourBam, controlBam, "CaVEMan", "estep", 1);
     cavemanEstepJob.getCommand().addArgument("-l " + estepNormalisedThreads);
     cavemanEstepJob.getCommand().addArgument("-t " + estepNormalisedThreads);
-    cavemanMstepJob.setMaxMemory(Integer.toString(totalEstepMem));
-    cavemanMstepJob.setThreads(estepNormalisedThreads);
+    cavemanEstepJob.setMaxMemory(Integer.toString(totalEstepMem));
+    cavemanEstepJob.setThreads(estepNormalisedThreads);
     cavemanEstepJob.addParent(cavemanMergeJob);
     
     Job cavemanMergeResultsJob = cavemanBaseJob(tumourCount, tumourBam, controlBam, "CaVEMan", "merge_results", 1);
