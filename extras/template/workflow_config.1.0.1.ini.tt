@@ -1,0 +1,96 @@
+# the output directory is a convention used in many workflows to specify a relative output path
+output_dir=seqware-results
+# the output_prefix is a convention used to specify the root of the absolute output path or an S3 bucket name
+# you should pick a path that is available on all cluster nodes and can be written by your user
+output_prefix=./
+# cleanup true will remove just the input BAMs if not uploading and the full output directory if uploading
+# false there will be no cleanup which is useful for debugging
+cleanup=false
+
+# basic setup
+# | 7  | m2.xxlarge   | 65536     | 20   | 0         |      | 16    | 1.0         | True      |
+coresAddressable=[% coresAddressable  %]
+memHostMbAvailable=[% memHostMbAvailable %]
+tabixSrvUri=[% tabixSrvUri  %]
+pemFile=[% pemFile  %]
+uploadPemFile=[% uploadPemFile %]
+gnosServer=[% gnosServer %]
+## comment out upload server to block vcfUpload
+uploadServer=[% uploadServer %]
+
+study-refname-override=icgc_pancancer_vcf_test
+#analysis-center-override=
+upload-test=[% uploadTest %]
+upload-skip=[% uploadSkip %]
+
+assembly=GRCh37
+species=human
+seqType=WGS
+gender=L
+
+# test data, will be overriden unless testMode=true
+testMode=false
+
+# PD4116a 30x vs PD4116b 30x
+tumourAliquotIds=[% tumourAliquotIds %]
+tumourAnalysisIds=[% tumourAnalysisIds %]
+tumourBams=[% tumourBams %]
+controlAnalysisId=[% controlAnalysisId %]
+controlBam=[% controlBam %]
+
+refExclude=MT,GL%,hs37d5,NC_007605
+
+# GENOS
+memBasFileGet=4000
+memGnosDownload=8000
+memUpload=5000
+
+# GENERIC
+memWorkflowOverhead=3000
+memPackageResults=4000
+memMarkTime=4000
+memQcMetrics=4000
+memGetTbi=4000
+
+#PICNIC
+memPicnicCounts=4000
+memPicnicMerge=4000
+
+#BATTENBERG
+memUnpack=4000
+memBbMerge=4000
+
+# ASCAT
+memAlleleCount=4000
+memAscat=8000
+memAscatFinalise=4000
+
+# PINDEL
+memPindelInput=12000
+memPindel=8000
+memPindelVcf=4000
+memPindelMerge=6000
+memPindelFlag=4000
+
+# BRASS
+memBrassInput=6000
+memBrassGroup=4500
+memBrassFilter=4500
+memBrassSplit=4000
+memBrassAssemblePerThread=4000
+memBrassGrass=4000
+memBrassTabix=4000
+
+# CAVEMAN
+memCaveCnPrep=4000
+memCavemanSetup=4000
+memCavemanSplit=4000
+memCavemanSplitConcat=4000
+memCavemanMstepPerThread=3000
+memCavemanMerge=4000
+memCavemanEstepPerThread=3000
+memCavemanMergeResults=4000
+memCavemanAddIds=4000
+memCavemanFlag=5000
+memCavemanTbiClean=4000
+
