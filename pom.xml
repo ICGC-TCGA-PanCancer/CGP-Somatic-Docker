@@ -24,8 +24,8 @@
     <skipITs>true</skipITs>
     <workflow-full-name>Workflow_Bundle_SangerPancancerCgpCnIndelSnvStr_${workflow-version}_SeqWare_${seqware-version}</workflow-full-name>
     <workflow-dir>${project.build.directory}/${workflow-full-name}/Workflow_Bundle_SangerPancancerCgpCnIndelSnvStr/${workflow-version}</workflow-dir>
-    <version.template.file>src/main/java/io/seqware/pancancer/Version.java src/main/java/io/seqware/pancancer/Version.java.template</version.template.file>
-    <version.file>src/main/java/io/seqware/pancancer/Version.java src/main/java/io/seqware/pancancer/Version.java</version.file>
+    <version.template.file>src/main/java/io/seqware/pancancer/Version.java.template</version.template.file>
+    <version.file>src/main/java/io/seqware/pancancer/Version.java</version.file>
   </properties>
 
   <dependencies>
@@ -124,7 +124,7 @@
             </replacement>
             <replacement>
               <token>@workflow-name@</token>
-              <value>${project.build.finalName}</value>
+              <value>${workflow-name}</value>
             </replacement>
             <replacement>
               <token>@workflow-version@</token>
