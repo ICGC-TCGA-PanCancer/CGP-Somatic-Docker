@@ -18,7 +18,7 @@ gnosServer=[% gnosServer %]
 ## comment out upload server to block vcfUpload
 uploadServer=[% uploadServer %]
 
-study-refname-override=icgc_pancancer_vcf_test
+study-refname-override=tcga_pancancer_vcf_test
 #analysis-center-override=
 upload-test=[% uploadTest %]
 upload-skip=[% uploadSkip %]
