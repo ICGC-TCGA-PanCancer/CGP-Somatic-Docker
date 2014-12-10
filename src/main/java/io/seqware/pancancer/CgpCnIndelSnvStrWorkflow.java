@@ -330,7 +330,6 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     Job contaminationJob = contaminationBaseJob(1, controlBam, "control");
     contaminationJob.setMaxMemory(memContam);
     contaminationJob.addParent(getTbiJob);
-    contaminationJobs.add(contaminationJob);
     
     // these are not paired but per individual sample
     List<Job> bbAlleleCountJobs = new ArrayList<Job>();
