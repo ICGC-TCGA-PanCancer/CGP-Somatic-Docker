@@ -1027,7 +1027,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       .addArgument("-o " + OUTDIR + "/" + tumourCount + "/contamination")
       .addArgument("-b " + inBam)
       .addArgument("-d " + contamDownSampOneIn)
-      .addArgument("-j" + OUTDIR + "/" + tumourCount + "/contamination/summary.json")
+      .addArgument("-j " + OUTDIR + "/" + tumourCount + "/contamination/summary.json")
       ;
     if(process.equals("tumour")) {
       thisJob.getCommand().addArgument("-a " + OUTDIR + "/" + tumourCount + "/ascat/*.summary.csv"); // not the best approach but works
