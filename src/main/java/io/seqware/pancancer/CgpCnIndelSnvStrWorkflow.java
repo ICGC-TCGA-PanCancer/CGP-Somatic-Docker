@@ -330,6 +330,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     Job contaminationJob = contaminationBaseJob(1, controlBam, "control");
     contaminationJob.setMaxMemory(memContam);
     contaminationJob.addParent(getTbiJob);
+    // packaging must have parent cavemanTbiCleanJob
     
     // these are not paired but per individual sample
     List<Job> bbAlleleCountJobs = new ArrayList<Job>();
@@ -382,8 +383,10 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     
     Job cavemanTbiCleanJob = cavemanTbiCleanJob();
     cavemanTbiCleanJob.setMaxMemory(memCavemanTbiClean);
+    cavemanTbiCleanJob.addParent(contaminationJob); // control contamination
     for(Job cavemanFlagJob : cavemanFlagJobs) {
       cavemanTbiCleanJob.addParent(cavemanFlagJob);
+      // tumour contamination is linked in buildPairWorkflow() 
     }
     
     Job endWorkflow = markTime("end");
@@ -660,6 +663,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     cavemanFlagJob.addParent(getTbiJob);
     cavemanFlagJob.addParent(pindelFlagJob); // PINDEL dependency
     cavemanFlagJob.addParent(cavemanAddIdsJob);
+    cavemanFlagJob.addParent(contaminationJob);
     
     Job cavemanPackage = packageResults(tumourCount, "caveman", "snv_mnv", tumourBam, "flagged.muts.vcf.gz", workflowName, "somatic", dateString);
     cavemanPackage.setMaxMemory(memPackageResults);
