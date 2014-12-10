@@ -323,6 +323,15 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       getTbiJob.addParent(job);
     }
     
+    Job genotypeJob = genoptypeBaseJob(tumourBams, controlBam);
+    genotypeJob.setMaxMemory("memGenotype");
+    genotypeJob.addParent(getTbiJob);
+    
+    Job contaminationJob = contaminationBaseJob(1, controlBam, "control");
+    contaminationJob.setMaxMemory(memContam);
+    contaminationJob.addParent(getTbiJob);
+    contaminationJobs.add(contaminationJob);
+    
     // these are not paired but per individual sample
     List<Job> bbAlleleCountJobs = new ArrayList<Job>();
     for(int i=0; i<23; i++) { // not 1-22+X
@@ -364,22 +373,6 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     for(Job j : ngsCountJobs) {
       ngsCountMergeJob.addParent(j);
     }
-    
-    Job genotypeJob = genoptypeBaseJob(tumourBams, controlBam);
-    genotypeJob.setMaxMemory("memGenotype");
-    genotypeJob.addParent(getTbiJob);
-    
-    List<Job> contaminationJobs = new ArrayList<Job>();
-    for(int j=0; j<tumourBams.size(); j++) {
-      Job contaminationJob = contaminationBaseJob(j, tumourBams.get(j), "tumour");
-      contaminationJob.setMaxMemory(memContam);
-      contaminationJob.addParent(getTbiJob);
-      contaminationJobs.add(contaminationJob);
-    }
-    Job contaminationJob = contaminationBaseJob(1, controlBam, "control");
-    contaminationJob.setMaxMemory(memContam);
-    contaminationJob.addParent(getTbiJob);
-    contaminationJobs.add(contaminationJob);
     
     // donor based workflow section
     Job[] cavemanFlagJobs = new Job [tumourBams.size()];
@@ -475,6 +468,10 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     Job ascatPackage = packageResults(tumourCount, "ascat", "cnv", tumourBam, "copynumber.caveman.vcf.gz", workflowName, "somatic", dateString);
     ascatPackage.setMaxMemory(memPackageResults);
     ascatPackage.addParent(ascatFinaliseJob);
+    
+    Job contaminationJob = contaminationBaseJob(tumourCount, tumourBam, "tumour");
+    contaminationJob.setMaxMemory(memContam);
+    contaminationJob.addParent(ascatFinaliseJob);
     
     /**
      * CaVEMan setup is here to allow better workflow graph
