@@ -324,7 +324,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     }
     
     Job genotypeJob = genoptypeBaseJob(tumourBams, controlBam);
-    genotypeJob.setMaxMemory("memGenotype");
+    genotypeJob.setMaxMemory(memGenotype);
     genotypeJob.addParent(getTbiJob);
     
     Job contaminationJob = contaminationBaseJob(1, controlBam, "control");
