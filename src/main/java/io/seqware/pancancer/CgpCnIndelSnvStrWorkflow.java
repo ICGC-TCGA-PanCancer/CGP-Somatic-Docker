@@ -327,6 +327,10 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     genotypeJob.setMaxMemory(memGenotype);
     genotypeJob.addParent(getTbiJob);
     
+    Job genotypePackJob = packageGenotype(tumourBams, controlBam);
+    genotypePackJob.setMaxMemory("4000");
+    genotypePackJob.addParent(genotypeJob);
+    
     Job contaminationJob = contaminationBaseJob(tumourBams.size()+1, controlBam, "control");
     contaminationJob.setMaxMemory(memContam);
     contaminationJob.addParent(getTbiJob);
@@ -393,9 +397,27 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     endWorkflow.setMaxMemory(memMarkTime);
     endWorkflow.addParent(cavemanTbiCleanJob);
     
-    Job metricsJob = getMetricsJob(tumourBams);
+    Job metricsJob = getMetricsJob(tumourBams, controlBam);
     metricsJob.setMaxMemory(memQcMetrics);
     metricsJob.addParent(endWorkflow);
+    
+    Job renameGenotypeJob = renameSampleFile(tumourBams, OUTDIR, "verifyBamId.tar.gz");
+    renameGenotypeJob.setMaxMemory("4000");
+    renameGenotypeJob.addParent(genotypePackJob);
+    Job renameGenotypeMd5Job = renameSampleFile(tumourBams, OUTDIR, "verifyBamId.tar.gz.md5");
+    renameGenotypeMd5Job.setMaxMemory("4000");
+    renameGenotypeMd5Job.addParent(genotypePackJob);
+    
+    Job packageContamJob = packageContam(tumourBams, controlBam);
+    packageContamJob.setMaxMemory("4000");
+    packageContamJob.addParent(cavemanTbiCleanJob);
+    
+    Job renameContamJob = renameSampleFile(tumourBams, OUTDIR, "verifyBamId.tar.gz");
+    renameContamJob.setMaxMemory("4000");
+    renameContamJob.addParent(packageContamJob);
+    Job renameContamMd5Job = renameSampleFile(tumourBams, OUTDIR, "verifyBamId.tar.gz.md5");
+    renameContamMd5Job.setMaxMemory("4000");
+    renameContamMd5Job.addParent(packageContamJob);
     
     Job renameImputeJob = renameSampleFile(tumourBams, OUTDIR + "/bbCounts", "imputeCounts.tar.gz");
     renameImputeJob.setMaxMemory("4000");
@@ -907,14 +929,15 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     return thisJob;
   }
   
-  private Job getMetricsJob(List<String> tumourBams) {
+  private Job getMetricsJob(List<String> tumourBams, String controlBam) {
     //die "USAGE: rootOfOutdir ordered.bam [ordered.bam2]";
     Job thisJob = getWorkflow().createBashJob("metrics");
     thisJob.getCommand()
       .addArgument(getWorkflowBaseDir()+ "/bin/wrapper.sh")
       .addArgument(installBase)
       .addArgument(getWorkflowBaseDir()+ "/bin/qc_and_metrics.pl")
-      .addArgument(OUTDIR);
+      .addArgument(OUTDIR)
+      .addArgument(controlBam);
     for(String bam : tumourBams) {
       thisJob.getCommand().addArgument(bam);
     }
@@ -1011,6 +1034,21 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     return thisJob;
   }
   
+  private Job packageGenotype(List<String> tumourBams, String controlBam) {
+    Job thisJob = getWorkflow().createBashJob("packageGenotype");
+    thisJob.getCommand()
+      .addArgument(getWorkflowBaseDir()+ "/bin/wrapper.sh")
+      .addArgument(installBase)
+      .addArgument(getWorkflowBaseDir() + "/bin/packageGenotype.pl")
+      .addArgument(OUTDIR)
+      .addArgument(controlBam)
+      ;
+    for(String tumour : tumourBams) {
+      thisJob.getCommand().addArgument(tumour);
+    }
+    return thisJob;
+  }
+  
   private Job contaminationBaseJob(int tumourCount, String inBam, String process) {
     Job thisJob = prepTimedJob(tumourCount, "verifyBamHomChk", process, 0);
     thisJob.getCommand()
@@ -1028,6 +1066,23 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     
     return thisJob;
   }
+  
+    private Job packageContam(List<String> tumourBams, String controlBam) {
+    Job thisJob = getWorkflow().createBashJob("packageContam");
+    thisJob.getCommand()
+      .addArgument(getWorkflowBaseDir()+ "/bin/wrapper.sh")
+      .addArgument(installBase)
+      .addArgument(getWorkflowBaseDir() + "/bin/packageContam.pl")
+      .addArgument(OUTDIR)
+      .addArgument(controlBam)
+      ;
+    for(String tumour : tumourBams) {
+      thisJob.getCommand().addArgument(tumour);
+    }
+    return thisJob;
+  }
+  
+  
 
   private Job cgpAscatBaseJob(int tumourCount, String tumourBam, String controlBam, String alg, String process, int index) {
     Job thisJob = prepTimedJob(tumourCount, alg, process, index);
