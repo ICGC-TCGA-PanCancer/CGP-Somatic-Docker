@@ -327,7 +327,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     genotypeJob.setMaxMemory(memGenotype);
     genotypeJob.addParent(getTbiJob);
     
-    Job contaminationJob = contaminationBaseJob(1, controlBam, "control");
+    Job contaminationJob = contaminationBaseJob(tumourBams.size()+1, controlBam, "control");
     contaminationJob.setMaxMemory(memContam);
     contaminationJob.addParent(getTbiJob);
     // packaging must have parent cavemanTbiCleanJob
