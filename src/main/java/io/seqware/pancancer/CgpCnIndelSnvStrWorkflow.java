@@ -331,7 +331,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     genotypePackJob.setMaxMemory("4000");
     genotypePackJob.addParent(genotypeJob);
     
-    Job contaminationJob = contaminationBaseJob(tumourBams.size()+1, controlBam, "control");
+    Job contaminationJob = contaminationBaseJob(tumourBams.size(), controlBam, "control");
     contaminationJob.setMaxMemory(memContam);
     contaminationJob.addParent(getTbiJob);
     // packaging must have parent cavemanTbiCleanJob
@@ -401,10 +401,10 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     metricsJob.setMaxMemory(memQcMetrics);
     metricsJob.addParent(endWorkflow);
     
-    Job renameGenotypeJob = renameSampleFile(tumourBams, OUTDIR, "verifyBamId.tar.gz");
+    Job renameGenotypeJob = renameSampleFile(tumourBams, OUTDIR, "genotype.tar.gz");
     renameGenotypeJob.setMaxMemory("4000");
     renameGenotypeJob.addParent(genotypePackJob);
-    Job renameGenotypeMd5Job = renameSampleFile(tumourBams, OUTDIR, "verifyBamId.tar.gz.md5");
+    Job renameGenotypeMd5Job = renameSampleFile(tumourBams, OUTDIR, "genotype.tar.gz.md5");
     renameGenotypeMd5Job.setMaxMemory("4000");
     renameGenotypeMd5Job.addParent(genotypePackJob);
     

@@ -52,8 +52,12 @@ sub qc_data {
 
 sub _qc_genotypes {
   my ($full_qc, $base_dir) = @_;
-  my $struc = decode_json "$base_dir/genotype/summary.json";
-  for my $tumour(@{$struc->{'tumours'}}}) {
+  
+  my ($stdout, $stderr, $exit) = capture { system("cat $base_dir/genotype/summary.json"); };
+  die "STDOUT: $stdout\n\nSTDERR: $stderr\n" if ( $exit != 0 );
+  my $struc = decode_json $stdout;
+
+  for my $tumour(@{$struc->{'tumours'}}) {
     my $tumour_name = $tumour->{'sample'};
     $full_qc->{$tumour_name}->{'genotype'}->{'frac_informative_genotype'} = $tumour->{'genotype'}->{'frac_informative_genotype'};
     $full_qc->{$tumour_name}->{'genotype'}->{'frac_matched_genotype'} = $tumour->{'genotype'}->{'frac_matched_genotype'};
@@ -169,6 +173,7 @@ sub _run_met {
 sub _qc_contam {
   my $to_process = shift;
   my ($stdout, $stderr, $exit) = capture { system(qq{cat $to_process/summary.json}); };
+  die "STDOUT: $stdout\n\nSTDERR: $stderr\n" if ( $exit != 0 );
   my $struc = decode_json $stdout;
   my %qc = ( 'caller' => 'varifyBamId' );
   for my $key(keys %{$struc}) {
