@@ -1030,7 +1030,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       .addArgument("-j " + OUTDIR + "/" + tumourCount + "/contamination/summary.json")
       ;
     if(process.equals("tumour")) {
-      thisJob.getCommand().addArgument("-a " + OUTDIR + "/" + tumourCount + "/ascat/*.summary.csv"); // not the best approach but works
+      thisJob.getCommand().addArgument("-a " + OUTDIR + "/" + tumourCount + "/ascat/*.copynumber.caveman.csv"); // not the best approach but works
     }
     
     return thisJob;
