@@ -20,7 +20,10 @@ expand("$link_dir/", "$link_dir/testdata.tar.gz");
 
 sub expand {
   my ($changeTo, $archive) = @_;
-  my $res = system("tar -C $changeTo -kzxvf $archive");
+  my $outdir = $archive;
+  $outdir =~ s/.tar.gz//;
+  my $res = 0;
+  if (!-e $outdir) { $res = system("tar -C $changeTo -kzxvf $archive"); }
   die ("Failed to unpack $archive!\n") if($res != 0);
 }
 

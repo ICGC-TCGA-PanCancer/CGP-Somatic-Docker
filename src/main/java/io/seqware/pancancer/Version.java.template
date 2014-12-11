@@ -1,0 +1,27 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+package io.seqware.pancancer;
+
+/**
+ *
+ * @author boconnor
+ */
+public class Version {
+  
+    public static final String SEQWARE_VERSION="@seqware-version@";
+
+    public static final String WORKFLOW_NAME="@workflow-name@";
+
+    public static final String WORKFLOW_SHORT_NAME_VERSION="@workflow-short-name-version@";
+
+    public static final String WORKFLOW_VERSION="@workflow-version@";
+    
+    public static final String WORKFLOW_URL="@workflow-url@";
+    
+    public static final String WORKFLOW_SRC_URL="@workflow-src-url@";
+    
+}
