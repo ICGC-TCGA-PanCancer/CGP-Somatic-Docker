@@ -979,17 +979,10 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
               .addArgument("-o " + OUTDIR + "/" + tumourCount + "/caveman")
               .addArgument("-tc " + OUTDIR + "/" + tumourCount + "/tumour.cn.bed")
               .addArgument("-nc " + OUTDIR + "/" + tumourCount + "/normal.cn.bed")
-              .addArgument("-k " + ascatContamFile);
-    if(tumourBam.startsWith("/")) {
-      thisJob.getCommand().addArgument("-tb " + tumourBam)
-                          .addArgument("-nb " + controlBam)
-                          .addArgument("-r " + genomeFaGz + ".fai");
-    }
-    else {
-      thisJob.getCommand().addArgument("-tb " + tumourBam)
-                          .addArgument("-nb " + controlBam)
-                          .addArgument("-r " + genomeFaGz + ".fai");
-    }
+              .addArgument("-k " + ascatContamFile)
+              .addArgument("-tb " + tumourBam)
+              .addArgument("-nb " + controlBam)
+              .addArgument("-r " + genomeFaGz + ".fai");
     
     if(!process.equals("mstep") && !process.equals("estep")) {
       thisJob.getCommand().addArgument("-i " + index);
