@@ -140,33 +140,42 @@ sub _workflow_met {
 sub _run_met {
   my ( $inc, $folder, $alg ) = @_;
   my ( $total_cpu, $max_mem ) = ( 0, 0 );
-  my %met;
+  my (%met, %process_files);
   opendir( my $dh, $folder );
   while ( my $x = readdir($dh) ) {
     my $stub = $inc . '_' . $alg . '_';
 
     next unless ( index( $x, $stub ) == 0 );
 
-    my ( $process, $index ) = $x =~ m/_([^_]+)_([[:digit:]]+)$/;
-    my $file = "$folder/$x";
-    open my $fh, '<', $file;
-    while ( my $line = <$fh> ) {
-      chomp $line;
-      my ( $key, $value ) = split /\s+/, $line;
-      $met{'detailed'}{$process}[ $index - 1 ]{$key} = $value;
-      if ( $key eq 'User_s' || $key eq 'System_s' ) {
-        $total_cpu += $value;
-      }
-      elsif ( $key eq 'Max_kb' && $value > $max_mem ) {
-        $max_mem = $value;
-      }
-    }
-    close $fh;
-    $met{'caller'} = $alg;
-    $met{'total_cpu_s'} = $total_cpu;
-    $met{'max_mem_mb'} = int 1 + ( $max_mem / 1024 ); # round up
+    my ( $process, $index ) = $x =~ m/^${inc}_${alg}_([^_]+)_([[:digit:]]+)$/;
+    $process_files{$process}{$index} = "$folder/$x";
   }
   closedir($dh);
+
+  for my $process(keys %process_files) {
+    for my $index(sort {$a<=>$b} keys %{$process_files{$process}}) {
+      my $file = $process_files{$process}->{$index};
+      open my $fh, '<', $file;
+      my %process_metrics;
+      while ( my $line = <$fh> ) {
+        chomp $line;
+        my ( $key, $value ) = split /\s+/, $line;
+        $process_metrics{$key} = $value;
+        if ( $key eq 'User_s' || $key eq 'System_s' ) {
+          $total_cpu += $value;
+        }
+        elsif ( $key eq 'Max_kb' && $value > $max_mem ) {
+          $max_mem = $value;
+        }
+      }
+      close $fh;
+      push @{$met{'detailed'}{$process}}, \%process_metrics;
+      $met{'caller'} = $alg;
+      $met{'total_cpu_s'} = $total_cpu;
+      $met{'max_mem_mb'} = int 1 + ( $max_mem / 1024 ); # round up
+    }
+  }
+
   return \%met;
 }
 

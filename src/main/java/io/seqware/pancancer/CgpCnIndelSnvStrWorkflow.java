@@ -11,6 +11,7 @@ import net.sourceforge.seqware.pipeline.workflowV2.AbstractWorkflowDataModel;
 import net.sourceforge.seqware.pipeline.workflowV2.model.Job;
 import net.sourceforge.seqware.pipeline.workflowV2.model.SqwFile;
 import org.apache.commons.lang.StringUtils;
+import io.seqware.pancancer.Version;
 
 /**
  * <p>For more information on developing workflows, see the documentation at
@@ -40,7 +41,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   DateFormat df = new SimpleDateFormat("yyyyMMdd");
   String dateString = df.format(Calendar.getInstance().getTime());
 
-  private String workflowName = "svcp_1-0-0";
+  private String workflowName = Version.WORKFLOW_SHORT_NAME_VERSION;
   
   // MEMORY variables //
   private String  memBasFileGet, memGnosDownload, memPackageResults, memMarkTime,
@@ -853,6 +854,11 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       .addArgument("--upload-url " + uploadServer)
       .addArgument("--qc-metrics-json " + OUTDIR + "/qc_metrics.json")
       .addArgument("--timing-metrics-json " + OUTDIR + "/process_metrics.json")
+      .addArgument("--workflow-src-url "+Version.WORKFLOW_SRC_URL)
+      .addArgument("--workflow-url "+Version.WORKFLOW_URL)
+      .addArgument("--workflow-name "+Version.WORKFLOW_NAME)
+      .addArgument("--workflow-version "+Version.WORKFLOW_VERSION)
+      .addArgument("--seqware-version "+Version.SEQWARE_VERSION)
       ;
     try {
       if(hasPropertyAndNotNull("study-refname-override")) {
@@ -864,7 +870,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       if(hasPropertyAndNotNull("upload-test") && Boolean.valueOf(getProperty("upload-test"))) {
         thisJob.getCommand().addArgument("--test ");
       }
-      if(hasPropertyAndNotNull("upload-skip")) {
+      if(hasPropertyAndNotNull("upload-skip") && Boolean.valueOf(getProperty("upload-skip"))) {
         thisJob.getCommand().addArgument("--skip-upload");
       }
     } catch (Exception e) {
