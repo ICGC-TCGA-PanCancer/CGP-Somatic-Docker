@@ -10,13 +10,14 @@ use Capture::Tiny qw(capture);
 use JSON;
 
 if ( @ARGV < 2 ) {
-  die "USAGE: rootOfOutdir ordered.bam [ordered.bam2]";
+  die "USAGE: rootOfOutdir control.bam tumour1.bam [tumour2.bam...]";
 }
 
 my $base_dir = shift @ARGV;
+my $control_bam = shift @ARGV;
 my @ordered_bams = @ARGV;
 
-my $final_qc = qc_data( $base_dir, @ordered_bams );
+my $final_qc = qc_data( $base_dir, $control_bam, @ordered_bams );
 my $encoded = encode_json $final_qc;
 open my $JOUT, '>', "$base_dir/qc_metrics.json";
 print $JOUT $encoded,"\n";
@@ -29,7 +30,7 @@ print $JOUT $encoded,"\n";
 close $JOUT;
 
 sub qc_data {
-  my ( $base_dir, @bams ) = @_;
+  my ( $base_dir, $cntl_bam, @bams ) = @_;
 # this will need to be mildly intelligent, expecially for ASCAT to capture failures
   my %full_qc;
   my $count = 0;
@@ -40,9 +41,35 @@ sub qc_data {
     $full_qc{$aliqout_id}{'snv_mnv'} = _qc_caveman("$to_process/caveman");
     $full_qc{$aliqout_id}{'indel'} = _qc_pindel("$to_process/pindel");
     $full_qc{$aliqout_id}{'cnv'} = _qc_ascat("$to_process/ascat");
+    $full_qc{$aliqout_id}{'contamination'} = _qc_contam("$to_process/contamination");
     $count++;
   }
+  my $aliqout_id = get_aliquot_id_from_bam($cntl_bam);
+  $full_qc{$aliqout_id}{'contamination'} = _qc_contam("$base_dir/$count/contamination");
+  _qc_genotypes(\%full_qc, $base_dir);
   return \%full_qc;
+}
+
+sub _qc_genotypes {
+  my ($full_qc, $base_dir) = @_;
+  
+  my ($stdout, $stderr, $exit) = capture { system("cat $base_dir/genotype/summary.json"); };
+  die "STDOUT: $stdout\n\nSTDERR: $stderr\n" if ( $exit != 0 );
+  my $struc = decode_json $stdout;
+
+  for my $tumour(@{$struc->{'tumours'}}) {
+    my $tumour_name = $tumour->{'sample'};
+    $full_qc->{$tumour_name}->{'genotype'}->{'frac_informative_genotype'} = $tumour->{'genotype'}->{'frac_informative_genotype'};
+    $full_qc->{$tumour_name}->{'genotype'}->{'frac_matched_genotype'} = $tumour->{'genotype'}->{'frac_matched_genotype'};
+    $full_qc->{$tumour_name}->{'genotype'}->{'total_loci'} = $struc->{'total_loci_genotype'};
+    $full_qc->{$tumour_name}->{'genotype'}->{'compared_against'} = $struc->{'compared_against'};
+
+    $full_qc->{$tumour_name}->{'gender'}->{'frac_match_gender'} = $tumour->{'genotype'}->{'frac_match_gender'};
+    $full_qc->{$tumour_name}->{'gender'}->{'gender_result'} = $tumour->{'genotype'}->{'gender'};
+    $full_qc->{$tumour_name}->{'gender'}->{'total_loci'} = $struc->{'total_loci_gender'};
+    $full_qc->{$tumour_name}->{'gender'}->{'compared_against'} = $struc->{'compared_against'};
+  }
+  1;
 }
 
 # code duplication in packageResults.pl
@@ -74,6 +101,7 @@ sub get_aliquot_id_from_bam {
   die "No SM entry found in: $bam\n" if ( scalar @keys == 0 );
   return $keys[0];
 }
+
 sub rum_metrics {
   my ( $base_dir, @bams ) = @_;
   my %run_met;
@@ -92,6 +120,7 @@ sub rum_metrics {
   $run_met{'workflow'}{'Wall_s'} = _workflow_met($timings);
   return \%run_met;
 }
+
 sub _workflow_met {
   my $folder = shift;
   my ($stdout, $stderr, $exit) = capture { system(qq{cat $folder/workflow_start}); };
@@ -107,6 +136,7 @@ sub _workflow_met {
   my $elapsed = $ended - $started;
   return $elapsed;
 }
+
 sub _run_met {
   my ( $inc, $folder, $alg ) = @_;
   my ( $total_cpu, $max_mem ) = ( 0, 0 );
@@ -148,6 +178,19 @@ sub _run_met {
 
   return \%met;
 }
+
+sub _qc_contam {
+  my $to_process = shift;
+  my ($stdout, $stderr, $exit) = capture { system(qq{cat $to_process/summary.json}); };
+  die "STDOUT: $stdout\n\nSTDERR: $stderr\n" if ( $exit != 0 );
+  my $struc = decode_json $stdout;
+  my %qc = ( 'caller' => 'varifyBamId' );
+  for my $key(keys %{$struc}) {
+    $qc{$key} = $struc->{$key};
+  }
+  return \%qc;
+}
+
 sub _qc_brass {
   my $to_process = shift;
   my %qc = ( 'caller' => 'BRASS' );
@@ -164,6 +207,7 @@ sub _qc_brass {
   $qc{'assembled'} = $1;
   return \%qc;
 }
+
 sub _qc_ascat {
   my $to_process = shift;
   my %qc = ( 'caller' => 'ASCAT' );
@@ -188,6 +232,7 @@ sub _qc_ascat {
   }
   return \%qc;
 }
+
 sub _qc_pindel {
   my $to_process = shift;
   my %qc = ( 'caller' => 'cgpPindel' );
@@ -209,6 +254,7 @@ sub _qc_pindel {
 
   return \%qc;
 }
+
 sub _qc_caveman {
   my $to_process = shift;
   # I know that grep can cout things, but if it gets 0 it gives non-zero exit

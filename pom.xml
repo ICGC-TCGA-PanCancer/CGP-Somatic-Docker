@@ -106,7 +106,7 @@
         <groupId>com.google.code.maven-replacer-plugin</groupId>
         <artifactId>maven-replacer-plugin</artifactId>
         <version>1.4.0</version>
-        <executions>                
+        <executions>
           <execution>
             <phase>process-sources</phase>
             <goals>
@@ -142,10 +142,10 @@
               <token>@workflow-src-url@</token>
               <value>${workflow-src-url}</value>
             </replacement>
-          </replacements>                        
+          </replacements>
         </configuration>
       </plugin>
-      
+
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>properties-maven-plugin</artifactId>
