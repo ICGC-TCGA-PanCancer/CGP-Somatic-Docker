@@ -28,7 +28,7 @@ get_distro () {
 }
 
 repos=(
-  "https://github.com/ICGC-TCGA-PanCancer/PCAP-core/archive/v1.2.2.tar.gz"
+  "https://github.com/ICGC-TCGA-PanCancer/PCAP-core/archive/v1.2.3.tar.gz"
   "https://github.com/cancerit/cgpVcf/archive/v1.2.2.tar.gz"
   "https://github.com/cancerit/alleleCount/archive/v1.2.1.tar.gz"
   "https://github.com/cancerit/cgpBinCounts/archive/v1.0.0.tar.gz"
@@ -37,7 +37,7 @@ repos=(
   "https://github.com/cancerit/cgpPindel/archive/v1.1.2.tar.gz"
   "https://github.com/cancerit/cgpCaVEManPostProcessing/archive/v1.0.2.tar.gz"
   "https://github.com/cancerit/cgpCaVEManWrapper/archive/v1.2.0.tar.gz"
-  "https://github.com/cancerit/BRASS/archive/v2.0.1.tar.gz"
+  "https://github.com/cancerit/BRASS/archive/v2.1.0.tar.gz"
   "https://github.com/cancerit/VAGrENT/archive/v2.0.0.tar.gz"
   "https://github.com/cancerit/grass/archive/v1.0.1.tar.gz"
  )
