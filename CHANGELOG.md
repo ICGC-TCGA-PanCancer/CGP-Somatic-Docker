@@ -1,7 +1,7 @@
 # 1.0.2
 
 * creating additional config files with different memory profiles
-* Artifact additions include
+* Artifact addition:
     * cgpNgsQc - genotype and contamination analysis
 * Artifact updated to fix the following:
     * BRASS - prevent memory issues cause by high-depth regions.
