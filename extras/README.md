@@ -13,12 +13,16 @@ This tool is designed to work with the 1.0.1 version of the workflow.
 
     sudo apt-get install libtemplate-perl
 
-## Example
+## Examples
 
     # 1.0.0
     perl generate_ini.pl --tsv data/PCAWG_Data_Freeze_Train_2.0_Pilot-58.tsv --output-dir /glusterfs/netapp/homes1/BOCONNOR/workflow-dev/20141125b_test_runs --defaults config/settings.conf --template template/workflow_config.1.0.0.ini.tt 
     # 1.0.1
     perl generate_ini.pl --tsv data/PCAWG_Data_Freeze_Train_2.0_Pilot-58.tsv --output-dir /glusterfs/netapp/homes1/BOCONNOR/workflow-dev/20141202_test_runs --defaults config/settings.conf --template template/workflow_config.1.0.1.ini.tt
+    # 1.0.2 on latest list for running on AWS Frankfurt
+    perl generate_ini.pl --tsv data/PCAWG_Data_Freeze_Train_2.0_Pilot-64-FROZEN_2014_12_08.tsv --output-dir /home/seqware/sanger_workflow_ini/20141216 --defaults config/settings.aws.large.conf --template template/workflow_config.1.0.2.ini.tt
+
+
 
 ## TODO
 
