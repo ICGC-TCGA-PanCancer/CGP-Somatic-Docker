@@ -91,9 +91,7 @@ Once you build this on a SeqWare VM the next thing you'll want to do is actually
     pemFile=/mnt/seqware-build/ebi.pem
     # not "true" means the data will be downloaded using AliquotIDs
     testMode=false
-    # uncomment if the above is "true"
-    #tumourBamT=/mnt/testData/PD7303/PD7303a_ds.bam
-    #controlBamT=/mnt/testData/PD7303/PD7303b_ds.bam
+
     # these are residing on the EBI GNOS repo
     tumourAliquotIds=f393bb07-270c-2c93-e040-11ac0d484533
     tumourAnalysisIds=ef26d046-e88a-4f21-a232-16ccb43637f2
@@ -103,9 +101,55 @@ Once you build this on a SeqWare VM the next thing you'll want to do is actually
 
 Once you've modified (or copied and modified) the .ini file you can launch the workflow with something like:
 
-    seqware bundle launch --dir <path>/target/Workflow_Bundle_CgpCnIndelSnvStr_1.0.0_SeqWare_1.1.0-alpha.5 --ini <path_to_modified_ini>
+    seqware bundle launch --dir <path>/target/Workflow_Bundle_CgpCnIndelSnvStr_... --ini <path_to_modified_ini>
 
 This will launch the workflow and print out some key debugging information that will help you if things go wrong.
+
+## Notes about memory and cores
+
+The following values should be set to the maximum that the executing host can safely use (taking into account OS and other services running):
+
+    coresAddressable - the maximum number of core that will be available to the workflow.
+    memHostMbAvailable - the total memory available to the workflow.
+
+There are a few steps that don't handle cores and memory in the normal Seqware way.  This allows the per-process overhead to be mostly negated and more efficient parallel processing.
+These processes which use this approach are:
+
+    CaVEMan_mstep
+    CaVEMan_estep
+    BRASS_assemble
+
+These processes can theoretically use all of the cores and memory available to the host.  If you decide that these steps generically need a change to memory please modify the
+appropriate ``mem*PerThread`` and not the generic ``coresAddressable`` or ``memHostMbAvailable``.  The workflow will assess the available memory and sacrifice cores for memory if required.
+
+As these steps will be running multiple threads (internally) each can share/donate memory to those running at the same time and so memory failures are reduced.
+
+### How to update mem*PerThread part way through execution
+
+In these cases _do not_ modify the ``*-qsub.opts`` file but instead reduce the parallel threads by 2 as follows:
+
+<table border="all">
+  <tr>
+    <th>Process</th><th>script stub</th><th>Modify</th>
+  </tr>
+  <tr>
+    <td>CaVEMan_mstep</td>
+    <td>CaVEMan_mstep_262.sh</td>
+    <td>-l and -t</td>
+  </tr>
+  <tr>
+    <td>CaVEMan_estep</td>
+    <td>CaVEMan_estep_264.sh</td>
+    <td>-l and -t</td>
+  </tr>
+  <tr>
+    <td>BRASS_assemble</td>
+    <td>BRASS_assemble_171.sh</td>
+    <td>-l and -c</td>
+  </tr>
+</table>
+
+(the numeric component of 'script stub' was correct at time of writing, it may drift)
 
 ## Building CGP Workflow Dependencies - Optional
 
