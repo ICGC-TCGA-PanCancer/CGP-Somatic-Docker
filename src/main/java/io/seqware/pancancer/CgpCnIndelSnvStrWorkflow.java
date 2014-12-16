@@ -836,8 +836,12 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       String baseFile = OUTDIR + "/" + tumourAliquotId + "." + workflowName + "." + dateString + ".somatic.";
       tars = tars.concat("," + baseFile + "imputeCounts.tar.gz");
       tars = tars.concat("," + baseFile + "binnedReadCounts.tar.gz");
+      tars = tars.concat("," + baseFile + "genotype.tar.gz");
+      tars = tars.concat("," + baseFile + "verifyBamId.tar.gz");
       tarmd5s = tarmd5s.concat("," + baseFile + "imputeCounts.tar.gz.md5");
       tarmd5s = tarmd5s.concat("," + baseFile + "binnedReadCounts.tar.gz.md5");
+      tarmd5s = tarmd5s.concat("," + baseFile + "genotype.tar.gz.md5");
+      tarmd5s = tarmd5s.concat("," + baseFile + "verifyBamId.tar.gz.md5");
     }
     
     thisJob.getCommand()
