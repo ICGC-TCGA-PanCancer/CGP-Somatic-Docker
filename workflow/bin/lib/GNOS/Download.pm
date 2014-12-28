@@ -89,6 +89,9 @@ sub launch_and_monitor {
         # these will be defined if the program is actively downloading
         my ($size, $percent, $rate) = $_ =~ m/^Status:\s*(\d+.\d+|\d+|\s*)\s*[M|G]B\s*downloaded\s*\((\d+.\d+|\d+|\s)%\s*complete\)\s*current rate:\s+(\d+.\d+|\d+| )\s+MB\/s/g;
 
+	# override, let's use percent for size because it's always increasing whereas the units of the size change and this will interfere with the > $last_reported_size
+	$size = $percent;
+
         # test to see if the thread is md5sum'ing after an earlier failure
         # this actually doesn't produce new lines, it's all on one line but you
         # need to check since the md5sum can take hours and this would cause a timeout
