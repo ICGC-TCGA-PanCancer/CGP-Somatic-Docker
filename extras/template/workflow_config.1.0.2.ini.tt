@@ -8,45 +8,34 @@ output_prefix=./
 cleanup=false
 
 # basic setup
-# | 7  | m2.xxlarge   | 65536     | 20   | 0         |      | 16    | 1.0         | True      |
-# trying a 9G spread here to see if it reduces crashes
-coresAddressable=16
-memHostMbAvailable=56000
-tabixSrvUri=http://ec2-54-217-231-49.eu-west-1.compute.amazonaws.com/
-
-# Use public pulldown data from S3 instead of genome scale from GNOS
-#testMode=true
-
-pemFile=/glusterfs/netapp/homes1/BOCONNOR/workflow-dev/ebi-key.pem
-gnosServer=https://gtrepo-ebi.annailabs.com
+coresAddressable=[% coresAddressable  %]
+memHostMbAvailable=[% memHostMbAvailable %]
+tabixSrvUri=[% tabixSrvUri  %]
+pemFile=[% pemFile  %]
+uploadPemFile=[% uploadPemFile %]
+gnosServer=[% gnosServer %]
 ## comment out upload server to block vcfUpload
-uploadServer=https://gtrepo-ebi.annailabs.com
-uploadPemFile=/mnt/seqware-build/ebi.pem
+uploadServer=[% uploadServer %]
 
 study-refname-override=tcga_pancancer_vcf_test
 #analysis-center-override=
-upload-test=false
-upload-skip=false
+upload-test=[% uploadTest %]
+upload-skip=[% uploadSkip %]
 
 assembly=GRCh37
 species=human
 seqType=WGS
 gender=L
 
-# PD13491a 36x tumour, other test data, GNOS download
-#tumourAliquotIds=f86b6ba2-8f4b-ee53-e040-11ac0d485904
-#tumourAnalysisIds=0772aed3-4df7-403f-802a-808df2935cd1
-#tumourBams=c007f362d965b32174ec030825262714.bam
-# PD13491b 30x normal
-#controlAnalysisId=5161b68b-e757-47df-80cf-79554430e5cb
-#controlBam=459793d5b324900a2f9dd1ec079a368e.bam
+# test data, will be overriden unless testMode=true
+testMode=false
 
 # PD4116a 30x vs PD4116b 30x
-tumourAliquotIds=f393bb07-270c-2c93-e040-11ac0d484533
-tumourAnalysisIds=ef26d046-e88a-4f21-a232-16ccb43637f2
-tumourBams=7723a85b59ebce340fe43fc1df504b35.bam
-controlAnalysisId=1b9215ab-3634-4108-9db7-7e63139ef7e9
-controlBam=8f957ddae66343269cb9b854c02eee2f.bam
+tumourAliquotIds=[% tumourAliquotIds %]
+tumourAnalysisIds=[% tumourAnalysisIds %]
+tumourBams=[% tumourBams %]
+controlAnalysisId=[% controlAnalysisId %]
+controlBam=[% controlBam %]
 
 refExclude=MT,GL%,hs37d5,NC_007605
 
@@ -107,3 +96,4 @@ memCavemanMergeResults=4000
 memCavemanAddIds=4000
 memCavemanFlag=5000
 memCavemanTbiClean=4000
+
