@@ -45,7 +45,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   
   // MEMORY variables //
   private String  memBasFileGet, memGnosDownload, memPackageResults, memMarkTime,
-                  memQcMetrics, memUpload, memGetTbi,
+                  memQcMetrics, memUpload, memGetTbi, memGenotype, memContam,
                   memPicnicCounts, memPicnicMerge, memUnpack, memBbMerge,
                   // ascat memory
                   memAlleleCount, memAscat, memAscatFinalise,
@@ -76,7 +76,10 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
                   //caveman variables
                   tabixSrvUri,
                   //general variables
-                  installBase, refBase, genomeFaGz, testBase;
+                  installBase, refBase, genomeFaGz, testBase,
+                  //contamination variables
+                  contamDownSampOneIn
+                  ;
   
   private int coresAddressable, memWorkflowOverhead, memHostMbAvailable;
   
@@ -151,6 +154,8 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       memPackageResults = getProperty("memPackageResults");
       memMarkTime = getProperty("memMarkTime");
       memQcMetrics = getProperty("memQcMetrics");
+      memGenotype = getProperty("memGenotype");
+      memContam = getProperty("memContam");
       memUpload = getProperty("memUpload");
       memGetTbi = getProperty("memGetTbi");
       
@@ -191,6 +196,8 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       
       memWorkflowOverhead = Integer.valueOf(getProperty("memWorkflowOverhead"));
       memHostMbAvailable = Integer.valueOf(getProperty("memHostMbAvailable"));
+      
+      contamDownSampOneIn = getProperty("contamDownSampOneIn");
 
       // REFERENCE INFO //
       species = getProperty("species");
@@ -317,6 +324,19 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       getTbiJob.addParent(job);
     }
     
+    Job genotypeJob = genoptypeBaseJob(tumourBams, controlBam);
+    genotypeJob.setMaxMemory(memGenotype);
+    genotypeJob.addParent(getTbiJob);
+    
+    Job genotypePackJob = packageGenotype(tumourBams, controlBam);
+    genotypePackJob.setMaxMemory("4000");
+    genotypePackJob.addParent(genotypeJob);
+    
+    Job contaminationJob = contaminationBaseJob(tumourBams.size(), controlBam, "control");
+    contaminationJob.setMaxMemory(memContam);
+    contaminationJob.addParent(getTbiJob);
+    // packaging must have parent cavemanTbiCleanJob
+    
     // these are not paired but per individual sample
     List<Job> bbAlleleCountJobs = new ArrayList<Job>();
     for(int i=0; i<23; i++) { // not 1-22+X
@@ -368,17 +388,37 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     
     Job cavemanTbiCleanJob = cavemanTbiCleanJob();
     cavemanTbiCleanJob.setMaxMemory(memCavemanTbiClean);
+    cavemanTbiCleanJob.addParent(contaminationJob); // control contamination
     for(Job cavemanFlagJob : cavemanFlagJobs) {
       cavemanTbiCleanJob.addParent(cavemanFlagJob);
+      // tumour contamination is linked in buildPairWorkflow() 
     }
     
     Job endWorkflow = markTime("end");
     endWorkflow.setMaxMemory(memMarkTime);
     endWorkflow.addParent(cavemanTbiCleanJob);
     
-    Job metricsJob = getMetricsJob(tumourBams);
+    Job metricsJob = getMetricsJob(tumourBams, controlBam);
     metricsJob.setMaxMemory(memQcMetrics);
     metricsJob.addParent(endWorkflow);
+    
+    Job renameGenotypeJob = renameSampleFile(tumourBams, OUTDIR, "genotype.tar.gz");
+    renameGenotypeJob.setMaxMemory("4000");
+    renameGenotypeJob.addParent(genotypePackJob);
+    Job renameGenotypeMd5Job = renameSampleFile(tumourBams, OUTDIR, "genotype.tar.gz.md5");
+    renameGenotypeMd5Job.setMaxMemory("4000");
+    renameGenotypeMd5Job.addParent(genotypePackJob);
+    
+    Job packageContamJob = packageContam(tumourBams, controlBam);
+    packageContamJob.setMaxMemory("4000");
+    packageContamJob.addParent(cavemanTbiCleanJob);
+    
+    Job renameContamJob = renameSampleFile(tumourBams, OUTDIR, "verifyBamId.tar.gz");
+    renameContamJob.setMaxMemory("4000");
+    renameContamJob.addParent(packageContamJob);
+    Job renameContamMd5Job = renameSampleFile(tumourBams, OUTDIR, "verifyBamId.tar.gz.md5");
+    renameContamMd5Job.setMaxMemory("4000");
+    renameContamMd5Job.addParent(packageContamJob);
     
     Job renameImputeJob = renameSampleFile(tumourBams, OUTDIR + "/bbCounts", "imputeCounts.tar.gz");
     renameImputeJob.setMaxMemory("4000");
@@ -453,6 +493,10 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     Job ascatPackage = packageResults(tumourCount, "ascat", "cnv", tumourBam, "copynumber.caveman.vcf.gz", workflowName, "somatic", dateString);
     ascatPackage.setMaxMemory(memPackageResults);
     ascatPackage.addParent(ascatFinaliseJob);
+    
+    Job contaminationJob = contaminationBaseJob(tumourCount, tumourBam, "tumour");
+    contaminationJob.setMaxMemory(memContam);
+    contaminationJob.addParent(ascatFinaliseJob);
     
     /**
      * CaVEMan setup is here to allow better workflow graph
@@ -642,6 +686,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     cavemanFlagJob.addParent(getTbiJob);
     cavemanFlagJob.addParent(pindelFlagJob); // PINDEL dependency
     cavemanFlagJob.addParent(cavemanAddIdsJob);
+    cavemanFlagJob.addParent(contaminationJob);
     
     Job cavemanPackage = packageResults(tumourCount, "caveman", "snv_mnv", tumourBam, "flagged.muts.vcf.gz", workflowName, "somatic", dateString);
     cavemanPackage.setMaxMemory(memPackageResults);
@@ -791,8 +836,12 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       String baseFile = OUTDIR + "/" + tumourAliquotId + "." + workflowName + "." + dateString + ".somatic.";
       tars = tars.concat("," + baseFile + "imputeCounts.tar.gz");
       tars = tars.concat("," + baseFile + "binnedReadCounts.tar.gz");
+      tars = tars.concat("," + baseFile + "genotype.tar.gz");
+      tars = tars.concat("," + baseFile + "verifyBamId.tar.gz");
       tarmd5s = tarmd5s.concat("," + baseFile + "imputeCounts.tar.gz.md5");
       tarmd5s = tarmd5s.concat("," + baseFile + "binnedReadCounts.tar.gz.md5");
+      tarmd5s = tarmd5s.concat("," + baseFile + "genotype.tar.gz.md5");
+      tarmd5s = tarmd5s.concat("," + baseFile + "verifyBamId.tar.gz.md5");
     }
     
     thisJob.getCommand()
@@ -885,19 +934,21 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
             .addArgument(installBase)
             .addArgument("xml_to_bas.pl")
             .addArgument("-d " + gnosServer + "/cghub/metadata/analysisFull/" + analysisId)
+            .addArgument("-b " + sampleBam)
             .addArgument("-o " + analysisId + "/" + sampleBam + ".bas")
             ;
     return thisJob;
   }
   
-  private Job getMetricsJob(List<String> tumourBams) {
+  private Job getMetricsJob(List<String> tumourBams, String controlBam) {
     //die "USAGE: rootOfOutdir ordered.bam [ordered.bam2]";
     Job thisJob = getWorkflow().createBashJob("metrics");
     thisJob.getCommand()
       .addArgument(getWorkflowBaseDir()+ "/bin/wrapper.sh")
       .addArgument(installBase)
       .addArgument(getWorkflowBaseDir()+ "/bin/qc_and_metrics.pl")
-      .addArgument(OUTDIR);
+      .addArgument(OUTDIR)
+      .addArgument(controlBam);
     for(String bam : tumourBams) {
       thisJob.getCommand().addArgument(bam);
     }
@@ -962,17 +1013,10 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
               .addArgument("-o " + OUTDIR + "/" + tumourCount + "/caveman")
               .addArgument("-tc " + OUTDIR + "/" + tumourCount + "/tumour.cn.bed")
               .addArgument("-nc " + OUTDIR + "/" + tumourCount + "/normal.cn.bed")
-              .addArgument("-k " + ascatContamFile);
-    if(tumourBam.startsWith("/")) {
-      thisJob.getCommand().addArgument("-tb " + tumourBam)
-                          .addArgument("-nb " + controlBam)
-                          .addArgument("-r " + genomeFaGz + ".fai");
-    }
-    else {
-      thisJob.getCommand().addArgument("-tb " + tumourBam)
-                          .addArgument("-nb " + controlBam)
-                          .addArgument("-r " + genomeFaGz + ".fai");
-    }
+              .addArgument("-k " + ascatContamFile)
+              .addArgument("-tb " + tumourBam)
+              .addArgument("-nb " + controlBam)
+              .addArgument("-r " + genomeFaGz + ".fai");
     
     if(!process.equals("mstep") && !process.equals("estep")) {
       thisJob.getCommand().addArgument("-i " + index);
@@ -984,6 +1028,72 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
 
     return thisJob;
   }
+  
+  private Job genoptypeBaseJob(List<String> tumourBams, String controlBam) {
+    Job thisJob = prepTimedJob(0, "compareBamGenotypes", "all", 0);
+    thisJob.getCommand()
+      .addArgument(getWorkflowBaseDir()+ "/bin/wrapper.sh")
+      .addArgument(installBase)
+      .addArgument("compareBamGenotypes.pl")
+      .addArgument("-o " + OUTDIR + "/genotype")
+      .addArgument("-nb " + controlBam)
+      .addArgument("-j " + OUTDIR + "/genotype/summary.json")
+      ;
+    for(String tumourBam : tumourBams) {
+      thisJob.getCommand().addArgument("-tb " + tumourBam);
+    }
+    return thisJob;
+  }
+  
+  private Job packageGenotype(List<String> tumourBams, String controlBam) {
+    Job thisJob = getWorkflow().createBashJob("packageGenotype");
+    thisJob.getCommand()
+      .addArgument(getWorkflowBaseDir()+ "/bin/wrapper.sh")
+      .addArgument(installBase)
+      .addArgument(getWorkflowBaseDir() + "/bin/packageGenotype.pl")
+      .addArgument(OUTDIR)
+      .addArgument(controlBam)
+      ;
+    for(String tumour : tumourBams) {
+      thisJob.getCommand().addArgument(tumour);
+    }
+    return thisJob;
+  }
+  
+  private Job contaminationBaseJob(int tumourCount, String inBam, String process) {
+    Job thisJob = prepTimedJob(tumourCount, "verifyBamHomChk", process, 0);
+    thisJob.getCommand()
+      .addArgument(getWorkflowBaseDir()+ "/bin/wrapper.sh")
+      .addArgument(installBase)
+      .addArgument("verifyBamHomChk.pl")
+      .addArgument("-o " + OUTDIR + "/" + tumourCount + "/contamination")
+      .addArgument("-b " + inBam)
+      .addArgument("-d " + contamDownSampOneIn)
+      .addArgument("-j " + OUTDIR + "/" + tumourCount + "/contamination/summary.json")
+      ;
+    if(process.equals("tumour")) {
+      thisJob.getCommand().addArgument("-a " + OUTDIR + "/" + tumourCount + "/ascat/*.copynumber.caveman.csv"); // not the best approach but works
+    }
+    
+    return thisJob;
+  }
+  
+    private Job packageContam(List<String> tumourBams, String controlBam) {
+    Job thisJob = getWorkflow().createBashJob("packageContam");
+    thisJob.getCommand()
+      .addArgument(getWorkflowBaseDir()+ "/bin/wrapper.sh")
+      .addArgument(installBase)
+      .addArgument(getWorkflowBaseDir() + "/bin/packageContam.pl")
+      .addArgument(OUTDIR)
+      .addArgument(controlBam)
+      ;
+    for(String tumour : tumourBams) {
+      thisJob.getCommand().addArgument(tumour);
+    }
+    return thisJob;
+  }
+  
+  
 
   private Job cgpAscatBaseJob(int tumourCount, String tumourBam, String controlBam, String alg, String process, int index) {
     Job thisJob = prepTimedJob(tumourCount, alg, process, index);

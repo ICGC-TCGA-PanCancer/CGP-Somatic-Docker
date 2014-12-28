@@ -11,7 +11,7 @@
   <!-- MAKE SURE YOU UPDATE THE workflow.properties FILE TOO -->
   <artifactId>SangerPancancerCgpCnIndelSnvStr</artifactId>
   <!-- MAKE SURE YOU UPDATE THE workflow.properties FILE TOO -->
-  <version>1.0.1</version>
+  <version>1.0.2</version>
   <packaging>jar</packaging>
   <!-- MAKE SURE YOU UPDATE THE workflow.properties FILE TOO -->
   <name>SangerPancancerCgpCnIndelSnvStr</name>
@@ -50,7 +50,7 @@
     <dependency>
       <groupId>SeqWare-CGP-SomaticCore</groupId>
       <artifactId>SeqWare-CGP-SomaticCore_opt</artifactId>
-      <version>1.0.0e</version>
+      <version>1.1.0</version>
       <type>tar.gz</type>
     </dependency>
   </dependencies>
@@ -106,7 +106,7 @@
         <groupId>com.google.code.maven-replacer-plugin</groupId>
         <artifactId>maven-replacer-plugin</artifactId>
         <version>1.4.0</version>
-        <executions>                
+        <executions>
           <execution>
             <phase>process-sources</phase>
             <goals>
@@ -142,10 +142,10 @@
               <token>@workflow-src-url@</token>
               <value>${workflow-src-url}</value>
             </replacement>
-          </replacements>                        
+          </replacements>
         </configuration>
       </plugin>
-      
+
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>properties-maven-plugin</artifactId>
