@@ -110,7 +110,7 @@ sub launch_and_monitor {
         if ((defined($percent) && defined($last_reported_uploaded) && $percent > $last_reported_uploaded) || $md5sum) {
             $time_last_uploading = time;
             if (defined($md5sum)) { say "  IS MD5Sum State: $md5sum"; }
-            if (defined($time_last_downloading) && defined($percent)) { say "  LAST REPORTED TIME $time_last_downloading SIZE: $percent"; }
+            if (defined($time_last_uploading) && defined($percent)) { say "  LAST REPORTED TIME $time_last_uploading SIZE: $percent"; }
         }
         elsif (($time_last_uploading != 0) and (time - $time_last_uploading) > $timeout) {
             say 'ERROR: Killing Thread - Timed Out '.time;
