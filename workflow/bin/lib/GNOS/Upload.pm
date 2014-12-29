@@ -91,13 +91,21 @@ sub launch_and_monitor {
     local $SIG{KILL} = sub { say "GOT KILL FOR THREAD: $my_tid";
                              threads->exit;
                            };
-    # system doesn't work, can't kill it but the open below does allow the sub-process to be killed
-    #system($cmd);
-    my $pid = open my $in, '-|', "$command 2>&1";
+
+    print "COMMAND TO RUN: $command\n";
+
+    # looks like the multiple commands are messing up the pipe so make a temp script
+    open OUT, ">temp.script.sh" or die;
+    print OUT "#!/bin/bash\n\n";
+    print OUT $command;
+    close OUT;
+
+    my $pid = open my $in, '-|', "bash temp.script.sh 2>&1";
+    #my $pid = open my $in, '-|', "$command 2>&1";
 
     # TODO: there's actually a progress file e.g.
     # /mnt/seqware-oozie/oozie-15b6645f-9922-4a1b-96aa-817bd4939084/seqware-results/upload/29ef0288-0d29-481d-b5d8-0672bfe1462d/29ef0288-0d29-481d-b5d8-0672bfe1462d.gto.progress
-    # could be an alternative if the below prooves unreliable
+    # could be an alternative if the below proves unreliable
     my $time_last_uploading = time;
     my $last_reported_uploaded = 0;
 
@@ -123,6 +131,7 @@ sub launch_and_monitor {
         # using percent here and not amount because
         $last_reported_uploaded = $percent;
     }
+
 }
 
 1;
