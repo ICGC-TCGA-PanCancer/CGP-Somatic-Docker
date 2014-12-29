@@ -39,15 +39,14 @@ my $milliseconds_in_an_hour = 3600000;
 # VARIABLES #
 #############
 
-# seconds to wait for a retry
-my $cooldown = 60;
+# min to wait for a retry
+my $cooldown = 1;
 # 30 retries at 60 seconds each is 30 hours
 my $retries = 30;
 # retries for md5sum, 4 hours
-my $md5_sleep = 240;
+my $timeout_min = 60;
 
 my $vcfs;
-my $vcf_types;
 my $md5_file = "";
 my $vcfs_idx;
 my $md5_idx_file = "";
@@ -159,20 +158,21 @@ say "SETTING UP OUTPUT DIR";
 
 my $uuid = '';
 my $ug = Data::UUID->new;
+$uuid = lc($ug->create_str());
 
-if(-d "$output_dir") {
-    opendir( my $dh, $output_dir);
-    my @dirs = grep {-d "$output_dir/$_" && ! /^\.{1,2}$/} readdir($dh);
-    if (scalar @dirs == 1) {
-        $uuid = $dirs[0];
-    }
-    else {
-        $uuid = lc($ug->create_str());
-    }
-}
-else {
-    $uuid = lc($ug->create_str());
-}
+#if(-d "$output_dir") {
+#    opendir( my $dh, $output_dir);
+#    my @dirs = grep {-d "$output_dir/$_" && ! /^\.{1,2}$/} readdir($dh);
+#    if (scalar @dirs == 1) {
+#        $uuid = $dirs[0];
+#    }
+#    else {
+#        $uuid = lc($ug->create_str());
+#    }
+#}
+#else {
+#    $uuid = lc($ug->create_str());
+#}
 
 $output_dir = "vcf/$output_dir";
 run("mkdir -p $output_dir/$uuid");
@@ -184,7 +184,6 @@ my $final_touch_file = $output_dir."upload_complete.txt";
 # parse values
 my @vcf_arr          = split /,/, $vcfs;
 my @md5_file_arr     = split /,/, $md5_file;
-my @vcf_types_arr    = split /,/, $vcf_types;
 my @vcfs_idx_arr     = split /,/, $vcfs_idx;
 my @md5_idx_file_arr = split /,/, $md5_idx_file;
 my @vcf_checksums;
@@ -373,7 +372,8 @@ sub validate_submission {
 sub upload_submission {
     my ($sub_path) = @_;
 
-    my $cmd = "cgsubmit -s $upload_url -o metadata_upload.log -u $sub_path -vv -c $key";
+    my $cmd = "cgsubmit -s $upload_url -o metadata_upload.log -u $sub_path -c $key";
+    #my $cmd = "cgsubmit -s $upload_url -o metadata_upload.log -u $sub_path -vv -c $key";
     say "UPLOADING METADATA: $cmd";
     if ( not $test && not $skip_upload ) {
         croak "ABORT: No cgsubmit installed, aborting!" if( system("which cgsubmit"));
@@ -385,11 +385,11 @@ sub upload_submission {
 
     my $log_file = 'upload.log';
     my $gt_upload_command = "cd $sub_path; gtupload -v -c $key -l ./$log_file -u ./manifest.xml; cd -";
-    say "UPLOADING DATA: $cmd";
+    say "UPLOADING DATA: $gt_upload_command LOG: $sub_path/$log_file";
 
     unless ( $test ) {
         die "ABORT: No gtupload installed, aborting!" if ( system("which gtupload") );
-        return 1 if ( GNOS::Upload->run_upload($gt_upload_command, "$sub_path/$log_file", $retries, $cooldown, $md5_sleep) );
+        return 1 if ( GNOS::Upload->run_upload($gt_upload_command, "$sub_path/$log_file", $retries, $cooldown, $timeout_min) );
     }
 
     # just touch this file to ensure monitoring tools know upload is complete
@@ -524,7 +524,7 @@ sub generate_submission {
         $participant_id = $participant_ids[0];
         my $index = 0;
         foreach my $bam_info ( @{ $m->{$file}{'run'} } ) {
-            if ( $bam_info->{data_block_name} ne '' ) {
+            if (defined($bam_info) && $bam_info->{data_block_name} ne '' ) {
 
                 my $pi = {};
                 $pi->{'input_info'}{'donor_id'}              = $participant_id;
@@ -1069,7 +1069,9 @@ sub download_url {
 sub getVal {
     my ( $node, $key ) = @_;
 
-    if ( $node != undef ) {
+    if (!defined($node)) { return undef; } 
+
+    if ( defined($node) && $node != undef ) {
         if ( defined( $node->getElementsByTagName($key) ) ) {
             if ( defined( $node->getElementsByTagName($key)->item(0) ) ) {
                 if (

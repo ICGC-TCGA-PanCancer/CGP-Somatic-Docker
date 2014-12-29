@@ -45,26 +45,30 @@ sub run_upload {
     do {
 
         #check if upload completed
-
-        open my $fh, '<', $log_file;
-        my @lines = <$fh>;
-        close $fh;
-
-        if ( {grep {/(100.000% complete)/s} @lines} ) {
-            $completed = 1;
-        }
-        elsif (not $thr->is_running()) {
-            if (++$count < $retries ) {
-                say 'KILLING THE THREAD!!';
-                # kill and wait to exit
-                $thr->kill('KILL')->join();
-                $thr = threads->create(\&launch_and_monitor, $command, $timeout_mili);
-
-            }
-            else {
-                say "Surpassed the number of retries: $retries";
-                exit 1;
-            }
+        if(-e $log_file) {
+          open my $fh, '<', $log_file;
+          my @lines = <$fh>;
+          close $fh;
+  
+          if ( {grep {/(100.000% complete)/s} @lines} ) {
+              $completed = 1;
+          }
+          elsif (not $thr->is_running()) {
+              if (++$count < $retries ) {
+                  say 'KILLING THE THREAD!!';
+                  # kill and wait to exit
+                  $thr->kill('KILL')->join();
+                  $thr = threads->create(\&launch_and_monitor, $command, $timeout_mili);
+  
+              }
+              else {
+                  say "Surpassed the number of retries: $retries";
+                  say 'KILLING THE THREAD!!';
+                  # kill and wait to exit
+                  $thr->kill('KILL')->join();
+                  exit 1;
+              }
+          }
         }
 
         sleep $cooldown_sec;
