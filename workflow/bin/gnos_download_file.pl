@@ -46,4 +46,7 @@ GetOptions (
 
 say "FILE: $file";
 
-GNOS::Download->run_download($command, $file, $retries, $cooldown_min, $timeout_min);
+# will return 0 on success, not 0 on failure
+my $ret_val = GNOS::Download->run_download($command, $file, $retries, $cooldown_min, $timeout_min);
+
+exit ($ret_val);

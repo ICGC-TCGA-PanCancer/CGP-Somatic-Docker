@@ -62,7 +62,7 @@ sub run_download {
     say 'DONE';
     $thr->join() if ($thr->is_running());
 
-    return 1;
+    return 0;
 }
 
 sub launch_and_monitor {
