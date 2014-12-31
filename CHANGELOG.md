@@ -1,3 +1,7 @@
+# 1.0.3
+
+* using Adam's wrapper (modified) to monitor gtdownload/gtupload
+
 # 1.0.2
 
 * creating additional config files with different memory profiles
