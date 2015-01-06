@@ -118,6 +118,7 @@ These processes which use this approach are:
     CaVEMan_mstep
     CaVEMan_estep
     BRASS_assemble
+    cgpPindel_pindel
 
 These processes can theoretically use all of the cores and memory available to the host.  If you decide that these steps generically need a change to memory please modify the
 appropriate ``mem*PerThread`` and not the generic ``coresAddressable`` or ``memHostMbAvailable``.  The workflow will assess the available memory and sacrifice cores for memory if required.
