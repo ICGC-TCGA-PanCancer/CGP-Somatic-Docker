@@ -134,19 +134,24 @@ In these cases _do not_ modify the ``*-qsub.opts`` file but instead reduce the p
     <th>Process</th><th>script stub</th><th>Modify</th>
   </tr>
   <tr>
+    <td>cgpPindel_pindel</td>
+    <td>cgpPindel_pindel_115.sh</td>
+    <td>-l and -c</td>
+  </tr>
+  <tr>
+    <td>BRASS_assemble</td>
+    <td>BRASS_assemble_148.sh</td>
+    <td>-l and -c</td>
+  </tr>
+  <tr>
     <td>CaVEMan_mstep</td>
-    <td>CaVEMan_mstep_262.sh</td>
+    <td>CaVEMan_mstep_239.sh</td>
     <td>-l and -t</td>
   </tr>
   <tr>
     <td>CaVEMan_estep</td>
-    <td>CaVEMan_estep_264.sh</td>
+    <td>CaVEMan_estep_241.sh</td>
     <td>-l and -t</td>
-  </tr>
-  <tr>
-    <td>BRASS_assemble</td>
-    <td>BRASS_assemble_171.sh</td>
-    <td>-l and -c</td>
   </tr>
 </table>
 
