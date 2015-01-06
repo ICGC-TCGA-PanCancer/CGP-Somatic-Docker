@@ -1158,7 +1158,6 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
               .addArgument(installBase)
               .addArgument("pindel.pl")
               .addArgument("-p " + process)
-              .addArgument("-i " + index)
               .addArgument("-r " + genomeFaGz)
               .addArgument("-e " + refExclude)
               .addArgument("-st " + seqType)
@@ -1174,6 +1173,10 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
               .addArgument("-t " + tumourBam)
               .addArgument("-n " + controlBam)
               ;
+    if(!process.equals("pindel")) {
+      thisJob.getCommand().addArgument("-i " + index);
+    }
+    
     if(process.equals("input")) {
       int pindelInputThreads;
       if(coresAddressable > 4) {
