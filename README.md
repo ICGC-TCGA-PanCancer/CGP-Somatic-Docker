@@ -163,7 +163,7 @@ You need to build and install the following in this order:
 * [cgpVcf v1.2.2](https://github.com/cancerit/cgpVcf/archive/v1.2.2.tar.gz)
 * [alleleCount v1.2.1](https://github.com/cancerit/alleleCount/archive/v1.2.1.tar.gz)
 * [ascatNgs v1.5.0](https://github.com/cancerit/ascatNgs/archive/v1.5.0.tar.gz)
-* [cgpPindel v1.1.2](https://github.com/cancerit/cgpPindel/archive/v1.1.2.tar.gz)
+* [cgpPindel v1.2.0](https://github.com/cancerit/cgpPindel/archive/v1.2.0.tar.gz)
 * [cgpCaVEManPostProcessing v1.0.2](https://github.com/cancerit/cgpCaVEManPostProcessing/archive/v1.0.2.tar.gz)
 * [cgpCaVEManWrapper v1.2.0](https://github.com/cancerit/cgpCaVEManWrapper/archive/v1.2.0.tar.gz)
 * [BRASS v2.1.0](https://github.com/cancerit/BRASS/archive/v2.1.0.tar.gz)
