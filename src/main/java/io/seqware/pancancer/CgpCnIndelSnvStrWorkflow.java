@@ -50,7 +50,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
                   // ascat memory
                   memAlleleCount, memAscat, memAscatFinalise,
                   // pindel memory
-                  memPindelInput, memPindel, memPindelVcf, memPindelMerge , memPindelFlag,
+                  memPindelInput, memPindelPerThread, memPindelVcf, memPindelMerge , memPindelFlag,
                   // brass memory
                   memBrassInput, memBrassGroup, memBrassFilter, memBrassSplit,
                   memBrassAssemblePerThread, memBrassGrass, memBrassTabix,
@@ -169,7 +169,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       memAscatFinalise = getProperty("memAscatFinalise");
       
       memPindelInput = getProperty("memPindelInput");
-      memPindel = getProperty("memPindel");
+      memPindelPerThread = getProperty("memPindelPerThread");
       memPindelVcf = getProperty("memPindelVcf");
       memPindelMerge = getProperty("memPindelMerge");
       memPindelFlag = getProperty("memPindelFlag");
@@ -538,21 +538,25 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       pindelInputJobs[i] = inputParse;
     }
     
+    int pindelNormalisedThreads = pindelNormalisedThreads(memPindelPerThread, coresAddressable);
+    int totalPindelMem = Integer.valueOf(memPindelPerThread) + (Integer.valueOf(memWorkflowOverhead) / pindelNormalisedThreads);
+    
+    Job pindelJob = pindelBaseJob(tumourCount, tumourBam, controlBam, "cgpPindel", "pindel", 1);
+    pindelJob.getCommand().addArgument("-l " + pindelNormalisedThreads);
+    pindelJob.getCommand().addArgument("-c " + pindelNormalisedThreads);
+    pindelJob.setMaxMemory(Integer.toString(totalPindelMem));
+    pindelJob.setThreads(pindelNormalisedThreads);
+    pindelJob.addParent(pindelInputJobs[0]);
+    pindelJob.addParent(pindelInputJobs[1]);
+    
     // determine number of refs to process
     // we know that this is static for PanCancer so be lazy 24 jobs (1-22,X,Y)
     // but pindel needs to know the exclude list so hard code this
     Job pinVcfJobs[] = new Job[24];
     for(int i=0; i<24; i++) {
-      Job pindelJob = pindelBaseJob(tumourCount, tumourBam, controlBam, "cgpPindel", "pindel", i+1);
-      pindelJob.setMaxMemory(memPindel);
-      pindelJob.addParent(pindelInputJobs[0]);
-      pindelJob.addParent(pindelInputJobs[1]);
-      
       Job pinVcfJob = pindelBaseJob(tumourCount, tumourBam, controlBam, "cgpPindel", "pin2vcf", i+1);
       pinVcfJob.setMaxMemory(memPindelVcf);
       pinVcfJob.addParent(pindelJob);
-      
-      // pinVcf depends on pindelJob so only need have dependency on the pinVcf
       pinVcfJobs[i] = pinVcfJob;
     }
     
@@ -693,6 +697,24 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     cavemanPackage.addParent(cavemanFlagJob);
     
     return cavemanFlagJob;
+  }
+  
+  /**
+   * This allows for other processes to run along side if the number of cores
+   * will allow.  Added in an attempt to prevent increased wall time for the
+   * whole workflow.
+   * 
+   * @param memPerThread Memory in MB consumed by each thread
+   * @param totalCores Total number of cores available to the workflow
+   * @return Number of threads usable based on per-thread and system overhead.
+   */
+  private int pindelNormalisedThreads(String memPerThread, int totalCores) {
+    int sensibleCores = totalCores;
+    if(sensibleCores > 12) {
+      sensibleCores = totalCores - 2;
+    }
+    int pindelNormalisedThreads = getMemNormalisedThread(memPerThread, sensibleCores);
+    return pindelNormalisedThreads;
   }
   
   private Job prepareTestData(String sample) {
@@ -1137,7 +1159,6 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
               .addArgument(installBase)
               .addArgument("pindel.pl")
               .addArgument("-p " + process)
-              .addArgument("-i " + index)
               .addArgument("-r " + genomeFaGz)
               .addArgument("-e " + refExclude)
               .addArgument("-st " + seqType)
@@ -1153,6 +1174,10 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
               .addArgument("-t " + tumourBam)
               .addArgument("-n " + controlBam)
               ;
+    if(!process.equals("pindel")) {
+      thisJob.getCommand().addArgument("-i " + index);
+    }
+    
     if(process.equals("input")) {
       int pindelInputThreads;
       if(coresAddressable > 4) {

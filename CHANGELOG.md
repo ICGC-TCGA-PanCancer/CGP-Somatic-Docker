@@ -1,3 +1,7 @@
+#next
+
+* Modified cgpPindel_pindel to use threaded approach like caveman\[em\]step.
+
 # 1.0.3
 
 * using Adam's wrapper (modified) to monitor gtdownload/gtupload
