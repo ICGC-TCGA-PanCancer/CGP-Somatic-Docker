@@ -805,6 +805,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       .addArgument(getWorkflowBaseDir()+ "/bin/execute_with_sample.pl " + bam)
       .addArgument("cp " + dir + "/" + "%SM%." + extension)
       .addArgument(OUTDIR + "/" + "%SM%." + workflowName + "." + dateString + ".somatic." + extension)
+      .addArgument(";");
       ;
     }
     return thisJob;
