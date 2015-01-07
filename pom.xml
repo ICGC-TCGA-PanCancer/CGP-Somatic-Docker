@@ -11,7 +11,7 @@
   <!-- MAKE SURE YOU UPDATE THE workflow.properties FILE TOO -->
   <artifactId>SangerPancancerCgpCnIndelSnvStr</artifactId>
   <!-- MAKE SURE YOU UPDATE THE workflow.properties FILE TOO -->
-  <version>1.0.2</version>
+  <version>1.0.3</version>
   <packaging>jar</packaging>
   <!-- MAKE SURE YOU UPDATE THE workflow.properties FILE TOO -->
   <name>SangerPancancerCgpCnIndelSnvStr</name>
@@ -29,12 +29,12 @@
   </properties>
 
   <dependencies>
-    <dependency>
+    <!--dependency>
       <groupId>SeqWare-PanCancer</groupId>
       <artifactId>vcf-uploader</artifactId>
       <version>1.1.0</version>
       <type>tar.gz</type>
-    </dependency>
+    </dependency-->
     <dependency>
       <groupId>io.seqware</groupId>
       <artifactId>seqware-bin-linux-x86-64-jre-7.0.51</artifactId>

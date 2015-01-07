@@ -245,7 +245,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   private Job bamProvision(String analysisId, String bamFile, Job startTiming) {
     Job basJob = null;
     if(testMode == false) {
-      Job gnosDownload = gnosDownloadBaseJob(analysisId);
+      Job gnosDownload = gnosDownloadBaseJob(analysisId, bamFile);
       gnosDownload.setMaxMemory(memGnosDownload);
       gnosDownload.addParent(startTiming);
       // the file needs to end up in tumourBam/controlBam
@@ -783,6 +783,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       .addArgument(getWorkflowBaseDir()+ "/bin/execute_with_sample.pl " + bam)
       .addArgument("cp " + dir + "/" + "%SM%." + extension)
       .addArgument(OUTDIR + "/" + "%SM%." + workflowName + "." + dateString + ".somatic." + extension)
+      .addArgument(";");
       ;
     }
     return thisJob;
@@ -845,7 +846,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     }
     
     thisJob.getCommand()
-      .addArgument("perl " + getWorkflowBaseDir()+ "/bin/gnos_upload_vcf.pl")
+      .addArgument("perl -I " + getWorkflowBaseDir()+ "/bin/lib " + getWorkflowBaseDir()+ "/bin/gnos_upload_vcf.pl")
       .addArgument("--metadata-urls " + metadataUrls)
       .addArgument("--vcfs " + vcfs)
       .addArgument("--vcf-md5sum-files " + vcfmd5s)
@@ -919,11 +920,19 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     return usableThreads;
   }
   
-  private Job gnosDownloadBaseJob(String analysisId) {
+  private Job gnosDownloadBaseJob(String analysisId, String bamFile) {
     Job thisJob = getWorkflow().createBashJob("GNOSDownload");
+    /*
+    perl -I ../gt-download-upload-wrapper/lib gnos_download_file.pl --command 'gtdownload -c /mnt/home/seqware/.ssh/boconnor_gnos_ebi_keyfile.pem -v https://gtrepo-ebi.annailabs.com/cghub/data/analysis/download/96e252b8-911a-44c7-abc6-b924845e0be6' --file 96e252b8-911a-44c7-abc6b924845e0be6/7d743b10ea1231730151b2c9d91c527f.bam --retries 10 --sleep-min 1 --timeout-min 60
+    */
     thisJob.getCommand()
-                  .addArgument("gtdownload -c " + pemFile)
-                  .addArgument("-v " + gnosServer + "/cghub/data/analysis/download/" + analysisId);
+                  .addArgument("perl -I " + getWorkflowBaseDir() + "/bin/lib " + getWorkflowBaseDir() + "/bin/gnos_download_file.pl ")
+                  .addArgument("--command 'gtdownload -c " + pemFile )
+                  .addArgument("-v " + gnosServer + "/cghub/data/analysis/download/" + analysisId + "'")
+                  .addArgument("--file " + analysisId + "/" + bamFile)
+                  .addArgument("--retries 10 --sleep-min 1 --timeout-min 60");
+                  /*.addArgument("gtdownload -c " + pemFile)
+                  .addArgument("-v " + gnosServer + "/cghub/data/analysis/download/" + analysisId); */
     return thisJob;
   }
   
