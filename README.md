@@ -118,6 +118,7 @@ These processes which use this approach are:
     CaVEMan_mstep
     CaVEMan_estep
     BRASS_assemble
+    cgpPindel_pindel
 
 These processes can theoretically use all of the cores and memory available to the host.  If you decide that these steps generically need a change to memory please modify the
 appropriate ``mem*PerThread`` and not the generic ``coresAddressable`` or ``memHostMbAvailable``.  The workflow will assess the available memory and sacrifice cores for memory if required.
@@ -133,19 +134,24 @@ In these cases _do not_ modify the ``*-qsub.opts`` file but instead reduce the p
     <th>Process</th><th>script stub</th><th>Modify</th>
   </tr>
   <tr>
+    <td>cgpPindel_pindel</td>
+    <td>cgpPindel_pindel_115.sh</td>
+    <td>-l and -c</td>
+  </tr>
+  <tr>
+    <td>BRASS_assemble</td>
+    <td>BRASS_assemble_148.sh</td>
+    <td>-l and -c</td>
+  </tr>
+  <tr>
     <td>CaVEMan_mstep</td>
-    <td>CaVEMan_mstep_262.sh</td>
+    <td>CaVEMan_mstep_239.sh</td>
     <td>-l and -t</td>
   </tr>
   <tr>
     <td>CaVEMan_estep</td>
-    <td>CaVEMan_estep_264.sh</td>
+    <td>CaVEMan_estep_241.sh</td>
     <td>-l and -t</td>
-  </tr>
-  <tr>
-    <td>BRASS_assemble</td>
-    <td>BRASS_assemble_171.sh</td>
-    <td>-l and -c</td>
   </tr>
 </table>
 
@@ -163,7 +169,7 @@ You need to build and install the following in this order:
 * [cgpVcf v1.2.2](https://github.com/cancerit/cgpVcf/archive/v1.2.2.tar.gz)
 * [alleleCount v1.2.1](https://github.com/cancerit/alleleCount/archive/v1.2.1.tar.gz)
 * [ascatNgs v1.5.0](https://github.com/cancerit/ascatNgs/archive/v1.5.0.tar.gz)
-* [cgpPindel v1.1.2](https://github.com/cancerit/cgpPindel/archive/v1.1.2.tar.gz)
+* [cgpPindel v1.2.0](https://github.com/cancerit/cgpPindel/archive/v1.2.0.tar.gz)
 * [cgpCaVEManPostProcessing v1.0.2](https://github.com/cancerit/cgpCaVEManPostProcessing/archive/v1.0.2.tar.gz)
 * [cgpCaVEManWrapper v1.2.0](https://github.com/cancerit/cgpCaVEManWrapper/archive/v1.2.0.tar.gz)
 * [BRASS v2.1.0](https://github.com/cancerit/BRASS/archive/v2.1.0.tar.gz)
