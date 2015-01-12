@@ -1,4 +1,8 @@
-#next
+# 1.0.5
+
+* TBD, probably include alternative upload options (S3, uploading alignment BAMs, etc)
+
+# 1.0.4
 
 * Modified cgpPindel_pindel to use threaded approach like caveman\[em\]step.
 
