@@ -45,15 +45,15 @@ The following are the packages needed for Ubuntu 12.04:
     sudo apt-get install libglib2.0-dev
     sudo apt-get install zlib1g-dev
     # for the vcf-uploader
-    sudo apt-get install libxml-dom-perl libxml-xpath-perl libjson-perl libxml-libxml-perl
+    sudo apt-get install libxml-dom-perl libxml-xpath-perl libjson-perl libxml-libxml-perl time libdata-uuid-libuuid-perl libcarp-always-perl libipc-system-simple-perl 
 
 These packages are needed for execution, **even when pulling from Artifactory**:
 
-    sudo apt-get install r-base r-base-core r-cran-rcolorbrewer
+    sudo apt-get install r-base r-base-core r-cran-rcolorbrewer 
 
 All of the above on one line to make it easy to cut and paste into a terminal:
 
-    sudo apt-get autoclean; sudo apt-get update; sudo apt-get -y upgrade; sudo apt-get -y install libxml-dom-perl libxml-xpath-perl libjson-perl libxml-libxml-perl zlib1g-dev libglib2.0-dev libpstreams-dev libboost-all-dev libgd2-xpm-dev libncurses5-dev g++ pkg-config dh-autoreconf r-base r-base-core r-cran-rcolorbrewer
+    sudo apt-get autoclean; sudo apt-get update; sudo apt-get -y upgrade; sudo apt-get -y install libxml-dom-perl libxml-xpath-perl libjson-perl libxml-libxml-perl zlib1g-dev libglib2.0-dev libpstreams-dev libboost-all-dev libgd2-xpm-dev libncurses5-dev g++ pkg-config dh-autoreconf r-base r-base-core r-cran-rcolorbrewer time libdata-uuid-libuuid-perl libcarp-always-perl libipc-system-simple-perl 
 
 Note: on BioNimbus I ran into an issue with r-cran-rcolorbrewer not being up to date with R 3.x.  See http://stackoverflow.com/questions/16503554/r-3-0-0-update-has-left-loads-of-2-x-packages-incompatible
 
