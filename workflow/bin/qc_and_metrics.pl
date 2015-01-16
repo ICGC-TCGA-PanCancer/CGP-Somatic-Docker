@@ -64,8 +64,8 @@ sub _qc_genotypes {
     $full_qc->{$tumour_name}->{'genotype'}->{'total_loci'} = $struc->{'total_loci_genotype'};
     $full_qc->{$tumour_name}->{'genotype'}->{'compared_against'} = $struc->{'compared_against'};
 
-    $full_qc->{$tumour_name}->{'gender'}->{'frac_match_gender'} = $tumour->{'genotype'}->{'frac_match_gender'};
-    $full_qc->{$tumour_name}->{'gender'}->{'gender_result'} = $tumour->{'genotype'}->{'gender'};
+    $full_qc->{$tumour_name}->{'gender'}->{'frac_match_gender'} = $tumour->{'gender'}->{'frac_match_gender'};
+    $full_qc->{$tumour_name}->{'gender'}->{'gender_result'} = $tumour->{'gender'}->{'gender'};
     $full_qc->{$tumour_name}->{'gender'}->{'total_loci'} = $struc->{'total_loci_gender'};
     $full_qc->{$tumour_name}->{'gender'}->{'compared_against'} = $struc->{'compared_against'};
   }
