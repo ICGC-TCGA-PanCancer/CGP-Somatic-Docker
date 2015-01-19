@@ -894,6 +894,12 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       if(hasPropertyAndNotNull("analysis-center-override")) {
         thisJob.getCommand().addArgument("--analysis-center-override " + getProperty("analysis-center-override"));
       }
+      if(hasPropertyAndNotNull("center-override")) {
+        thisJob.getCommand().addArgument("--center-override " + getProperty("center-override"));
+      }
+      if(hasPropertyAndNotNull("ref-center-override")) {
+        thisJob.getCommand().addArgument("--ref-center-override " + getProperty("ref-center-override"));
+      }
       if(hasPropertyAndNotNull("upload-test") && Boolean.valueOf(getProperty("upload-test"))) {
         thisJob.getCommand().addArgument("--test ");
       }

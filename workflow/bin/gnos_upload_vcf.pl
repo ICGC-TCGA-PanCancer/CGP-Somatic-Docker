@@ -79,6 +79,8 @@ my $changelog_url =
 my $force_copy      = 0;
 my $study_ref_name  = "icgc_pancancer_vcf";
 my $analysis_center = "OICR";
+my $center_override = "";
+my $refcenter_override = "";
 my $metadata_url;
 my $make_runxml        = 0;
 my $make_expxml        = 0;
@@ -107,6 +109,8 @@ if ( scalar(@ARGV) < 12 || scalar(@ARGV) > 46 ) {
        [--seqware-version <seqware_version_workflow_compiled_with>]
        [--description-file <file_path_for_description_txt>]
        [--study-refname-override <study_refname_override>]
+       [--center-override <center_override>]
+       [--ref-center-override <center_override>]
        [--analysis-center-override <analysis_center_override>]
        [--pipeline-json <pipeline_json_file>]
        [--qc-metrics-json <qc_metrics_json_file>]
@@ -137,6 +141,8 @@ GetOptions(
     "seqware-version=s"          => \$seqware_version,
     "description-file=s"         => \$description_file,
     "study-refname-override=s"   => \$study_ref_name,
+    "center-override=s"          => \$center_override,
+    "ref-center-override=s"      => \$refcenter_override,
     "analysis-center-override=s" => \$analysis_center,
     "pipeline-json=s"            => \$pipeline_json_file,
     "qc-metrics-json=s"          => \$qc_json_file,
@@ -433,7 +439,7 @@ sub generate_submission {
 
     # populate refcenter from original BAM submission
     # @RG CN:(.*)
-    my $refcenter = "OICR";
+    my $refcenter = "";
 
     # @CO sample_id
     my $sample_id = "";
@@ -551,6 +557,11 @@ sub generate_submission {
             }
         }
     }
+
+    # override if given on the command line
+    if (defined($center_override) && $center_override ne "") { $center_name = $center_override; } 
+    if (defined($refcenter_override) && $refcenter_override ne "") { $refcenter = $refcenter_override; } 
+
     my $str = to_json($pi2);
     $global_attr->{"pipeline_input_info"}{$str} = 1;
 
