@@ -11,7 +11,7 @@
   <!-- MAKE SURE YOU UPDATE THE workflow.properties FILE TOO -->
   <artifactId>SangerPancancerCgpCnIndelSnvStr</artifactId>
   <!-- MAKE SURE YOU UPDATE THE workflow.properties FILE TOO -->
-  <version>1.0.4</version>
+  <version>1.0.5</version>
   <packaging>jar</packaging>
   <!-- MAKE SURE YOU UPDATE THE workflow.properties FILE TOO -->
   <name>SangerPancancerCgpCnIndelSnvStr</name>
