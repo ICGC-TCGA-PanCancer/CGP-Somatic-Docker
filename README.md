@@ -165,10 +165,10 @@ You need to build and install the following in this order:
 
 * [PCAP v1.2.3](https://github.com/ICGC-TCGA-PanCancer/PCAP-core/archive/v1.2.3.tar.gz)
 * [cgpBinCounts v1.0.0](https://github.com/cancerit/cgpBinCounts/archive/v1.0.0.tar.gz)
-* [cgpNgsQc v1.0.0](https://github.com/cancerit/cgpNgsQc/archive/v1.0.0.tar.gz)
+* [cgpNgsQc v1.0.2](https://github.com/cancerit/cgpNgsQc/archive/v1.0.2.tar.gz)
 * [cgpVcf v1.2.2](https://github.com/cancerit/cgpVcf/archive/v1.2.2.tar.gz)
 * [alleleCount v1.2.1](https://github.com/cancerit/alleleCount/archive/v1.2.1.tar.gz)
-* [ascatNgs v1.5.0](https://github.com/cancerit/ascatNgs/archive/v1.5.0.tar.gz)
+* [ascatNgs v1.5.1](https://github.com/cancerit/ascatNgs/archive/v1.5.1.tar.gz)
 * [cgpPindel v1.2.0](https://github.com/cancerit/cgpPindel/archive/v1.2.0.tar.gz)
 * [cgpCaVEManPostProcessing v1.0.2](https://github.com/cancerit/cgpCaVEManPostProcessing/archive/v1.0.2.tar.gz)
 * [cgpCaVEManWrapper v1.2.0](https://github.com/cancerit/cgpCaVEManWrapper/archive/v1.2.0.tar.gz)

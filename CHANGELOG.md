@@ -1,6 +1,10 @@
 # 1.0.5
 
 * TBD, probably include alternative upload options (S3, uploading alignment BAMs, etc)
+* Corrected path in xml_to_bas.pl calls - only affects data which failed to process due to readgroup ID clash
+* Updated ``SeqWare-CGP-SomaticCore_opt`` artifact:
+    * Revised gender determination to be based solely on normal sample in ascatNgs (1.5.1) - no affect on successfully processed data
+    * Revised gender determination to be based solely on normal sample in cgpNgsQc (1.0.2) - minor correction in JSON output, otherwise no affect on successfully processed data.
 
 # 1.0.4
 
