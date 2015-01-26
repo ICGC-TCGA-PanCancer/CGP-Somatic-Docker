@@ -1,6 +1,7 @@
 # 1.0.5
 
 * TBD, probably include alternative upload options (S3, uploading alignment BAMs, etc)
+* added more features for overriding certain vaiables in the XML uploaded to GNOS.
 
 # 1.0.4
 
