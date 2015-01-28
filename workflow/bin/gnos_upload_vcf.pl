@@ -906,6 +906,27 @@ END
         </ANALYSIS_ATTRIBUTE>
 ";
 
+# LEFT OFF HERE: need to add tags for compute center and profiles
+    # some metadata about this workflow
+    $analysis_xml .= "        <ANALYSIS_ATTRIBUTE>
+          <TAG>variant_workflow_name</TAG>
+          <VALUE>$workflow_name</VALUE>
+        </ANALYSIS_ATTRIBUTE>
+        <ANALYSIS_ATTRIBUTE>
+          <TAG>variant_workflow_version</TAG>
+          <VALUE>$workflow_version</VALUE>
+        </ANALYSIS_ATTRIBUTE>
+        <ANALYSIS_ATTRIBUTE>
+          <TAG>variant_workflow_source_url</TAG>
+          <VALUE>$workflow_src_url</VALUE>
+        </ANALYSIS_ATTRIBUTE>
+        <ANALYSIS_ATTRIBUTE>
+          <TAG>variant_workflow_bundle_url</TAG>
+          <VALUE>$workflow_url</VALUE>
+        </ANALYSIS_ATTRIBUTE>
+";
+
+
     # TODO QC
     $analysis_xml .= "        <ANALYSIS_ATTRIBUTE>
           <TAG>variant_qc_metrics</TAG>

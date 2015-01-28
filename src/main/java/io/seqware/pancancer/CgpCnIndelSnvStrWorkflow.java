@@ -59,7 +59,9 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
                   memCavemanSetup, memCavemanSplit, memCavemanSplitConcat,
                   memCavemanMstepPerThread, memCavemanMerge, memCavemanEstepPerThread,
                   memCavemanMergeResults, memCavemanAddIds, memCavemanFlag,
-                  memCavemanTbiClean
+                  memCavemanTbiClean,
+                  //upload BAM optionally
+                  bamUploadServer, bamUploadPemFile
           ;
 
   // workflow variables
@@ -158,6 +160,10 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       memContam = getProperty("memContam");
       memUpload = getProperty("memUpload");
       memGetTbi = getProperty("memGetTbi");
+      
+      // upload
+      bamUploadServer = getProperty("bamUploadServer");
+      bamUploadPemFile = getProperty("bamUploadPemFile");
       
       memPicnicCounts = getProperty("memPicnicCounts");
       memPicnicMerge = getProperty("memPicnicMerge");
@@ -295,6 +301,12 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
         controlAnalysisId = getProperty("controlAnalysisId");
         controlBasJob = bamProvision(controlAnalysisId, getProperty("controlBam"), startWorkflow);
         controlBam = controlAnalysisId + "/" + getProperty("controlBam");
+        
+        // optional upload of the downloaded tumor bam
+        if (hasPropertyAndNotNull("bamUploadServer") && hasPropertyAndNotNull("bamUploadPemFile")) {
+          Job normalBamUpload = alignedBamUploadJob(controlBasJob, bamUploadServer, bamUploadPemFile, controlAnalysisId, getProperty("controlBam"));
+          normalBamUpload.addParent(controlBasJob);
+        }
 
         tumourAnalysisIds = Arrays.asList(getProperty("tumourAnalysisIds").split(":"));
         tumourAliquotIds = Arrays.asList(getProperty("tumourAliquotIds").split(":"));
@@ -310,6 +322,12 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
           tumourBasJobs.add(tumourBasJob);
           String tumourBam = tumourAnalysisIds.get(i) + "/" + rawBams.get(i);
           tumourBams.add(tumourBam);
+          
+          // optional upload of the downloaded tumor bam
+          if (hasPropertyAndNotNull("bamUploadServer") && hasPropertyAndNotNull("bamUploadPemFile")) {
+            Job tumourBamUpload = alignedBamUploadJob(tumourBasJob, bamUploadServer, bamUploadPemFile, tumourAnalysisIds.get(i), rawBams.get(i));
+            tumourBamUpload.addParent(tumourBasJob);
+          }
         }
       }
     } catch(Exception e) {
@@ -1254,5 +1272,51 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     }
     return thisJob;
   }
+  
+  
+  /**
+   * So this isn't super useful since 1) it makes a new analysis ID on the target server
+   * and 2) it overrides the workflow information since this tool doesn't have that 
+   * information, needs to be a param.  The correct way to do this is to actually 
+   * read the XML for this particular BAM, make a new submission by cutting up the XML
+   * doc, and moving the BAM to a directory named after the analysis ID from the download server.
+   * This is new tool development so I'm including this but keep in mind it's not well tested.
+   * @param parentJob
+   * @param bamUploadServer
+   * @param bamUploadPemFile
+   * @param analysisId
+   * @param bamPath
+   * @return 
+   */
+  private Job alignedBamUploadJob(Job parentJob, String bamDownloadServer, String studyRefnameOverride, String analysisCenter, String bamUploadServer, String bamUploadPemFile, String analysisId, String bamPath, String uploadScriptJobMem, String uploadScriptJobSlots) {
+        Job job = this.getWorkflow().createBashJob("upload_bam");
+        
+        // NEED TO: make upload dir
+        //          metadata URLs need to be constructed
+        //          md5sum created
+        
+        
+        // FIXME: including an echo here just to test this
+        job.getCommand()
+                .addArgument("echo md5sum "+bamPath+" > "+bamPath+".md5;")
+                .addArgument(
+                        "echo perl -I " + this.getWorkflowBaseDir() + "/bin/gt-download-upload-wrapper-1.0.0/lib " + this.getWorkflowBaseDir()
+                                + "/scripts/gnos_upload_data.pl").addArgument("--bam " + bamPath)
+                .addArgument("--key " + bamUploadPemFile).addArgument("--outdir bam_uploads")
+                .addArgument("--metadata-urls " + bamDownloadServer + "/cghub/metadata/analysisFull/" + analysisId)
+                .addArgument("--upload-url " + bamUploadServer)
+                .addArgument("--study-refname-override " + studyRefnameOverride)
+                .addArgument("--bam-md5sum-file " + bamPath + ".md5")
+                .addArgument("--analysis-center-override " + analysisCenter)
+                .addArgument("--workflow-bundle-dir " + this.getWorkflowBaseDir())
+                .addArgument("--workflow-version " + this.getBundle_version())
+                .addArgument("--seqware-version " + this.getSeqware_version());
+
+        job.setMaxMemory(uploadScriptJobMem + "900");
+        job.setThreads(Integer.valueOf(uploadScriptJobSlots));
+        job.addParent(parentJob);
+        
+        return(job);
+    }
 
 }
