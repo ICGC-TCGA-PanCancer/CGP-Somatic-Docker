@@ -299,8 +299,8 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       }
       else {
         controlAnalysisId = getProperty("controlAnalysisId");
-        controlBasJob = bamProvision(controlAnalysisId, getProperty("controlBam"), startWorkflow);
         controlBam = controlAnalysisId + "/" + getProperty("controlBam");
+        controlBasJob = bamProvision(controlAnalysisId, controlBam, startWorkflow);
         
         // optional upload of the downloaded tumor bam
         if (hasPropertyAndNotNull("bamUploadServer") && hasPropertyAndNotNull("bamUploadPemFile")) {
@@ -318,9 +318,9 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
           throw new RuntimeException("Properties tumourAliquotIds and tumourBam decode to lists of different sizes");
         }
         for(int i=0; i<rawBams.size(); i++) {
-          Job tumourBasJob = bamProvision(tumourAnalysisIds.get(i), rawBams.get(i), startWorkflow);
-          tumourBasJobs.add(tumourBasJob);
           String tumourBam = tumourAnalysisIds.get(i) + "/" + rawBams.get(i);
+          Job tumourBasJob = bamProvision(tumourAnalysisIds.get(i), tumourBam, startWorkflow);
+          tumourBasJobs.add(tumourBasJob);  
           tumourBams.add(tumourBam);
           
           // optional upload of the downloaded tumor bam
