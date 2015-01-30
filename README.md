@@ -125,6 +125,23 @@ appropriate ``mem*PerThread`` and not the generic ``coresAddressable`` or ``memH
 
 As these steps will be running multiple threads (internally) each can share/donate memory to those running at the same time and so memory failures are reduced.
 
+### STDOUT/ERR under these processes
+
+For the processes where core and memory utilisation is managed by the underlying perl code and not Seqware/SGE directly (other than total available) the logs are written
+to the log area for the specific algorithm.  This is done so that the output from multiple threads isn't mixed on a single stream.
+
+It is easy to see where things got up to with something like:
+
+    ls -ltrh seqware-results/0/<ALG>/tmp*/logs/*.err | tail -n 10
+
+Where ``<ALG>`` can be:
+
+    brass
+    caveman
+    pindel
+
+There are also ``*.out`` files.
+
 ### How to update mem*PerThread part way through execution
 
 In these cases _do not_ modify the ``*-qsub.opts`` file but instead reduce the parallel threads by 2 as follows:
