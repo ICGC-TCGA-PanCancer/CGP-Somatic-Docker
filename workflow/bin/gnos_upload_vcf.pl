@@ -88,6 +88,8 @@ my $description_file   = "";
 my $pipeline_json_file = "";
 my $qc_json_file       = "";
 my $timing_json_file   = "";
+my $upload_archive     = "";
+my $uuid               = "";
 
 # TODO: check the argument counts here
 if ( scalar(@ARGV) < 12 || scalar(@ARGV) > 46 ) {
@@ -120,6 +122,8 @@ if ( scalar(@ARGV) < 12 || scalar(@ARGV) > 46 ) {
        [--force-copy]
        [--skip-validate]
        [--skip-upload]
+       [--upload-archive <path_of_dir_to_copy_upload_to>]
+       [--uuid <uuis_for_use_as_upload_analysis_id>]
        [--test]\n";
 }
 
@@ -153,6 +157,8 @@ GetOptions(
     "skip-validate"              => \$skip_validate,
     "skip-upload"                => \$skip_upload,
     "test"                       => \$test,
+    "upload-archive=s"           => \$upload_archive,
+    "uuid=s"                     => \$uuid,
 );
 
 ##############
@@ -162,9 +168,10 @@ GetOptions(
 # setup output dir
 say "SETTING UP OUTPUT DIR";
 
-my $uuid = '';
 my $ug = Data::UUID->new;
-$uuid = lc($ug->create_str());
+if ($uuid eq "") {
+  $uuid = lc($ug->create_str());
+}
 
 #if(-d "$output_dir") {
 #    opendir( my $dh, $output_dir);
@@ -401,6 +408,12 @@ sub upload_submission {
     # just touch this file to ensure monitoring tools know upload is complete
     run("date +\%s > $final_touch_file", "metadata_upload.log");
 
+    # now make an archive tarball if requested
+    if ($upload_archive ne "") {
+      run("mkdir -p $upload_archive/$uuid && rsync -Lrauv $sub_path/* $upload_archive/$uuid/");
+    }
+    # could just do this outside the perl script???
+
     return 0;
 }
 
@@ -559,8 +572,8 @@ sub generate_submission {
     }
 
     # override if given on the command line
-    if (defined($center_override) && $center_override ne "") { $center_name = $center_override; } 
-    if (defined($refcenter_override) && $refcenter_override ne "") { $refcenter = $refcenter_override; } 
+    if (defined($center_override) && $center_override ne "") { $center_name = $center_override; }
+    if (defined($refcenter_override) && $refcenter_override ne "") { $refcenter = $refcenter_override; }
 
     my $str = to_json($pi2);
     $global_attr->{"pipeline_input_info"}{$str} = 1;
@@ -1101,7 +1114,7 @@ sub download_url {
 sub getVal {
     my ( $node, $key ) = @_;
 
-    if (!defined($node)) { return undef; } 
+    if (!defined($node)) { return undef; }
 
     if ( defined($node) && $node != undef ) {
         if ( defined( $node->getElementsByTagName($key) ) ) {
