@@ -12,6 +12,7 @@ import net.sourceforge.seqware.pipeline.workflowV2.model.Job;
 import net.sourceforge.seqware.pipeline.workflowV2.model.SqwFile;
 import org.apache.commons.lang.StringUtils;
 import io.seqware.pancancer.Version;
+import java.util.UUID;
 
 /**
  * <p>For more information on developing workflows, see the documentation at
@@ -36,6 +37,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   private static String BBDIR;
   private boolean testMode=false;
   private boolean cleanup = false;
+  private boolean cleanupBams = false;
   
   // datetime all upload files will be named with
   DateFormat df = new SimpleDateFormat("yyyyMMdd");
@@ -128,6 +130,10 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       
       if(hasPropertyAndNotNull("cleanup")) {
         cleanup = Boolean.valueOf(getProperty("cleanup"));
+      }
+      
+      if(hasPropertyAndNotNull("cleanupBams")) {
+        cleanupBams = Boolean.valueOf(getProperty("cleanupBams"));
       }
       
       if(hasPropertyAndNotNull("testMode")) {
@@ -462,16 +468,28 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       uploadJob.addParent(renameCountsJob);
       uploadJob.addParent(renameCountsMd5Job);
       
-      if (cleanup) {
+      // this is used to create a tarball of the upload directory and store it in the specified path
+      Job uploadTarballArchive = uploadTarballArchive();
+      uploadTarballArchive.addParent(uploadJob);
+      
+      // this is used to copy the contents of the upload directory to an SFTP server
+      Job uploadToSFTP = uploadToSFTP();
+      uploadToSFTP.addParent(uploadJob);
+      
+      // this is used to copy the contents of the upload directory to an S3 bucket path
+      Job uploadToS3 = uploadToS3();
+      uploadToS3.addParent(uploadJob);
+      
+      if (cleanup || cleanupBams) {
         // if we upload to GNOS then go ahead and delete all the large files
-        Job cleanJob = postUploadCleanJob();
+        Job cleanJob = cleanJob();
         cleanJob.addParent(uploadJob);
       }
       
     } else {
       // delete just the BAM inputs and not the output dir
-      if (cleanup) {
-        Job cleanInputsJob = cleanInputsJob();
+      if (cleanup || cleanupBams) {
+        Job cleanInputsJob = cleanJob();
         cleanInputsJob.addParent(metricsJob);
       }
     }
@@ -871,7 +889,6 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       }
     }
     
-    
     // specific to CGP data
     for(String tumourAliquotId : tumourAliquotIds) {
       String baseFile = OUTDIR + "/" + tumourAliquotId + "." + workflowName + "." + dateString + ".somatic.";
@@ -884,6 +901,8 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       tarmd5s = tarmd5s.concat("," + baseFile + "genotype.tar.gz.md5");
       tarmd5s = tarmd5s.concat("," + baseFile + "verifyBamId.tar.gz.md5");
     }
+    
+    String uuid = UUID.randomUUID().toString().toLowerCase();
     
     thisJob.getCommand()
       .addArgument("perl -I " + getWorkflowBaseDir()+ "/bin/lib " + getWorkflowBaseDir()+ "/bin/gnos_upload_vcf.pl")
@@ -904,8 +923,12 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       .addArgument("--workflow-name "+Version.WORKFLOW_NAME)
       .addArgument("--workflow-version "+Version.WORKFLOW_VERSION)
       .addArgument("--seqware-version "+Version.SEQWARE_VERSION)
+      .addArgument("--uuid "+uuid)
       ;
     try {
+      if (hasPropertyAndNotNull("saveUploadArchive") && hasPropertyAndNotNull("uploadArchivePath") && "true".equals(getProperty("saveUploadArchive"))) {
+        thisJob.getCommand().addArgument("--upload-archive "+ getProperty("uploadArchivePath"));
+      }
       if(hasPropertyAndNotNull("study-refname-override")) {
         thisJob.getCommand().addArgument("--study-refname-override " + getProperty("study-refname-override"));
       }
@@ -974,7 +997,9 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     thisJob.getCommand()
                   .addArgument("perl -I " + getWorkflowBaseDir() + "/bin/lib " + getWorkflowBaseDir() + "/bin/gnos_download_file.pl ")
                   .addArgument("--command 'gtdownload -c " + pemFile )
-                  .addArgument("-v " + gnosServer + "/cghub/data/analysis/download/" + analysisId + "'")
+                  .addArgument(" -l ./download"+analysisId+".log")
+                  .addArgument(" -k 60")
+                  .addArgument("-vv " + gnosServer + "/cghub/data/analysis/download/" + analysisId + "'")
                   .addArgument("--file " + analysisId + "/" + bamFile)
                   .addArgument("--retries 10 --sleep-min 1 --timeout-min 60");
                   /*.addArgument("gtdownload -c " + pemFile)
@@ -989,7 +1014,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
             .addArgument(installBase)
             .addArgument("xml_to_bas.pl")
             .addArgument("-d " + gnosServer + "/cghub/metadata/analysisFull/" + analysisId)
-            .addArgument("-b " + sampleBam)
+            .addArgument("-b " + analysisId + "/" + sampleBam)
             .addArgument("-o " + analysisId + "/" + sampleBam + ".bas")
             ;
     return thisJob;
@@ -1036,15 +1061,16 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     return thisJob;
   }
   
-  private Job postUploadCleanJob() {
+  private Job cleanJob() {
     Job thisJob = getWorkflow().createBashJob("postUploadClean");
-    thisJob.getCommand().addArgument("rm -rf ./*/*.bam " + OUTDIR);
-    return thisJob;
-  }
-
-  private Job cleanInputsJob() {
-    Job thisJob = getWorkflow().createBashJob("cleanInputs");
-    thisJob.getCommand().addArgument("rm -f ./*/*.bam");
+    // this just removes the contents of the working directory and not OUTDIR which may point to another filesystem for archival purposes
+    if (cleanupBams) {
+      thisJob.getCommand().addArgument("rm -f ./*/*.bam; ");
+    }
+    // this removes the whole working directory
+    if (cleanup) {
+      thisJob.getCommand().addArgument("rm -rf .; ");
+    }
     return thisJob;
   }
   
