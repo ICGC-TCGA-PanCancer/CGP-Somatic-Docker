@@ -336,162 +336,180 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
           }
         }
       }
-    } catch(Exception e) {
-      throw new RuntimeException(e);
-    }
-    
-    Job getTbiJob = stageTbi();
-    getTbiJob.setMaxMemory(memGetTbi);
-    getTbiJob.addParent(startWorkflow);
-    getTbiJob.addParent(controlBasJob);
-    for(Job job : tumourBasJobs) {
-      getTbiJob.addParent(job);
-    }
-    
-    Job genotypeJob = genoptypeBaseJob(tumourBams, controlBam);
-    genotypeJob.setMaxMemory(memGenotype);
-    genotypeJob.addParent(getTbiJob);
-    
-    Job genotypePackJob = packageGenotype(tumourBams, controlBam);
-    genotypePackJob.setMaxMemory("4000");
-    genotypePackJob.addParent(genotypeJob);
-    
-    Job contaminationJob = contaminationBaseJob(tumourBams.size(), controlBam, "control");
-    contaminationJob.setMaxMemory(memContam);
-    contaminationJob.addParent(getTbiJob);
-    // packaging must have parent cavemanTbiCleanJob
-    
-    // these are not paired but per individual sample
-    List<Job> bbAlleleCountJobs = new ArrayList<Job>();
-    for(int i=0; i<23; i++) { // not 1-22+X
-      for(int j=0; j<tumourBams.size(); j++) {
-        Job bbAlleleCountJob = bbAlleleCount(j, tumourBams.get(j), "tumour", i);
+
+      Job getTbiJob = stageTbi();
+      getTbiJob.setMaxMemory(memGetTbi);
+      getTbiJob.addParent(startWorkflow);
+      getTbiJob.addParent(controlBasJob);
+      for(Job job : tumourBasJobs) {
+        getTbiJob.addParent(job);
+      }
+
+      Job genotypeJob = genoptypeBaseJob(tumourBams, controlBam);
+      genotypeJob.setMaxMemory(memGenotype);
+      genotypeJob.addParent(getTbiJob);
+
+      Job genotypePackJob = packageGenotype(tumourBams, controlBam);
+      genotypePackJob.setMaxMemory("4000");
+      genotypePackJob.addParent(genotypeJob);
+
+      Job contaminationJob = contaminationBaseJob(tumourBams.size(), controlBam, "control");
+      contaminationJob.setMaxMemory(memContam);
+      contaminationJob.addParent(getTbiJob);
+      // packaging must have parent cavemanTbiCleanJob
+
+      // these are not paired but per individual sample
+      List<Job> bbAlleleCountJobs = new ArrayList<Job>();
+      for(int i=0; i<23; i++) { // not 1-22+X
+        for(int j=0; j<tumourBams.size(); j++) {
+          Job bbAlleleCountJob = bbAlleleCount(j, tumourBams.get(j), "tumour", i);
+          bbAlleleCountJob.setMaxMemory(memAlleleCount);
+          bbAlleleCountJob.addParent(getTbiJob);
+          bbAlleleCountJobs.add(bbAlleleCountJob);
+        }
+        Job bbAlleleCountJob = bbAlleleCount(1, controlBam, "control", i);
         bbAlleleCountJob.setMaxMemory(memAlleleCount);
         bbAlleleCountJob.addParent(getTbiJob);
         bbAlleleCountJobs.add(bbAlleleCountJob);
       }
-      Job bbAlleleCountJob = bbAlleleCount(1, controlBam, "control", i);
-      bbAlleleCountJob.setMaxMemory(memAlleleCount);
-      bbAlleleCountJob.addParent(getTbiJob);
-      bbAlleleCountJobs.add(bbAlleleCountJob);
-    }
-    
-    Job bbAlleleMergeJob = bbAlleleMerge(controlBam);
-    bbAlleleMergeJob.setMaxMemory(memBbMerge);
-    for(Job j : bbAlleleCountJobs) {
-      bbAlleleMergeJob.addParent(j);
-    }
-    
-    // these are not paired but per individual sample
-    List<Job> ngsCountJobs = new ArrayList<Job>();
-    for(int i=1; i<=24; i++) {
-      for(int j=0; j<tumourBams.size(); j++) {
-        Job ngsCountJob = ngsCount(j, tumourBams.get(j), "tumour", i);
+
+      Job bbAlleleMergeJob = bbAlleleMerge(controlBam);
+      bbAlleleMergeJob.setMaxMemory(memBbMerge);
+      for(Job j : bbAlleleCountJobs) {
+        bbAlleleMergeJob.addParent(j);
+      }
+
+      // these are not paired but per individual sample
+      List<Job> ngsCountJobs = new ArrayList<Job>();
+      for(int i=1; i<=24; i++) {
+        for(int j=0; j<tumourBams.size(); j++) {
+          Job ngsCountJob = ngsCount(j, tumourBams.get(j), "tumour", i);
+          ngsCountJob.setMaxMemory(memPicnicCounts);
+          ngsCountJob.addParent(getTbiJob);
+          ngsCountJobs.add(ngsCountJob);
+        }
+        Job ngsCountJob = ngsCount(1, controlBam, "control", i);
         ngsCountJob.setMaxMemory(memPicnicCounts);
         ngsCountJob.addParent(getTbiJob);
         ngsCountJobs.add(ngsCountJob);
       }
-      Job ngsCountJob = ngsCount(1, controlBam, "control", i);
-      ngsCountJob.setMaxMemory(memPicnicCounts);
-      ngsCountJob.addParent(getTbiJob);
-      ngsCountJobs.add(ngsCountJob);
-    }
-    
-    Job ngsCountMergeJob = ngsCountMerge(controlBam);
-    ngsCountMergeJob.setMaxMemory(memPicnicMerge);
-    for(Job j : ngsCountJobs) {
-      ngsCountMergeJob.addParent(j);
-    }
-    
-    // donor based workflow section
-    Job[] cavemanFlagJobs = new Job [tumourBams.size()];
-    for(int i=0; i<tumourBams.size(); i++) {
-      Job cavemanFlagJob = buildPairWorkflow(getTbiJob, controlBam, tumourBams.get(i), i);
-      cavemanFlagJobs[i] = cavemanFlagJob;
-    }
-    
-    Job cavemanTbiCleanJob = cavemanTbiCleanJob();
-    cavemanTbiCleanJob.setMaxMemory(memCavemanTbiClean);
-    cavemanTbiCleanJob.addParent(contaminationJob); // control contamination
-    for(Job cavemanFlagJob : cavemanFlagJobs) {
-      cavemanTbiCleanJob.addParent(cavemanFlagJob);
-      // tumour contamination is linked in buildPairWorkflow() 
-    }
-    
-    Job endWorkflow = markTime("end");
-    endWorkflow.setMaxMemory(memMarkTime);
-    endWorkflow.addParent(cavemanTbiCleanJob);
-    
-    Job metricsJob = getMetricsJob(tumourBams, controlBam);
-    metricsJob.setMaxMemory(memQcMetrics);
-    metricsJob.addParent(endWorkflow);
-    
-    Job renameGenotypeJob = renameSampleFile(tumourBams, OUTDIR, "genotype.tar.gz");
-    renameGenotypeJob.setMaxMemory("4000");
-    renameGenotypeJob.addParent(genotypePackJob);
-    Job renameGenotypeMd5Job = renameSampleFile(tumourBams, OUTDIR, "genotype.tar.gz.md5");
-    renameGenotypeMd5Job.setMaxMemory("4000");
-    renameGenotypeMd5Job.addParent(genotypePackJob);
-    
-    Job packageContamJob = packageContam(tumourBams, controlBam);
-    packageContamJob.setMaxMemory("4000");
-    packageContamJob.addParent(cavemanTbiCleanJob);
-    
-    Job renameContamJob = renameSampleFile(tumourBams, OUTDIR, "verifyBamId.tar.gz");
-    renameContamJob.setMaxMemory("4000");
-    renameContamJob.addParent(packageContamJob);
-    Job renameContamMd5Job = renameSampleFile(tumourBams, OUTDIR, "verifyBamId.tar.gz.md5");
-    renameContamMd5Job.setMaxMemory("4000");
-    renameContamMd5Job.addParent(packageContamJob);
-    
-    Job renameImputeJob = renameSampleFile(tumourBams, OUTDIR + "/bbCounts", "imputeCounts.tar.gz");
-    renameImputeJob.setMaxMemory("4000");
-    renameImputeJob.addParent(bbAlleleMergeJob);
-    Job renameImputeMd5Job = renameSampleFile(tumourBams, OUTDIR + "/bbCounts", "imputeCounts.tar.gz.md5");
-    renameImputeMd5Job.setMaxMemory("4000");
-    renameImputeMd5Job.addParent(bbAlleleMergeJob);
-    
-    Job renameCountsJob = renameSampleFile(tumourBams, OUTDIR + "/ngsCounts", "binnedReadCounts.tar.gz");
-    renameCountsJob.setMaxMemory("4000");
-    renameCountsJob.addParent(ngsCountMergeJob);
-    Job renameCountsMd5Job = renameSampleFile(tumourBams, OUTDIR + "/ngsCounts", "binnedReadCounts.tar.gz.md5");
-    renameCountsMd5Job.setMaxMemory("4000");
-    renameCountsMd5Job.addParent(ngsCountMergeJob);
-    
-    if(uploadServer != null) {
-      String[] resultTypes = {"snv_mnv","cnv","sv","indel"};
-      Job uploadJob = vcfUpload(resultTypes, controlAnalysisId, tumourAnalysisIds, tumourAliquotIds);
-      uploadJob.setMaxMemory(memUpload);
-      uploadJob.addParent(metricsJob);
-      uploadJob.addParent(renameImputeJob);
-      uploadJob.addParent(renameImputeMd5Job);
-      uploadJob.addParent(renameCountsJob);
-      uploadJob.addParent(renameCountsMd5Job);
-      
-      // this is used to create a tarball of the upload directory and store it in the specified path
-      Job uploadTarballArchive = uploadTarballArchive();
-      uploadTarballArchive.addParent(uploadJob);
-      
-      // this is used to copy the contents of the upload directory to an SFTP server
-      Job uploadToSFTP = uploadToSFTP();
-      uploadToSFTP.addParent(uploadJob);
-      
-      // this is used to copy the contents of the upload directory to an S3 bucket path
-      Job uploadToS3 = uploadToS3();
-      uploadToS3.addParent(uploadJob);
-      
-      if (cleanup || cleanupBams) {
-        // if we upload to GNOS then go ahead and delete all the large files
-        Job cleanJob = cleanJob();
-        cleanJob.addParent(uploadJob);
+
+      Job ngsCountMergeJob = ngsCountMerge(controlBam);
+      ngsCountMergeJob.setMaxMemory(memPicnicMerge);
+      for(Job j : ngsCountJobs) {
+        ngsCountMergeJob.addParent(j);
       }
-      
-    } else {
-      // delete just the BAM inputs and not the output dir
-      if (cleanup || cleanupBams) {
-        Job cleanInputsJob = cleanJob();
-        cleanInputsJob.addParent(metricsJob);
+
+      // donor based workflow section
+      Job[] cavemanFlagJobs = new Job [tumourBams.size()];
+      for(int i=0; i<tumourBams.size(); i++) {
+        Job cavemanFlagJob = buildPairWorkflow(getTbiJob, controlBam, tumourBams.get(i), i);
+        cavemanFlagJobs[i] = cavemanFlagJob;
       }
+
+      Job cavemanTbiCleanJob = cavemanTbiCleanJob();
+      cavemanTbiCleanJob.setMaxMemory(memCavemanTbiClean);
+      cavemanTbiCleanJob.addParent(contaminationJob); // control contamination
+      for(Job cavemanFlagJob : cavemanFlagJobs) {
+        cavemanTbiCleanJob.addParent(cavemanFlagJob);
+        // tumour contamination is linked in buildPairWorkflow() 
+      }
+
+      Job endWorkflow = markTime("end");
+      endWorkflow.setMaxMemory(memMarkTime);
+      endWorkflow.addParent(cavemanTbiCleanJob);
+
+      Job metricsJob = getMetricsJob(tumourBams, controlBam);
+      metricsJob.setMaxMemory(memQcMetrics);
+      metricsJob.addParent(endWorkflow);
+
+      Job renameGenotypeJob = renameSampleFile(tumourBams, OUTDIR, "genotype.tar.gz");
+      renameGenotypeJob.setMaxMemory("4000");
+      renameGenotypeJob.addParent(genotypePackJob);
+      Job renameGenotypeMd5Job = renameSampleFile(tumourBams, OUTDIR, "genotype.tar.gz.md5");
+      renameGenotypeMd5Job.setMaxMemory("4000");
+      renameGenotypeMd5Job.addParent(genotypePackJob);
+
+      Job packageContamJob = packageContam(tumourBams, controlBam);
+      packageContamJob.setMaxMemory("4000");
+      packageContamJob.addParent(cavemanTbiCleanJob);
+
+      Job renameContamJob = renameSampleFile(tumourBams, OUTDIR, "verifyBamId.tar.gz");
+      renameContamJob.setMaxMemory("4000");
+      renameContamJob.addParent(packageContamJob);
+      Job renameContamMd5Job = renameSampleFile(tumourBams, OUTDIR, "verifyBamId.tar.gz.md5");
+      renameContamMd5Job.setMaxMemory("4000");
+      renameContamMd5Job.addParent(packageContamJob);
+
+      Job renameImputeJob = renameSampleFile(tumourBams, OUTDIR + "/bbCounts", "imputeCounts.tar.gz");
+      renameImputeJob.setMaxMemory("4000");
+      renameImputeJob.addParent(bbAlleleMergeJob);
+      Job renameImputeMd5Job = renameSampleFile(tumourBams, OUTDIR + "/bbCounts", "imputeCounts.tar.gz.md5");
+      renameImputeMd5Job.setMaxMemory("4000");
+      renameImputeMd5Job.addParent(bbAlleleMergeJob);
+
+      Job renameCountsJob = renameSampleFile(tumourBams, OUTDIR + "/ngsCounts", "binnedReadCounts.tar.gz");
+      renameCountsJob.setMaxMemory("4000");
+      renameCountsJob.addParent(ngsCountMergeJob);
+      Job renameCountsMd5Job = renameSampleFile(tumourBams, OUTDIR + "/ngsCounts", "binnedReadCounts.tar.gz.md5");
+      renameCountsMd5Job.setMaxMemory("4000");
+      renameCountsMd5Job.addParent(ngsCountMergeJob);
+
+      if(uploadServer != null || (hasPropertyAndNotNull("upload-skip") && Boolean.valueOf(getProperty("upload-skip")))) {
+        
+        String[] resultTypes = {"snv_mnv","cnv","sv","indel"};
+        Job uploadJob = vcfUpload(resultTypes, controlAnalysisId, tumourAnalysisIds, tumourAliquotIds);
+        uploadJob.setMaxMemory(memUpload);
+        uploadJob.addParent(metricsJob);
+        uploadJob.addParent(renameImputeJob);
+        uploadJob.addParent(renameImputeMd5Job);
+        uploadJob.addParent(renameCountsJob);
+        uploadJob.addParent(renameCountsMd5Job);
+
+        // this is used to create a tarball of the upload directory and store it in the specified path
+        if (hasPropertyAndNotNull("saveUploadArchive") && Boolean.valueOf(getProperty("saveUploadArchive"))) {
+          Job uploadTarballArchive = uploadTarballArchive();
+          uploadTarballArchive.addParent(uploadJob);
+          
+          if (hasPropertyAndNotNull("SFTPUploadArchive") && Boolean.valueOf(getProperty("SFTPUploadArchive"))) {
+            // this is used to copy the contents of the upload directory to an SFTP server
+            Job uploadToSFTP = uploadToSFTP();
+            uploadToSFTP.addParent(uploadTarballArchive);
+          }
+          if (hasPropertyAndNotNull("S3UploadArchive") && Boolean.valueOf(getProperty("S3UploadArchive"))) {
+            // this is used to copy the contents of the upload directory to an SFTP server
+            Job uploadToSFTP = uploadToS3();
+            uploadToSFTP.addParent(uploadTarballArchive);            
+          }
+        }
+        
+        if (hasPropertyAndNotNull("SFTPUploadFiles") && Boolean.valueOf(getProperty("SFTPUploadFiles"))) {
+          // this is used to copy the contents of the upload directory to an SFTP server
+          Job uploadToSFTP = uploadToSFTP();
+          uploadToSFTP.addParent(uploadJob);
+        }
+        if (hasPropertyAndNotNull("S3UploadFiles") && Boolean.valueOf(getProperty("S3UploadFiles"))) {
+          // this is used to copy the contents of the upload directory to an SFTP server
+          Job uploadToS3 = uploadToS3();
+          uploadToS3.addParent(uploadJob);        
+        }
+
+        // TODO: this only should go if the above jobs are OK
+        if (cleanup || cleanupBams) {
+          // if we upload to GNOS then go ahead and delete all the large files
+          Job cleanJob = cleanJob();
+          cleanJob.addParent(uploadJob);
+        }
+
+      } else {
+        // delete just the BAM inputs and not the output dir
+        if (cleanup || cleanupBams) {
+          Job cleanInputsJob = cleanJob();
+          cleanInputsJob.addParent(metricsJob);
+        }
+      }
+    } catch(Exception e) {
+      throw new RuntimeException(e);
     }
   }
 
@@ -1062,7 +1080,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   }
   
   private Job cleanJob() {
-    Job thisJob = getWorkflow().createBashJob("postUploadClean");
+    Job thisJob = getWorkflow().createBashJob("GeneralCleanup");
     // this just removes the contents of the working directory and not OUTDIR which may point to another filesystem for archival purposes
     if (cleanupBams) {
       thisJob.getCommand().addArgument("rm -f ./*/*.bam; ");
