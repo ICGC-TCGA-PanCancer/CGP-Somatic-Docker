@@ -90,6 +90,10 @@ my $qc_json_file       = "";
 my $timing_json_file   = "";
 my $upload_archive     = "";
 my $uuid               = "";
+my $vm_instance_type   = "unknown";
+my $vm_instance_cores  = "unknown";
+my $vm_instance_mem_gb = "unknown";
+my $vm_location_code   = "unknown";
 
 # TODO: check the argument counts here
 if ( scalar(@ARGV) < 12 || scalar(@ARGV) > 46 ) {
@@ -123,6 +127,10 @@ if ( scalar(@ARGV) < 12 || scalar(@ARGV) > 46 ) {
        [--skip-validate]
        [--skip-upload]
        [--upload-archive <path_of_dir_to_copy_upload_to_and_make_tarball_uuid.tar.gz>]
+       [--vm-instance-type <vmInstanceType>]
+       [--vm-instance-cores <vmInstanceCores>]
+       [--vm-instance-mem-gb <vmInstanceMemGb>]
+       [--vm-location-code <vmLocationCode>]
        [--uuid <uuis_for_use_as_upload_analysis_id>]
        [--test]\n";
 }
@@ -158,6 +166,10 @@ GetOptions(
     "skip-upload"                => \$skip_upload,
     "test"                       => \$test,
     "upload-archive=s"           => \$upload_archive,
+    "vm-instance-type=s"         => \$vm_instance_type,
+    "vm-instance-cores=s"        => \$vm_instance_cores,
+    "vm-instance-mem-gb=s"       => \$vm_instance_mem_gb,
+    "vm-location-code=s"         => \$vm_location_code,
     "uuid=s"                     => \$uuid,
 );
 
@@ -918,26 +930,24 @@ END
         </ANALYSIS_ATTRIBUTE>
 ";
 
-# LEFT OFF HERE: need to add tags for compute center and profiles
     # some metadata about this workflow
     $analysis_xml .= "        <ANALYSIS_ATTRIBUTE>
-          <TAG>variant_workflow_name</TAG>
-          <VALUE>$workflow_name</VALUE>
+          <TAG>vm_instance_type</TAG>
+          <VALUE>$vm_instance_type</VALUE>
         </ANALYSIS_ATTRIBUTE>
         <ANALYSIS_ATTRIBUTE>
-          <TAG>variant_workflow_version</TAG>
-          <VALUE>$workflow_version</VALUE>
+          <TAG>vm_instance_cores</TAG>
+          <VALUE>$vm_instance_cores</VALUE>
         </ANALYSIS_ATTRIBUTE>
         <ANALYSIS_ATTRIBUTE>
-          <TAG>variant_workflow_source_url</TAG>
-          <VALUE>$workflow_src_url</VALUE>
+          <TAG>vm_instance_mem_gb</TAG>
+          <VALUE>$vm_instance_mem_gb</VALUE>
         </ANALYSIS_ATTRIBUTE>
         <ANALYSIS_ATTRIBUTE>
-          <TAG>variant_workflow_bundle_url</TAG>
-          <VALUE>$workflow_url</VALUE>
+          <TAG>vm_location_code</TAG>
+          <VALUE>$vm_location_code</VALUE>
         </ANALYSIS_ATTRIBUTE>
 ";
-
 
     # TODO QC
     $analysis_xml .= "        <ANALYSIS_ATTRIBUTE>
