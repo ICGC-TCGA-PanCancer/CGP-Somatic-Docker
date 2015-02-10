@@ -122,7 +122,7 @@ if ( scalar(@ARGV) < 12 || scalar(@ARGV) > 46 ) {
        [--force-copy]
        [--skip-validate]
        [--skip-upload]
-       [--upload-archive <path_of_dir_to_copy_upload_to>]
+       [--upload-archive <path_of_dir_to_copy_upload_to_and_make_tarball_uuid.tar.gz>]
        [--uuid <uuis_for_use_as_upload_analysis_id>]
        [--test]\n";
 }
@@ -405,14 +405,13 @@ sub upload_submission {
         return 1 if ( GNOS::Upload->run_upload($gt_upload_command, "$sub_path/$log_file", $retries, $cooldown, $timeout_min) );
     }
 
-    # just touch this file to ensure monitoring tools know upload is complete
-    run("date +\%s > $final_touch_file", "metadata_upload.log");
-
     # now make an archive tarball if requested
     if ($upload_archive ne "") {
-      run("mkdir -p $upload_archive/$uuid && rsync -Lrauv $sub_path/* $upload_archive/$uuid/");
+      return 1 if (run("mkdir -p $upload_archive/$uuid && rsync -Lrauv $sub_path/* $upload_archive/$uuid/ && cd $upload_archive && tar zcf $uuid.tar.gz $uuid"));
     }
-    # could just do this outside the perl script???
+
+    # just touch this file to ensure monitoring tools know upload is complete
+    run("date +\%s > $final_touch_file", "metadata_upload.log");
 
     return 0;
 }

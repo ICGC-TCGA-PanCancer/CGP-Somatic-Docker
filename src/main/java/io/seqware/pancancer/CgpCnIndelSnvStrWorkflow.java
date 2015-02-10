@@ -85,8 +85,30 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
                   contamDownSampOneIn
                   ;
   
-  private int coresAddressable, memWorkflowOverhead, memHostMbAvailable;
+  // variables related to upload 
+  private boolean saveUploadArchive = false;
+  private boolean S3UploadArchive = false;
+  private boolean SFTPUploadFiles = false;
+  private boolean S3UploadFiles = false;
+  private boolean SFTPUploadArchive = false;
   
+  private String 
+          uploadArchivePath,
+          SFTPUploadArchiveUsername, SFTPUploadArchivePassword, SFTPUploadArchivePath, SFTPUploadArchiveServer,
+          S3UploadArchiveBucketURL, S3UploadArchiveKey, S3UploadArchiveSecretKey,
+          SFTPUploadUsername, SFTPUploadPassword, SFTPUploadPath, SFTPUploadServer,
+          S3UploadBucketURL, S3UploadKey, S3UploadSecretKey, SFTPUploadArchiveMode, SFTPUploadMode,
+          S3UploadArchiveMode, S3UploadFileMode;
+  
+  // variables related to tracking cloud environment
+  private String vmInstanceType, vmInstanceCores, vmInstanceMemGb, vmLocationCode;
+
+  private int coresAddressable, memWorkflowOverhead, memHostMbAvailable;
+
+  // UUID
+  private String uuid = UUID.randomUUID().toString().toLowerCase();
+
+
   private void init() {
     try {
       //optional properties
@@ -127,6 +149,26 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   @Override
   public Map<String, SqwFile> setupFiles() {
     try {
+      
+      if(hasPropertyAndNotNull("saveUploadArchive")) {
+        saveUploadArchive=Boolean.valueOf(getProperty("saveUploadArchive"));
+      }
+      
+      if(hasPropertyAndNotNull("S3UploadArchive")) {
+        S3UploadArchive=Boolean.valueOf(getProperty("S3UploadArchive"));
+      }
+      
+      if(hasPropertyAndNotNull("SFTPUploadFiles")) {
+        SFTPUploadFiles=Boolean.valueOf(getProperty("SFTPUploadFiles"));
+      }
+      
+      if(hasPropertyAndNotNull("S3UploadFiles")) {
+        S3UploadFiles=Boolean.valueOf(getProperty("S3UploadFiles"));
+      }
+      
+      if(hasPropertyAndNotNull("SFTPUploadArchive")) {
+        SFTPUploadArchive=Boolean.valueOf(getProperty("SFTPUploadArchive"));
+      }
       
       if(hasPropertyAndNotNull("cleanup")) {
         cleanup = Boolean.valueOf(getProperty("cleanup"));
@@ -247,6 +289,38 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       refBase = getWorkflowBaseDir() + "/data/reference/cgp_reference";
       testBase = getWorkflowBaseDir() + "/data/testdata";
       genomeFaGz = getWorkflowBaseDir() + "/data/reference/genome.fa.gz";
+      
+      // variables for upload
+      uploadArchivePath = getProperty("uploadArchivePath");
+      SFTPUploadArchiveUsername = getProperty("SFTPUploadArchiveUsername");
+      SFTPUploadArchivePassword = getProperty("SFTPUploadArchivePassword");
+      SFTPUploadArchivePath = getProperty("SFTPUploadArchivePath");
+      if (!SFTPUploadArchivePath.endsWith("/")) { SFTPUploadArchivePath = SFTPUploadArchivePath + "/"; }
+      SFTPUploadArchiveServer = getProperty("SFTPUploadArchiveServer");
+      S3UploadArchiveBucketURL = getProperty("S3UploadArchiveBucketURL");
+      if (!S3UploadArchiveBucketURL.endsWith("/")) { S3UploadArchiveBucketURL = S3UploadArchiveBucketURL + "/"; }
+      S3UploadArchiveKey = getProperty("S3UploadArchiveKey");
+      S3UploadArchiveSecretKey = getProperty("S3UploadArchiveSecretKey");
+      SFTPUploadUsername = getProperty("SFTPUploadUsername");
+      SFTPUploadPassword = getProperty("SFTPUploadPassword");
+      SFTPUploadPath = getProperty("SFTPUploadPath");
+      if (!SFTPUploadPath.endsWith("/")) { SFTPUploadPath = SFTPUploadPath + "/"; }
+      SFTPUploadServer = getProperty("SFTPUploadServer");
+      S3UploadBucketURL = getProperty("S3BucketURL");
+      if (!S3UploadBucketURL.endsWith("/")) { S3UploadBucketURL = S3UploadBucketURL + "/"; }
+      S3UploadKey = getProperty("S3Key");
+      S3UploadSecretKey = getProperty("S3SecretKey");
+      SFTPUploadMode = getProperty("SFTPUploadMode");
+      SFTPUploadArchiveMode = getProperty("SFTPUploadArchiveMode");
+      S3UploadFileMode = getProperty("S3UploadFileMode");
+      S3UploadArchiveMode = getProperty("S3UploadArchiveMode");
+
+      // tracking cloud
+      vmInstanceType = getProperty("vm_instance_type");
+      vmInstanceCores = getProperty("vm_instance_cores");
+      vmInstanceMemGb = getProperty("vm_instance_mem_gb");
+      vmLocationCode = getProperty("vm_location_code");
+      
     } catch (Exception ex) {
       throw new RuntimeException(ex);
     }
@@ -310,8 +384,8 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
         
         // optional upload of the downloaded tumor bam
         if (hasPropertyAndNotNull("bamUploadServer") && hasPropertyAndNotNull("bamUploadPemFile")) {
-          Job normalBamUpload = alignedBamUploadJob(controlBasJob, bamUploadServer, bamUploadPemFile, controlAnalysisId, getProperty("controlBam"));
-          normalBamUpload.addParent(controlBasJob);
+          //Job normalBamUpload = alignedBamUploadJob(controlBasJob, bamUploadServer, bamUploadPemFile, controlAnalysisId, getProperty("controlBam"));
+          //normalBamUpload.addParent(controlBasJob);
         }
 
         tumourAnalysisIds = Arrays.asList(getProperty("tumourAnalysisIds").split(":"));
@@ -331,8 +405,8 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
           
           // optional upload of the downloaded tumor bam
           if (hasPropertyAndNotNull("bamUploadServer") && hasPropertyAndNotNull("bamUploadPemFile")) {
-            Job tumourBamUpload = alignedBamUploadJob(tumourBasJob, bamUploadServer, bamUploadPemFile, tumourAnalysisIds.get(i), rawBams.get(i));
-            tumourBamUpload.addParent(tumourBasJob);
+            //Job tumourBamUpload = alignedBamUploadJob(tumourBasJob, bamUploadServer, bamUploadPemFile, tumourAnalysisIds.get(i), rawBams.get(i));
+            //tumourBamUpload.addParent(tumourBasJob);
           }
         }
       }
@@ -412,7 +486,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       cavemanTbiCleanJob.addParent(contaminationJob); // control contamination
       for(Job cavemanFlagJob : cavemanFlagJobs) {
         cavemanTbiCleanJob.addParent(cavemanFlagJob);
-        // tumour contamination is linked in buildPairWorkflow() 
+        // tumour contamination is linked in buildPairWorkflow()
       }
 
       Job endWorkflow = markTime("end");
@@ -467,30 +541,28 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
         uploadJob.addParent(renameCountsMd5Job);
 
         // this is used to create a tarball of the upload directory and store it in the specified path
-        if (hasPropertyAndNotNull("saveUploadArchive") && Boolean.valueOf(getProperty("saveUploadArchive"))) {
-          Job uploadTarballArchive = uploadTarballArchive();
-          uploadTarballArchive.addParent(uploadJob);
-          
+        if (hasPropertyAndNotNull("saveUploadArchive") && Boolean.valueOf(getProperty("saveUploadArchive")) && hasPropertyAndNotNull("uploadArchivePath")) {
+
           if (hasPropertyAndNotNull("SFTPUploadArchive") && Boolean.valueOf(getProperty("SFTPUploadArchive"))) {
             // this is used to copy the contents of the upload directory to an SFTP server
-            Job uploadToSFTP = uploadToSFTP();
-            uploadToSFTP.addParent(uploadTarballArchive);
+            Job uploadToSFTP = uploadArchiveToSFTP(uploadArchivePath + "/" + uuid + ".tar.gz");
+            uploadToSFTP.addParent(uploadJob);
           }
           if (hasPropertyAndNotNull("S3UploadArchive") && Boolean.valueOf(getProperty("S3UploadArchive"))) {
             // this is used to copy the contents of the upload directory to an SFTP server
-            Job uploadToSFTP = uploadToS3();
-            uploadToSFTP.addParent(uploadTarballArchive);            
+            Job uploadToS3 = uploadArchiveToS3(uploadArchivePath + "/" + uuid + ".tar.gz");
+            uploadToS3.addParent(uploadJob);
           }
         }
         
         if (hasPropertyAndNotNull("SFTPUploadFiles") && Boolean.valueOf(getProperty("SFTPUploadFiles"))) {
           // this is used to copy the contents of the upload directory to an SFTP server
-          Job uploadToSFTP = uploadToSFTP();
+          Job uploadToSFTP = uploadFilesToSFTP(uploadArchivePath + "/" + uuid, uuid, tumourAliquotIds);
           uploadToSFTP.addParent(uploadJob);
         }
         if (hasPropertyAndNotNull("S3UploadFiles") && Boolean.valueOf(getProperty("S3UploadFiles"))) {
           // this is used to copy the contents of the upload directory to an SFTP server
-          Job uploadToS3 = uploadToS3();
+          Job uploadToS3 = uploadFilesToS3(uploadArchivePath + "/" + uuid, uuid, tumourAliquotIds);
           uploadToS3.addParent(uploadJob);        
         }
 
@@ -513,7 +585,48 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     }
   }
 
-  /**
+    private Job uploadFilesToSFTP(String uploadPath, String uuid, List<String> tumourAliquotIds) {
+      Job upload = getWorkflow().createBashJob("uploadFilesToSFTP");
+      String glob = "";
+      for(String tumourAliquotId : tumourAliquotIds) {
+        glob = glob + " " + tumourAliquotId + ".*";
+      }
+      upload.getCommand()
+          .addArgument("cp "+uploadPath+"/"+uuid+"/analysis.xml "+uploadPath+"/"+uuid+"/"+uuid+".analysis.xml;")
+          .addArgument("cd "+uploadPath+"/"+uuid+";")
+          .addArgument("duck -e " + SFTPUploadMode + " -r -p '" + SFTPUploadPassword + "' -u " + SFTPUploadUsername + " --upload  sftp://" + SFTPUploadServer + "/" + SFTPUploadPath + " " + glob + " " +uuid+".analysis.xml;");
+      return(upload);
+    }
+
+    private Job uploadFilesToS3(String uploadPath, String uuid, List<String> tumourAliquotIds) {
+      Job upload = getWorkflow().createBashJob("uploadFilesToS3");
+      String glob = "";
+      for(String tumourAliquotId : tumourAliquotIds) {
+        glob = glob + " " + tumourAliquotId + ".*";
+      }
+      upload.getCommand()
+          .addArgument("cp "+uploadPath+"/"+uuid+"/analysis.xml "+uploadPath+"/"+uuid+"/"+uuid+".analysis.xml;")
+          .addArgument("cd "+uploadPath+"/"+uuid+";")
+          .addArgument("duck -e " + S3UploadFileMode + " -r -p '" + S3UploadSecretKey + "' -u " + S3UploadKey + " --upload  " + S3UploadBucketURL + " " + glob + " " +uuid+".analysis.xml;");
+      return(upload);
+    }
+
+    private Job uploadArchiveToSFTP(String archivePath) {
+      Job upload = getWorkflow().createBashJob("uploadArchiveToSFTP");
+      //  sshpass -p 'password' sftp -o StrictHostKeyChecking=no username@tcgaftps.nci.nih.gov:/tcgapancan/pancan/variant_calling_pilot_64/OICR_Sanger_Core
+      // duck -e overwrite -r -p 'password' -u username -d sftp://tcgaftps.nci.nih.gov/tcgapancan/pancan/variant_calling_pilot_64/OICR_Sanger_Core/f9c3bc8e-dbc4-1ed0-e040-11ac0d4803a9.svcp_1-0-2.20150106.somatic.sv.vcf.gz.tbi test.tbi
+      upload.getCommand().addArgument("duck -e " + SFTPUploadArchiveMode + " -r -p '" + SFTPUploadArchivePassword + "' -u " + SFTPUploadArchiveUsername + " --upload  sftp://" + SFTPUploadArchiveServer + "/" + SFTPUploadArchivePath + " " +  archivePath);
+      return(upload);
+    }
+
+    private Job uploadArchiveToS3(String archivePath) {
+      Job upload = getWorkflow().createBashJob("uploadArchiveToS3");
+      // duck -e skip -r -p 'secretkey' -u 'key' -d s3://pan-cancer-testing/m2.tar.gz m2.tar.gz
+      upload.getCommand().addArgument("duck -e " + S3UploadArchiveMode + " -r -p '" + S3UploadArchiveSecretKey + "' -u '" + S3UploadArchiveKey + "' --upload  " + S3UploadArchiveBucketURL + " " +  archivePath);
+      return(upload);
+    }
+
+    /**
    * This builds the workflow for a pair of samples
    * The generic buildWorkflow section will choose the pair to be processed and 
    * setup the control sample download
@@ -919,11 +1032,9 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       tarmd5s = tarmd5s.concat("," + baseFile + "genotype.tar.gz.md5");
       tarmd5s = tarmd5s.concat("," + baseFile + "verifyBamId.tar.gz.md5");
     }
-    
-    String uuid = UUID.randomUUID().toString().toLowerCase();
-    
+
     thisJob.getCommand()
-      .addArgument("perl -I " + getWorkflowBaseDir()+ "/bin/lib " + getWorkflowBaseDir()+ "/bin/gnos_upload_vcf.pl")
+      .addArgument("perl -I " + getWorkflowBaseDir() + "/bin/lib " + getWorkflowBaseDir() + "/bin/gnos_upload_vcf.pl")
       .addArgument("--metadata-urls " + metadataUrls)
       .addArgument("--vcfs " + vcfs)
       .addArgument("--vcf-md5sum-files " + vcfmd5s)
@@ -938,10 +1049,14 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       .addArgument("--timing-metrics-json " + OUTDIR + "/process_metrics.json")
       .addArgument("--workflow-src-url "+Version.WORKFLOW_SRC_URL)
       .addArgument("--workflow-url "+Version.WORKFLOW_URL)
-      .addArgument("--workflow-name "+Version.WORKFLOW_NAME)
-      .addArgument("--workflow-version "+Version.WORKFLOW_VERSION)
-      .addArgument("--seqware-version "+Version.SEQWARE_VERSION)
-      .addArgument("--uuid "+uuid)
+        .addArgument("--workflow-name "+ Version.WORKFLOW_NAME)
+        .addArgument("--workflow-version " + Version.WORKFLOW_VERSION)
+        .addArgument("--seqware-version " + Version.SEQWARE_VERSION)
+        .addArgument("--vm-instance-type " +vmInstanceType)
+      .addArgument("--vm-instance-cores " +vmInstanceCores)
+      .addArgument("--vm-instance-mem-gb " +vmInstanceMemGb)
+      .addArgument("--vm-location-code " +vmLocationCode)
+      .addArgument("--uuid " + uuid)
       ;
     try {
       if (hasPropertyAndNotNull("saveUploadArchive") && hasPropertyAndNotNull("uploadArchivePath") && "true".equals(getProperty("saveUploadArchive"))) {
