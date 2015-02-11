@@ -12,6 +12,7 @@ import net.sourceforge.seqware.pipeline.workflowV2.model.Job;
 import net.sourceforge.seqware.pipeline.workflowV2.model.SqwFile;
 import org.apache.commons.lang.StringUtils;
 import io.seqware.pancancer.Version;
+import java.util.UUID;
 
 /**
  * <p>For more information on developing workflows, see the documentation at
@@ -35,7 +36,9 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   private static String COUNTDIR;
   private static String BBDIR;
   private boolean testMode=false;
+  private boolean localFileMode=false;
   private boolean cleanup = false;
+  private boolean cleanupBams = false;
   
   // datetime all upload files will be named with
   DateFormat df = new SimpleDateFormat("yyyyMMdd");
@@ -83,8 +86,33 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
                   contamDownSampOneIn
                   ;
   
-  private int coresAddressable, memWorkflowOverhead, memHostMbAvailable;
+  // variables related to upload 
+  private boolean saveUploadArchive = false;
+  private boolean S3UploadArchive = false;
+  private boolean SFTPUploadFiles = false;
+  private boolean S3UploadFiles = false;
+  private boolean SFTPUploadArchive = false;
+
+  // re-upload Bam
+  private String bamUploadStudyRefnameOverride, bamUploadAnalysisCenterOverride, controlAnalysisId, bamUploadScriptJobMem, bamUploadScriptJobSlots;
   
+  private String 
+          uploadArchivePath,
+          SFTPUploadArchiveUsername, SFTPUploadArchivePassword, SFTPUploadArchivePath, SFTPUploadArchiveServer,
+          S3UploadArchiveBucketURL, S3UploadArchiveKey, S3UploadArchiveSecretKey,
+          SFTPUploadUsername, SFTPUploadPassword, SFTPUploadPath, SFTPUploadServer,
+          S3UploadBucketURL, S3UploadKey, S3UploadSecretKey, SFTPUploadArchiveMode, SFTPUploadMode,
+          S3UploadArchiveMode, S3UploadFileMode;
+  
+  // variables related to tracking cloud environment
+  private String vmInstanceType, vmInstanceCores, vmInstanceMemGb, vmLocationCode;
+
+  private int coresAddressable, memWorkflowOverhead, memHostMbAvailable;
+
+  // UUID
+  private String uuid = UUID.randomUUID().toString().toLowerCase();
+
+
   private void init() {
     try {
       //optional properties
@@ -126,13 +154,42 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   public Map<String, SqwFile> setupFiles() {
     try {
       
+      if(hasPropertyAndNotNull("saveUploadArchive")) {
+        saveUploadArchive=Boolean.valueOf(getProperty("saveUploadArchive"));
+      }
+      
+      if(hasPropertyAndNotNull("S3UploadArchive")) {
+        S3UploadArchive=Boolean.valueOf(getProperty("S3UploadArchive"));
+      }
+      
+      if(hasPropertyAndNotNull("SFTPUploadFiles")) {
+        SFTPUploadFiles=Boolean.valueOf(getProperty("SFTPUploadFiles"));
+      }
+      
+      if(hasPropertyAndNotNull("S3UploadFiles")) {
+        S3UploadFiles=Boolean.valueOf(getProperty("S3UploadFiles"));
+      }
+      
+      if(hasPropertyAndNotNull("SFTPUploadArchive")) {
+        SFTPUploadArchive=Boolean.valueOf(getProperty("SFTPUploadArchive"));
+      }
+      
       if(hasPropertyAndNotNull("cleanup")) {
         cleanup = Boolean.valueOf(getProperty("cleanup"));
+      }
+      
+      if(hasPropertyAndNotNull("cleanupBams")) {
+        cleanupBams = Boolean.valueOf(getProperty("cleanupBams"));
       }
       
       if(hasPropertyAndNotNull("testMode")) {
         testMode=Boolean.valueOf(getProperty("testMode"));
         System.err.println("WARNING\n\tRunning in test mode, direct access BAM files will be used, change 'testMode' in ini file to disable\n");
+      }
+
+      if(hasPropertyAndNotNull("localFileMode")) {
+        localFileMode=Boolean.valueOf(getProperty("localFileMode"));
+        System.err.println("WARNING\n\tRunning in direct file mode, direct access BAM files will be used and assumed to be full paths but metadata will still be downloaded from GNOS, change 'localFileMode' in ini file to disable\n");
       }
       
       if(hasPropertyAndNotNull("uploadServer")) {
@@ -241,6 +298,45 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       refBase = getWorkflowBaseDir() + "/data/reference/cgp_reference";
       testBase = getWorkflowBaseDir() + "/data/testdata";
       genomeFaGz = getWorkflowBaseDir() + "/data/reference/genome.fa.gz";
+      
+      // variables for upload
+      uploadArchivePath = getProperty("uploadArchivePath");
+      SFTPUploadArchiveUsername = getProperty("SFTPUploadArchiveUsername");
+      SFTPUploadArchivePassword = getProperty("SFTPUploadArchivePassword");
+      SFTPUploadArchivePath = getProperty("SFTPUploadArchivePath");
+      if (!SFTPUploadArchivePath.endsWith("/")) { SFTPUploadArchivePath = SFTPUploadArchivePath + "/"; }
+      SFTPUploadArchiveServer = getProperty("SFTPUploadArchiveServer");
+      S3UploadArchiveBucketURL = getProperty("S3UploadArchiveBucketURL");
+      if (!S3UploadArchiveBucketURL.endsWith("/")) { S3UploadArchiveBucketURL = S3UploadArchiveBucketURL + "/"; }
+      S3UploadArchiveKey = getProperty("S3UploadArchiveKey");
+      S3UploadArchiveSecretKey = getProperty("S3UploadArchiveSecretKey");
+      SFTPUploadUsername = getProperty("SFTPUploadUsername");
+      SFTPUploadPassword = getProperty("SFTPUploadPassword");
+      SFTPUploadPath = getProperty("SFTPUploadPath");
+      if (!SFTPUploadPath.endsWith("/")) { SFTPUploadPath = SFTPUploadPath + "/"; }
+      SFTPUploadServer = getProperty("SFTPUploadServer");
+      S3UploadBucketURL = getProperty("S3BucketURL");
+      if (!S3UploadBucketURL.endsWith("/")) { S3UploadBucketURL = S3UploadBucketURL + "/"; }
+      S3UploadKey = getProperty("S3Key");
+      S3UploadSecretKey = getProperty("S3SecretKey");
+      SFTPUploadMode = getProperty("SFTPUploadMode");
+      SFTPUploadArchiveMode = getProperty("SFTPUploadArchiveMode");
+      S3UploadFileMode = getProperty("S3UploadFileMode");
+      S3UploadArchiveMode = getProperty("S3UploadArchiveMode");
+
+      // tracking cloud
+      vmInstanceType = getProperty("vm_instance_type");
+      vmInstanceCores = getProperty("vm_instance_cores");
+      vmInstanceMemGb = getProperty("vm_instance_mem_gb");
+      vmLocationCode = getProperty("vm_location_code");
+
+      // reupload bam
+      bamUploadStudyRefnameOverride = getProperty("bamUploadStudyRefnameOverride");
+      bamUploadAnalysisCenterOverride = getProperty("bamUploadAnalysisCenterOverride");
+      controlAnalysisId = getProperty("controlAnalysisId");
+      bamUploadScriptJobMem = getProperty("bamUploadScriptJobMem");
+      bamUploadScriptJobSlots = getProperty("bamUploadScriptJobSlots");
+      
     } catch (Exception ex) {
       throw new RuntimeException(ex);
     }
@@ -251,10 +347,20 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   private Job bamProvision(String analysisId, String bamFile, Job startTiming) {
     Job basJob = null;
     if(testMode == false) {
-      Job gnosDownload = gnosDownloadBaseJob(analysisId, bamFile);
-      gnosDownload.setMaxMemory(memGnosDownload);
-      gnosDownload.addParent(startTiming);
-      // the file needs to end up in tumourBam/controlBam
+
+      Job gnosDownload = null;
+
+      if (localFileMode == false) {
+        gnosDownload = gnosDownloadBaseJob(analysisId, bamFile);
+        gnosDownload.setMaxMemory(memGnosDownload);
+        gnosDownload.addParent(startTiming);
+        // the file needs to end up in tumourBam/controlBam
+      } else {
+        // then need to symlink so the downstream isn't broken
+        gnosDownload = gnosSymlinkBaseJob(analysisId, bamFile);
+        gnosDownload.setMaxMemory(memGnosDownload);
+        gnosDownload.addParent(startTiming);
+      }
 
       // get the BAS files
       basJob = basFileBaseJob(analysisId, bamFile);
@@ -267,16 +373,20 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   @Override
   public void buildWorkflow() {
     Job controlBasJob = null;
-    String controlBam;
+    String controlBam = null;
     List<String> tumourBams = new ArrayList<String>();
     List<Job> tumourBasJobs = new ArrayList<Job>();
     
     List<String> tumourAnalysisIds = new ArrayList<String>();
     List<String> tumourAliquotIds = new ArrayList<String>();
     String controlAnalysisId = new String();
+
+    Job startDownload = markTime("download", "start");
+    startDownload.setMaxMemory(memMarkTime);
     
-    Job startWorkflow = markTime("start");
+    Job startWorkflow = markTime("workflow", "start");
     startWorkflow.setMaxMemory(memMarkTime);
+    startWorkflow.addParent(startDownload);
     
     try {
       if(testMode) {
@@ -296,16 +406,34 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
         prepTum.setThreads(2);
         prepTum.addParent(startWorkflow);
         tumourBasJobs.add(prepTum);
-      }
-      else {
+
+        Job stopDownload = markTime("download", "end");
+        stopDownload.setMaxMemory(memMarkTime);
+        stopDownload.addParent(prepTum);
+
+      } else {
+
+        List<Job> downloadJobsList = new ArrayList<Job>();
         controlAnalysisId = getProperty("controlAnalysisId");
-        controlBasJob = bamProvision(controlAnalysisId, getProperty("controlBam"), startWorkflow);
-        controlBam = controlAnalysisId + "/" + getProperty("controlBam");
-        
+        if (localFileMode) {
+          controlBam = getProperty("controlBam");
+        } else {
+          controlBam = controlAnalysisId + "/" + getProperty("controlBam");
+        }
+        controlBasJob = bamProvision(controlAnalysisId, controlBam, startWorkflow);
+        // this is being done because the above makes a symlink to <analysisId>/<bamname.bam>
+        // and subsequent steps expect this, so controlBam must be just the filename and not the full path
+        if (localFileMode) {
+          List<String> bamPath = Arrays.asList(getProperty("controlBam").split("/"));
+          controlBam = controlAnalysisId + "/" + bamPath.get(bamPath.size() - 1);
+        }
+        downloadJobsList.add(controlBasJob);
+
+        // TODO: just makes an echo command
         // optional upload of the downloaded tumor bam
         /*   private Job alignedBamUploadJob(Job parentJob, String bamDownloadServer, String studyRefnameOverride, String analysisCenter, String bamUploadServer, String bamUploadPemFile, String analysisId, String bamPath, String uploadScriptJobMem, String uploadScriptJobSlots) { */
         if (hasPropertyAndNotNull("bamUploadServer") && hasPropertyAndNotNull("bamUploadPemFile")) {
-          Job normalBamUpload = alignedBamUploadJob(controlBasJob, bamUploadServer, bamUploadPemFile, controlAnalysisId, getProperty("controlBam"));
+          Job normalBamUpload = alignedBamUploadJob(controlBasJob, gnosServer, bamUploadStudyRefnameOverride, bamUploadAnalysisCenterOverride, bamUploadServer, bamUploadPemFile, controlAnalysisId, getProperty("controlBam"), bamUploadScriptJobMem, bamUploadScriptJobSlots);
           normalBamUpload.addParent(controlBasJob);
         }
 
@@ -319,166 +447,260 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
           throw new RuntimeException("Properties tumourAliquotIds and tumourBam decode to lists of different sizes");
         }
         for(int i=0; i<rawBams.size(); i++) {
-          Job tumourBasJob = bamProvision(tumourAnalysisIds.get(i), rawBams.get(i), startWorkflow);
+          String tumourBam = rawBams.get(i);
+          if (!localFileMode) {
+            tumourBam = tumourAnalysisIds.get(i) + "/" + rawBams.get(i);
+          }
+          Job tumourBasJob = bamProvision(tumourAnalysisIds.get(i), tumourBam, startWorkflow);
           tumourBasJobs.add(tumourBasJob);
-          String tumourBam = tumourAnalysisIds.get(i) + "/" + rawBams.get(i);
+          if (localFileMode) {
+            List<String> bamPath = Arrays.asList(tumourBam.split("/"));
+            tumourBam = tumourAnalysisIds.get(i) + "/" + bamPath.get(bamPath.size() - 1);
+          }
           tumourBams.add(tumourBam);
-          
+          downloadJobsList.add(tumourBasJob);
+
+          // TODO: just makes an echo command
           // optional upload of the downloaded tumor bam
           if (hasPropertyAndNotNull("bamUploadServer") && hasPropertyAndNotNull("bamUploadPemFile")) {
-            Job tumourBamUpload = alignedBamUploadJob(tumourBasJob, bamUploadServer, bamUploadPemFile, tumourAnalysisIds.get(i), rawBams.get(i));
+            Job tumourBamUpload = alignedBamUploadJob(tumourBasJob, gnosServer, bamUploadStudyRefnameOverride, bamUploadAnalysisCenterOverride, bamUploadServer, bamUploadPemFile, tumourAnalysisIds.get(i), rawBams.get(i), bamUploadScriptJobMem, bamUploadScriptJobSlots);
             tumourBamUpload.addParent(tumourBasJob);
           }
+        }
+
+        // save timing info for downloads
+        Job stopDownload = markTime("download", "end");
+        stopDownload.setMaxMemory(memMarkTime);
+        for (Job currJob : downloadJobsList) {
+          stopDownload.addParent(currJob);
+        }
+      }
+
+      Job getTbiJob = stageTbi();
+      getTbiJob.setMaxMemory(memGetTbi);
+      getTbiJob.addParent(startWorkflow);
+      getTbiJob.addParent(controlBasJob);
+      for(Job job : tumourBasJobs) {
+        getTbiJob.addParent(job);
+      }
+
+      Job genotypeJob = genoptypeBaseJob(tumourBams, controlBam);
+      genotypeJob.setMaxMemory(memGenotype);
+      genotypeJob.addParent(getTbiJob);
+
+      Job genotypePackJob = packageGenotype(tumourBams, controlBam);
+      genotypePackJob.setMaxMemory("4000");
+      genotypePackJob.addParent(genotypeJob);
+
+      Job contaminationJob = contaminationBaseJob(tumourBams.size(), controlBam, "control");
+      contaminationJob.setMaxMemory(memContam);
+      contaminationJob.addParent(getTbiJob);
+      // packaging must have parent cavemanTbiCleanJob
+
+      // these are not paired but per individual sample
+      List<Job> bbAlleleCountJobs = new ArrayList<Job>();
+      for(int i=0; i<23; i++) { // not 1-22+X
+        for(int j=0; j<tumourBams.size(); j++) {
+          Job bbAlleleCountJob = bbAlleleCount(j, tumourBams.get(j), "tumour", i);
+          bbAlleleCountJob.setMaxMemory(memAlleleCount);
+          bbAlleleCountJob.addParent(getTbiJob);
+          bbAlleleCountJobs.add(bbAlleleCountJob);
+        }
+        Job bbAlleleCountJob = bbAlleleCount(1, controlBam, "control", i);
+        bbAlleleCountJob.setMaxMemory(memAlleleCount);
+        bbAlleleCountJob.addParent(getTbiJob);
+        bbAlleleCountJobs.add(bbAlleleCountJob);
+      }
+
+      Job bbAlleleMergeJob = bbAlleleMerge(controlBam);
+      bbAlleleMergeJob.setMaxMemory(memBbMerge);
+      for(Job j : bbAlleleCountJobs) {
+        bbAlleleMergeJob.addParent(j);
+      }
+
+      // these are not paired but per individual sample
+      List<Job> ngsCountJobs = new ArrayList<Job>();
+      for(int i=1; i<=24; i++) {
+        for(int j=0; j<tumourBams.size(); j++) {
+          Job ngsCountJob = ngsCount(j, tumourBams.get(j), "tumour", i);
+          ngsCountJob.setMaxMemory(memPicnicCounts);
+          ngsCountJob.addParent(getTbiJob);
+          ngsCountJobs.add(ngsCountJob);
+        }
+        Job ngsCountJob = ngsCount(1, controlBam, "control", i);
+        ngsCountJob.setMaxMemory(memPicnicCounts);
+        ngsCountJob.addParent(getTbiJob);
+        ngsCountJobs.add(ngsCountJob);
+      }
+
+      Job ngsCountMergeJob = ngsCountMerge(controlBam);
+      ngsCountMergeJob.setMaxMemory(memPicnicMerge);
+      for(Job j : ngsCountJobs) {
+        ngsCountMergeJob.addParent(j);
+      }
+
+      // donor based workflow section
+      Job[] cavemanFlagJobs = new Job [tumourBams.size()];
+      for(int i=0; i<tumourBams.size(); i++) {
+        Job cavemanFlagJob = buildPairWorkflow(getTbiJob, controlBam, tumourBams.get(i), i);
+        cavemanFlagJobs[i] = cavemanFlagJob;
+      }
+
+      Job cavemanTbiCleanJob = cavemanTbiCleanJob();
+      cavemanTbiCleanJob.setMaxMemory(memCavemanTbiClean);
+      cavemanTbiCleanJob.addParent(contaminationJob); // control contamination
+      for(Job cavemanFlagJob : cavemanFlagJobs) {
+        cavemanTbiCleanJob.addParent(cavemanFlagJob);
+        // tumour contamination is linked in buildPairWorkflow()
+      }
+
+      Job endWorkflow = markTime("workflow", "end");
+      endWorkflow.setMaxMemory(memMarkTime);
+      endWorkflow.addParent(cavemanTbiCleanJob);
+
+      Job metricsJob = getMetricsJob(tumourBams, controlBam);
+      metricsJob.setMaxMemory(memQcMetrics);
+      metricsJob.addParent(endWorkflow);
+
+      Job renameGenotypeJob = renameSampleFile(tumourBams, OUTDIR, "genotype.tar.gz");
+      renameGenotypeJob.setMaxMemory("4000");
+      renameGenotypeJob.addParent(genotypePackJob);
+      Job renameGenotypeMd5Job = renameSampleFile(tumourBams, OUTDIR, "genotype.tar.gz.md5");
+      renameGenotypeMd5Job.setMaxMemory("4000");
+      renameGenotypeMd5Job.addParent(genotypePackJob);
+
+      Job packageContamJob = packageContam(tumourBams, controlBam);
+      packageContamJob.setMaxMemory("4000");
+      packageContamJob.addParent(cavemanTbiCleanJob);
+
+      Job renameContamJob = renameSampleFile(tumourBams, OUTDIR, "verifyBamId.tar.gz");
+      renameContamJob.setMaxMemory("4000");
+      renameContamJob.addParent(packageContamJob);
+      Job renameContamMd5Job = renameSampleFile(tumourBams, OUTDIR, "verifyBamId.tar.gz.md5");
+      renameContamMd5Job.setMaxMemory("4000");
+      renameContamMd5Job.addParent(packageContamJob);
+
+      Job renameImputeJob = renameSampleFile(tumourBams, OUTDIR + "/bbCounts", "imputeCounts.tar.gz");
+      renameImputeJob.setMaxMemory("4000");
+      renameImputeJob.addParent(bbAlleleMergeJob);
+      Job renameImputeMd5Job = renameSampleFile(tumourBams, OUTDIR + "/bbCounts", "imputeCounts.tar.gz.md5");
+      renameImputeMd5Job.setMaxMemory("4000");
+      renameImputeMd5Job.addParent(bbAlleleMergeJob);
+
+      Job renameCountsJob = renameSampleFile(tumourBams, OUTDIR + "/ngsCounts", "binnedReadCounts.tar.gz");
+      renameCountsJob.setMaxMemory("4000");
+      renameCountsJob.addParent(ngsCountMergeJob);
+      Job renameCountsMd5Job = renameSampleFile(tumourBams, OUTDIR + "/ngsCounts", "binnedReadCounts.tar.gz.md5");
+      renameCountsMd5Job.setMaxMemory("4000");
+      renameCountsMd5Job.addParent(ngsCountMergeJob);
+
+      if(uploadServer != null || (hasPropertyAndNotNull("upload-skip") && Boolean.valueOf(getProperty("upload-skip")))) {
+
+        // track all the upload jobs
+        List<Job> uploadJobs = new ArrayList<Job>();
+        
+        String[] resultTypes = {"snv_mnv","cnv","sv","indel"};
+        Job uploadJob = vcfUpload(resultTypes, controlAnalysisId, tumourAnalysisIds, tumourAliquotIds);
+        uploadJob.setMaxMemory(memUpload);
+        uploadJob.addParent(metricsJob);
+        uploadJob.addParent(renameImputeJob);
+        uploadJob.addParent(renameImputeMd5Job);
+        uploadJob.addParent(renameCountsJob);
+        uploadJob.addParent(renameCountsMd5Job);
+        uploadJobs.add(uploadJob);
+
+        // this is used to create a tarball of the upload directory and store it in the specified path
+        if (hasPropertyAndNotNull("saveUploadArchive") && Boolean.valueOf(getProperty("saveUploadArchive")) && hasPropertyAndNotNull("uploadArchivePath")) {
+
+          if (hasPropertyAndNotNull("SFTPUploadArchive") && Boolean.valueOf(getProperty("SFTPUploadArchive"))) {
+            // this is used to copy the contents of the upload directory to an SFTP server
+            Job uploadToSFTP = uploadArchiveToSFTP(uploadArchivePath + "/" + uuid + ".tar.gz");
+            uploadToSFTP.addParent(uploadJob);
+            uploadJobs.add(uploadToSFTP);
+          }
+          if (hasPropertyAndNotNull("S3UploadArchive") && Boolean.valueOf(getProperty("S3UploadArchive"))) {
+            // this is used to copy the contents of the upload directory to an SFTP server
+            Job uploadToS3 = uploadArchiveToS3(uploadArchivePath + "/" + uuid + ".tar.gz");
+            uploadToS3.addParent(uploadJob);
+            uploadJobs.add(uploadToS3);
+          }
+        }
+        
+        if (hasPropertyAndNotNull("SFTPUploadFiles") && Boolean.valueOf(getProperty("SFTPUploadFiles"))) {
+          // this is used to copy the contents of the upload directory to an SFTP server
+          Job uploadToSFTP = uploadFilesToSFTP(uploadArchivePath + "/" + uuid, uuid, tumourAliquotIds);
+          uploadToSFTP.addParent(uploadJob);
+          uploadJobs.add(uploadToSFTP);
+        }
+        if (hasPropertyAndNotNull("S3UploadFiles") && Boolean.valueOf(getProperty("S3UploadFiles"))) {
+          // this is used to copy the contents of the upload directory to an SFTP server
+          Job uploadToS3 = uploadFilesToS3(uploadArchivePath + "/" + uuid, uuid, tumourAliquotIds);
+          uploadToS3.addParent(uploadJob);
+          uploadJobs.add(uploadToS3);
+        }
+
+        if (cleanup || cleanupBams) {
+          // if we upload to GNOS then go ahead and delete all the large files
+          Job cleanJob = cleanJob();
+          for(Job currUpload : uploadJobs) {
+            cleanJob.addParent(currUpload);
+          }
+        }
+
+      } else {
+        // delete just the BAM inputs and not the output dir
+        if (cleanup || cleanupBams) {
+          Job cleanInputsJob = cleanJob();
+          cleanInputsJob.addParent(metricsJob);
         }
       }
     } catch(Exception e) {
       throw new RuntimeException(e);
     }
-    
-    Job getTbiJob = stageTbi();
-    getTbiJob.setMaxMemory(memGetTbi);
-    getTbiJob.addParent(startWorkflow);
-    getTbiJob.addParent(controlBasJob);
-    for(Job job : tumourBasJobs) {
-      getTbiJob.addParent(job);
-    }
-    
-    Job genotypeJob = genoptypeBaseJob(tumourBams, controlBam);
-    genotypeJob.setMaxMemory(memGenotype);
-    genotypeJob.addParent(getTbiJob);
-    
-    Job genotypePackJob = packageGenotype(tumourBams, controlBam);
-    genotypePackJob.setMaxMemory("4000");
-    genotypePackJob.addParent(genotypeJob);
-    
-    Job contaminationJob = contaminationBaseJob(tumourBams.size(), controlBam, "control");
-    contaminationJob.setMaxMemory(memContam);
-    contaminationJob.addParent(getTbiJob);
-    // packaging must have parent cavemanTbiCleanJob
-    
-    // these are not paired but per individual sample
-    List<Job> bbAlleleCountJobs = new ArrayList<Job>();
-    for(int i=0; i<23; i++) { // not 1-22+X
-      for(int j=0; j<tumourBams.size(); j++) {
-        Job bbAlleleCountJob = bbAlleleCount(j, tumourBams.get(j), "tumour", i);
-        bbAlleleCountJob.setMaxMemory(memAlleleCount);
-        bbAlleleCountJob.addParent(getTbiJob);
-        bbAlleleCountJobs.add(bbAlleleCountJob);
-      }
-      Job bbAlleleCountJob = bbAlleleCount(1, controlBam, "control", i);
-      bbAlleleCountJob.setMaxMemory(memAlleleCount);
-      bbAlleleCountJob.addParent(getTbiJob);
-      bbAlleleCountJobs.add(bbAlleleCountJob);
-    }
-    
-    Job bbAlleleMergeJob = bbAlleleMerge(controlBam);
-    bbAlleleMergeJob.setMaxMemory(memBbMerge);
-    for(Job j : bbAlleleCountJobs) {
-      bbAlleleMergeJob.addParent(j);
-    }
-    
-    // these are not paired but per individual sample
-    List<Job> ngsCountJobs = new ArrayList<Job>();
-    for(int i=1; i<=24; i++) {
-      for(int j=0; j<tumourBams.size(); j++) {
-        Job ngsCountJob = ngsCount(j, tumourBams.get(j), "tumour", i);
-        ngsCountJob.setMaxMemory(memPicnicCounts);
-        ngsCountJob.addParent(getTbiJob);
-        ngsCountJobs.add(ngsCountJob);
-      }
-      Job ngsCountJob = ngsCount(1, controlBam, "control", i);
-      ngsCountJob.setMaxMemory(memPicnicCounts);
-      ngsCountJob.addParent(getTbiJob);
-      ngsCountJobs.add(ngsCountJob);
-    }
-    
-    Job ngsCountMergeJob = ngsCountMerge(controlBam);
-    ngsCountMergeJob.setMaxMemory(memPicnicMerge);
-    for(Job j : ngsCountJobs) {
-      ngsCountMergeJob.addParent(j);
-    }
-    
-    // donor based workflow section
-    Job[] cavemanFlagJobs = new Job [tumourBams.size()];
-    for(int i=0; i<tumourBams.size(); i++) {
-      Job cavemanFlagJob = buildPairWorkflow(getTbiJob, controlBam, tumourBams.get(i), i);
-      cavemanFlagJobs[i] = cavemanFlagJob;
-    }
-    
-    Job cavemanTbiCleanJob = cavemanTbiCleanJob();
-    cavemanTbiCleanJob.setMaxMemory(memCavemanTbiClean);
-    cavemanTbiCleanJob.addParent(contaminationJob); // control contamination
-    for(Job cavemanFlagJob : cavemanFlagJobs) {
-      cavemanTbiCleanJob.addParent(cavemanFlagJob);
-      // tumour contamination is linked in buildPairWorkflow() 
-    }
-    
-    Job endWorkflow = markTime("end");
-    endWorkflow.setMaxMemory(memMarkTime);
-    endWorkflow.addParent(cavemanTbiCleanJob);
-    
-    Job metricsJob = getMetricsJob(tumourBams, controlBam);
-    metricsJob.setMaxMemory(memQcMetrics);
-    metricsJob.addParent(endWorkflow);
-    
-    Job renameGenotypeJob = renameSampleFile(tumourBams, OUTDIR, "genotype.tar.gz");
-    renameGenotypeJob.setMaxMemory("4000");
-    renameGenotypeJob.addParent(genotypePackJob);
-    Job renameGenotypeMd5Job = renameSampleFile(tumourBams, OUTDIR, "genotype.tar.gz.md5");
-    renameGenotypeMd5Job.setMaxMemory("4000");
-    renameGenotypeMd5Job.addParent(genotypePackJob);
-    
-    Job packageContamJob = packageContam(tumourBams, controlBam);
-    packageContamJob.setMaxMemory("4000");
-    packageContamJob.addParent(cavemanTbiCleanJob);
-    
-    Job renameContamJob = renameSampleFile(tumourBams, OUTDIR, "verifyBamId.tar.gz");
-    renameContamJob.setMaxMemory("4000");
-    renameContamJob.addParent(packageContamJob);
-    Job renameContamMd5Job = renameSampleFile(tumourBams, OUTDIR, "verifyBamId.tar.gz.md5");
-    renameContamMd5Job.setMaxMemory("4000");
-    renameContamMd5Job.addParent(packageContamJob);
-    
-    Job renameImputeJob = renameSampleFile(tumourBams, OUTDIR + "/bbCounts", "imputeCounts.tar.gz");
-    renameImputeJob.setMaxMemory("4000");
-    renameImputeJob.addParent(bbAlleleMergeJob);
-    Job renameImputeMd5Job = renameSampleFile(tumourBams, OUTDIR + "/bbCounts", "imputeCounts.tar.gz.md5");
-    renameImputeMd5Job.setMaxMemory("4000");
-    renameImputeMd5Job.addParent(bbAlleleMergeJob);
-    
-    Job renameCountsJob = renameSampleFile(tumourBams, OUTDIR + "/ngsCounts", "binnedReadCounts.tar.gz");
-    renameCountsJob.setMaxMemory("4000");
-    renameCountsJob.addParent(ngsCountMergeJob);
-    Job renameCountsMd5Job = renameSampleFile(tumourBams, OUTDIR + "/ngsCounts", "binnedReadCounts.tar.gz.md5");
-    renameCountsMd5Job.setMaxMemory("4000");
-    renameCountsMd5Job.addParent(ngsCountMergeJob);
-    
-    if(uploadServer != null) {
-      String[] resultTypes = {"snv_mnv","cnv","sv","indel"};
-      Job uploadJob = vcfUpload(resultTypes, controlAnalysisId, tumourAnalysisIds, tumourAliquotIds);
-      uploadJob.setMaxMemory(memUpload);
-      uploadJob.addParent(metricsJob);
-      uploadJob.addParent(renameImputeJob);
-      uploadJob.addParent(renameImputeMd5Job);
-      uploadJob.addParent(renameCountsJob);
-      uploadJob.addParent(renameCountsMd5Job);
-      
-      if (cleanup) {
-        // if we upload to GNOS then go ahead and delete all the large files
-        Job cleanJob = postUploadCleanJob();
-        cleanJob.addParent(uploadJob);
-      }
-      
-    } else {
-      // delete just the BAM inputs and not the output dir
-      if (cleanup) {
-        Job cleanInputsJob = cleanInputsJob();
-        cleanInputsJob.addParent(metricsJob);
-      }
-    }
   }
 
-  /**
+    private Job uploadFilesToSFTP(String uploadPath, String uuid, List<String> tumourAliquotIds) {
+      Job upload = getWorkflow().createBashJob("uploadFilesToSFTP");
+      String glob = "";
+      for(String tumourAliquotId : tumourAliquotIds) {
+        glob = glob + " " + tumourAliquotId + ".*";
+      }
+      upload.getCommand()
+          .addArgument("cp "+uploadPath+"/"+uuid+"/analysis.xml "+uploadPath+"/"+uuid+"/"+uuid+".analysis.xml;")
+          .addArgument("cd "+uploadPath+"/"+uuid+";")
+          .addArgument("duck -e " + SFTPUploadMode + " -r -p '" + SFTPUploadPassword + "' -u " + SFTPUploadUsername + " --upload  sftp://" + SFTPUploadServer + "/" + SFTPUploadPath + " " + glob + " " +uuid+".analysis.xml;");
+      return(upload);
+    }
+
+    private Job uploadFilesToS3(String uploadPath, String uuid, List<String> tumourAliquotIds) {
+      Job upload = getWorkflow().createBashJob("uploadFilesToS3");
+      String glob = "";
+      for(String tumourAliquotId : tumourAliquotIds) {
+        glob = glob + " " + tumourAliquotId + ".*";
+      }
+      upload.getCommand()
+          .addArgument("cp "+uploadPath+"/"+uuid+"/analysis.xml "+uploadPath+"/"+uuid+"/"+uuid+".analysis.xml;")
+          .addArgument("cd "+uploadPath+"/"+uuid+";")
+          .addArgument("duck -e " + S3UploadFileMode + " -r -p '" + S3UploadSecretKey + "' -u " + S3UploadKey + " --upload  " + S3UploadBucketURL + " " + glob + " " +uuid+".analysis.xml;");
+      return(upload);
+    }
+
+    private Job uploadArchiveToSFTP(String archivePath) {
+      Job upload = getWorkflow().createBashJob("uploadArchiveToSFTP");
+      //  sshpass -p 'password' sftp -o StrictHostKeyChecking=no username@tcgaftps.nci.nih.gov:/tcgapancan/pancan/variant_calling_pilot_64/OICR_Sanger_Core
+      // duck -e overwrite -r -p 'password' -u username -d sftp://tcgaftps.nci.nih.gov/tcgapancan/pancan/variant_calling_pilot_64/OICR_Sanger_Core/f9c3bc8e-dbc4-1ed0-e040-11ac0d4803a9.svcp_1-0-2.20150106.somatic.sv.vcf.gz.tbi test.tbi
+      upload.getCommand().addArgument("duck -e " + SFTPUploadArchiveMode + " -r -p '" + SFTPUploadArchivePassword + "' -u " + SFTPUploadArchiveUsername + " --upload  sftp://" + SFTPUploadArchiveServer + "/" + SFTPUploadArchivePath + " " +  archivePath);
+      return(upload);
+    }
+
+    private Job uploadArchiveToS3(String archivePath) {
+      Job upload = getWorkflow().createBashJob("uploadArchiveToS3");
+      // duck -e skip -r -p 'secretkey' -u 'key' -d s3://pan-cancer-testing/m2.tar.gz m2.tar.gz
+      upload.getCommand().addArgument("duck -e " + S3UploadArchiveMode + " -r -p '" + S3UploadArchiveSecretKey + "' -u '" + S3UploadArchiveKey + "' --upload  " + S3UploadArchiveBucketURL + " " +  archivePath);
+      return(upload);
+    }
+
+    /**
    * This builds the workflow for a pair of samples
    * The generic buildWorkflow section will choose the pair to be processed and 
    * setup the control sample download
@@ -872,7 +1094,6 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       }
     }
     
-    
     // specific to CGP data
     for(String tumourAliquotId : tumourAliquotIds) {
       String baseFile = OUTDIR + "/" + tumourAliquotId + "." + workflowName + "." + dateString + ".somatic.";
@@ -885,9 +1106,9 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       tarmd5s = tarmd5s.concat("," + baseFile + "genotype.tar.gz.md5");
       tarmd5s = tarmd5s.concat("," + baseFile + "verifyBamId.tar.gz.md5");
     }
-    
+
     thisJob.getCommand()
-      .addArgument("perl -I " + getWorkflowBaseDir()+ "/bin/lib " + getWorkflowBaseDir()+ "/bin/gnos_upload_vcf.pl")
+      .addArgument("perl -I " + getWorkflowBaseDir() + "/bin/lib " + getWorkflowBaseDir() + "/bin/gnos_upload_vcf.pl")
       .addArgument("--metadata-urls " + metadataUrls)
       .addArgument("--vcfs " + vcfs)
       .addArgument("--vcf-md5sum-files " + vcfmd5s)
@@ -902,11 +1123,19 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       .addArgument("--timing-metrics-json " + OUTDIR + "/process_metrics.json")
       .addArgument("--workflow-src-url "+Version.WORKFLOW_SRC_URL)
       .addArgument("--workflow-url "+Version.WORKFLOW_URL)
-      .addArgument("--workflow-name "+Version.WORKFLOW_NAME)
-      .addArgument("--workflow-version "+Version.WORKFLOW_VERSION)
-      .addArgument("--seqware-version "+Version.SEQWARE_VERSION)
+      .addArgument("--workflow-name " + Version.WORKFLOW_NAME)
+      .addArgument("--workflow-version " + Version.WORKFLOW_VERSION)
+      .addArgument("--seqware-version " + Version.SEQWARE_VERSION)
+      .addArgument("--vm-instance-type " + vmInstanceType)
+      .addArgument("--vm-instance-cores " +vmInstanceCores)
+      .addArgument("--vm-instance-mem-gb " +vmInstanceMemGb)
+      .addArgument("--vm-location-code " +vmLocationCode)
+      .addArgument("--uuid " + uuid)
       ;
     try {
+      if (hasPropertyAndNotNull("saveUploadArchive") && hasPropertyAndNotNull("uploadArchivePath") && "true".equals(getProperty("saveUploadArchive"))) {
+        thisJob.getCommand().addArgument("--upload-archive "+ getProperty("uploadArchivePath"));
+      }
       if(hasPropertyAndNotNull("study-refname-override")) {
         thisJob.getCommand().addArgument("--study-refname-override " + getProperty("study-refname-override"));
       }
@@ -975,11 +1204,22 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     thisJob.getCommand()
                   .addArgument("perl -I " + getWorkflowBaseDir() + "/bin/lib " + getWorkflowBaseDir() + "/bin/gnos_download_file.pl ")
                   .addArgument("--command 'gtdownload -c " + pemFile )
-                  .addArgument("-v " + gnosServer + "/cghub/data/analysis/download/" + analysisId + "'")
+                  .addArgument(" -l ./download"+analysisId+".log")
+                  .addArgument(" -k 60")
+                  .addArgument("-vv " + gnosServer + "/cghub/data/analysis/download/" + analysisId + "'")
                   .addArgument("--file " + analysisId + "/" + bamFile)
                   .addArgument("--retries 10 --sleep-min 1 --timeout-min 60");
                   /*.addArgument("gtdownload -c " + pemFile)
                   .addArgument("-v " + gnosServer + "/cghub/data/analysis/download/" + analysisId); */
+    return thisJob;
+  }
+
+  private Job gnosSymlinkBaseJob(String analysisId, String bamFile) {
+    Job thisJob = getWorkflow().createBashJob("GNOSSymlink");
+
+    thisJob.getCommand()
+        .addArgument("mkdir -p " + analysisId + "; ln -s "+bamFile+" "+analysisId+"/");
+
     return thisJob;
   }
   
@@ -990,7 +1230,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
             .addArgument(installBase)
             .addArgument("xml_to_bas.pl")
             .addArgument("-d " + gnosServer + "/cghub/metadata/analysisFull/" + analysisId)
-            .addArgument("-b " + sampleBam)
+            .addArgument("-b " + analysisId + "/" + sampleBam)
             .addArgument("-o " + analysisId + "/" + sampleBam + ".bas")
             ;
     return thisJob;
@@ -1037,15 +1277,16 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     return thisJob;
   }
   
-  private Job postUploadCleanJob() {
-    Job thisJob = getWorkflow().createBashJob("postUploadClean");
-    thisJob.getCommand().addArgument("rm -rf ./*/*.bam " + OUTDIR);
-    return thisJob;
-  }
-
-  private Job cleanInputsJob() {
-    Job thisJob = getWorkflow().createBashJob("cleanInputs");
-    thisJob.getCommand().addArgument("rm -f ./*/*.bam");
+  private Job cleanJob() {
+    Job thisJob = getWorkflow().createBashJob("GeneralCleanup");
+    // this just removes the contents of the working directory and not OUTDIR which may point to another filesystem for archival purposes
+    if (cleanupBams) {
+      thisJob.getCommand().addArgument("rm -f ./*/*.bam; ");
+    }
+    // this removes the whole working directory
+    if (cleanup) {
+      thisJob.getCommand().addArgument("rm -rf .; ");
+    }
     return thisJob;
   }
   
@@ -1217,8 +1458,8 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     return thisJob;
   }
   
-  private Job markTime(String item) {
-    String timeFile = TIMEDIR + "/workflow_" + item;
+  private Job markTime(String name, String item) {
+    String timeFile = TIMEDIR + "/" + name + "_" + item;
     Job thisJob = getWorkflow().createBashJob("mark_" + item);
     thisJob.getCommand().addArgument("date +%s > " + timeFile);
     return thisJob;

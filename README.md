@@ -57,6 +57,10 @@ All of the above on one line to make it easy to cut and paste into a terminal:
 
 Note: on BioNimbus I ran into an issue with r-cran-rcolorbrewer not being up to date with R 3.x.  See http://stackoverflow.com/questions/16503554/r-3-0-0-update-has-left-loads-of-2-x-packages-incompatible
 
+## New Dependencies
+
+    https://trac.cyberduck.io/wiki/help/en/howto/cli
+
 ## Tabix Server
 
 You need a tabix HTTP server serving up controlled access data that's used in the variant calling pipeline.  We can't share this publicaly so email the authors for information about this component. 
@@ -125,6 +129,23 @@ appropriate ``mem*PerThread`` and not the generic ``coresAddressable`` or ``memH
 
 As these steps will be running multiple threads (internally) each can share/donate memory to those running at the same time and so memory failures are reduced.
 
+### STDOUT/ERR under these processes
+
+For the processes where core and memory utilisation is managed by the underlying perl code and not Seqware/SGE directly (other than total available) the logs are written
+to the log area for the specific algorithm.  This is done so that the output from multiple threads isn't mixed on a single stream.
+
+It is easy to see where things got up to with something like:
+
+    ls -ltrh seqware-results/0/<ALG>/tmp*/logs/*.err | tail -n 10
+
+Where ``<ALG>`` can be:
+
+    brass
+    caveman
+    pindel
+
+There are also ``*.out`` files.
+
 ### How to update mem*PerThread part way through execution
 
 In these cases _do not_ modify the ``*-qsub.opts`` file but instead reduce the parallel threads by 2 as follows:
@@ -165,10 +186,10 @@ You need to build and install the following in this order:
 
 * [PCAP v1.2.3](https://github.com/ICGC-TCGA-PanCancer/PCAP-core/archive/v1.2.3.tar.gz)
 * [cgpBinCounts v1.0.0](https://github.com/cancerit/cgpBinCounts/archive/v1.0.0.tar.gz)
-* [cgpNgsQc v1.0.0](https://github.com/cancerit/cgpNgsQc/archive/v1.0.0.tar.gz)
+* [cgpNgsQc v1.0.2](https://github.com/cancerit/cgpNgsQc/archive/v1.0.2.tar.gz)
 * [cgpVcf v1.2.2](https://github.com/cancerit/cgpVcf/archive/v1.2.2.tar.gz)
 * [alleleCount v1.2.1](https://github.com/cancerit/alleleCount/archive/v1.2.1.tar.gz)
-* [ascatNgs v1.5.0](https://github.com/cancerit/ascatNgs/archive/v1.5.0.tar.gz)
+* [ascatNgs v1.5.1](https://github.com/cancerit/ascatNgs/archive/v1.5.1.tar.gz)
 * [cgpPindel v1.2.0](https://github.com/cancerit/cgpPindel/archive/v1.2.0.tar.gz)
 * [cgpCaVEManPostProcessing v1.0.2](https://github.com/cancerit/cgpCaVEManPostProcessing/archive/v1.0.2.tar.gz)
 * [cgpCaVEManWrapper v1.2.0](https://github.com/cancerit/cgpCaVEManWrapper/archive/v1.2.0.tar.gz)

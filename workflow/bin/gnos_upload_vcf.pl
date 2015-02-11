@@ -88,6 +88,12 @@ my $description_file   = "";
 my $pipeline_json_file = "";
 my $qc_json_file       = "";
 my $timing_json_file   = "";
+my $upload_archive     = "";
+my $uuid               = "";
+my $vm_instance_type   = "unknown";
+my $vm_instance_cores  = "unknown";
+my $vm_instance_mem_gb = "unknown";
+my $vm_location_code   = "unknown";
 
 # TODO: check the argument counts here
 if ( scalar(@ARGV) < 12 || scalar(@ARGV) > 46 ) {
@@ -120,6 +126,12 @@ if ( scalar(@ARGV) < 12 || scalar(@ARGV) > 46 ) {
        [--force-copy]
        [--skip-validate]
        [--skip-upload]
+       [--upload-archive <path_of_dir_to_copy_upload_to_and_make_tarball_uuid.tar.gz>]
+       [--vm-instance-type <vmInstanceType>]
+       [--vm-instance-cores <vmInstanceCores>]
+       [--vm-instance-mem-gb <vmInstanceMemGb>]
+       [--vm-location-code <vmLocationCode>]
+       [--uuid <uuis_for_use_as_upload_analysis_id>]
        [--test]\n";
 }
 
@@ -153,6 +165,12 @@ GetOptions(
     "skip-validate"              => \$skip_validate,
     "skip-upload"                => \$skip_upload,
     "test"                       => \$test,
+    "upload-archive=s"           => \$upload_archive,
+    "vm-instance-type=s"         => \$vm_instance_type,
+    "vm-instance-cores=s"        => \$vm_instance_cores,
+    "vm-instance-mem-gb=s"       => \$vm_instance_mem_gb,
+    "vm-location-code=s"         => \$vm_location_code,
+    "uuid=s"                     => \$uuid,
 );
 
 ##############
@@ -162,9 +180,10 @@ GetOptions(
 # setup output dir
 say "SETTING UP OUTPUT DIR";
 
-my $uuid = '';
 my $ug = Data::UUID->new;
-$uuid = lc($ug->create_str());
+if ($uuid eq "") {
+  $uuid = lc($ug->create_str());
+}
 
 #if(-d "$output_dir") {
 #    opendir( my $dh, $output_dir);
@@ -398,6 +417,11 @@ sub upload_submission {
         return 1 if ( GNOS::Upload->run_upload($gt_upload_command, "$sub_path/$log_file", $retries, $cooldown, $timeout_min) );
     }
 
+    # now make an archive tarball if requested
+    if ($upload_archive ne "") {
+      return 1 if (run("mkdir -p $upload_archive/$uuid && rsync -Lrauv $sub_path/* $upload_archive/$uuid/ && cd $upload_archive && tar zcf $uuid.tar.gz $uuid"));
+    }
+
     # just touch this file to ensure monitoring tools know upload is complete
     run("date +\%s > $final_touch_file", "metadata_upload.log");
 
@@ -559,8 +583,8 @@ sub generate_submission {
     }
 
     # override if given on the command line
-    if (defined($center_override) && $center_override ne "") { $center_name = $center_override; } 
-    if (defined($refcenter_override) && $refcenter_override ne "") { $refcenter = $refcenter_override; } 
+    if (defined($center_override) && $center_override ne "") { $center_name = $center_override; }
+    if (defined($refcenter_override) && $refcenter_override ne "") { $refcenter = $refcenter_override; }
 
     my $str = to_json($pi2);
     $global_attr->{"pipeline_input_info"}{$str} = 1;
@@ -906,26 +930,24 @@ END
         </ANALYSIS_ATTRIBUTE>
 ";
 
-# LEFT OFF HERE: need to add tags for compute center and profiles
-    # some metadata about this workflow
+    # some metadata about this vm
     $analysis_xml .= "        <ANALYSIS_ATTRIBUTE>
-          <TAG>variant_workflow_name</TAG>
-          <VALUE>$workflow_name</VALUE>
+          <TAG>vm_instance_type</TAG>
+          <VALUE>$vm_instance_type</VALUE>
         </ANALYSIS_ATTRIBUTE>
         <ANALYSIS_ATTRIBUTE>
-          <TAG>variant_workflow_version</TAG>
-          <VALUE>$workflow_version</VALUE>
+          <TAG>vm_instance_cores</TAG>
+          <VALUE>$vm_instance_cores</VALUE>
         </ANALYSIS_ATTRIBUTE>
         <ANALYSIS_ATTRIBUTE>
-          <TAG>variant_workflow_source_url</TAG>
-          <VALUE>$workflow_src_url</VALUE>
+          <TAG>vm_instance_mem_gb</TAG>
+          <VALUE>$vm_instance_mem_gb</VALUE>
         </ANALYSIS_ATTRIBUTE>
         <ANALYSIS_ATTRIBUTE>
-          <TAG>variant_workflow_bundle_url</TAG>
-          <VALUE>$workflow_url</VALUE>
+          <TAG>vm_location_code</TAG>
+          <VALUE>$vm_location_code</VALUE>
         </ANALYSIS_ATTRIBUTE>
 ";
-
 
     # TODO QC
     $analysis_xml .= "        <ANALYSIS_ATTRIBUTE>
@@ -1101,7 +1123,7 @@ sub download_url {
 sub getVal {
     my ( $node, $key ) = @_;
 
-    if (!defined($node)) { return undef; } 
+    if (!defined($node)) { return undef; }
 
     if ( defined($node) && $node != undef ) {
         if ( defined( $node->getElementsByTagName($key) ) ) {
