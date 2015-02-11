@@ -303,6 +303,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
         controlBam = controlAnalysisId + "/" + getProperty("controlBam");
         
         // optional upload of the downloaded tumor bam
+        /*   private Job alignedBamUploadJob(Job parentJob, String bamDownloadServer, String studyRefnameOverride, String analysisCenter, String bamUploadServer, String bamUploadPemFile, String analysisId, String bamPath, String uploadScriptJobMem, String uploadScriptJobSlots) { */
         if (hasPropertyAndNotNull("bamUploadServer") && hasPropertyAndNotNull("bamUploadPemFile")) {
           Job normalBamUpload = alignedBamUploadJob(controlBasJob, bamUploadServer, bamUploadPemFile, controlAnalysisId, getProperty("controlBam"));
           normalBamUpload.addParent(controlBasJob);
