@@ -1,5 +1,6 @@
 # 1.0.5
 
+* Added a download entry to the timing JSON object. So overall runtime of the workflow (not including upload) and just the download portion in seconds can be found in variant_timing_metrics, `{"workflow":{"Wall_s":<seconds>}, "download":{"Wall_s":<seconds>}}`
 * Note about output options, there are now several, please read carefully:
     * You can specify the output_prefix and output_dir as an external/shared filesystem for safekeeping of the output files. Note, your output_dir should include a unique string so it doesn't overwrite previous results.
     * if you want to use this approach above, then you can still use cleanup=true because these files aren't cleaned up, provided they are pointed to a file path **outside** the working (current) directory

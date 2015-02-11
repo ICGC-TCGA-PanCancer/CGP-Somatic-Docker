@@ -118,6 +118,7 @@ sub rum_metrics {
     $count++;
   }
   $run_met{'workflow'}{'Wall_s'} = _workflow_met($timings);
+  $run_met{'download'}{'Wall_s'} = _download_met($timings);
   return \%run_met;
 }
 
@@ -129,6 +130,22 @@ sub _workflow_met {
   my ($started) = $stdout =~ m/^([[:digit:]]+)/;
 
   ($stdout, $stderr, $exit) = capture { system(qq{cat $folder/workflow_end}); };
+  die "Error occurred while capturing content of $folder/end" if ($stderr);
+  chomp $stdout;
+  my ($ended) = $stdout =~ m/^([[:digit:]]+)/;
+
+  my $elapsed = $ended - $started;
+  return $elapsed;
+}
+
+sub _download_met {
+  my $folder = shift;
+  my ($stdout, $stderr, $exit) = capture { system(qq{cat $folder/download_start}); };
+  die "Error occurred while capturing content of $folder/start" if ($stderr);
+  chomp $stdout;
+  my ($started) = $stdout =~ m/^([[:digit:]]+)/;
+
+  ($stdout, $stderr, $exit) = capture { system(qq{cat $folder/download_end}); };
   die "Error occurred while capturing content of $folder/end" if ($stderr);
   chomp $stdout;
   my ($ended) = $stdout =~ m/^([[:digit:]]+)/;

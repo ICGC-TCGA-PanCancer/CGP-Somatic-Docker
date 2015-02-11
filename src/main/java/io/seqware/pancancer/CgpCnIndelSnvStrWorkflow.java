@@ -331,15 +331,24 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   private Job bamProvision(String analysisId, String bamFile, Job startTiming) {
     Job basJob = null;
     if(testMode == false) {
-      Job gnosDownload = gnosDownloadBaseJob(analysisId, bamFile);
-      gnosDownload.setMaxMemory(memGnosDownload);
-      gnosDownload.addParent(startTiming);
-      // the file needs to end up in tumourBam/controlBam
+
+      Job gnosDownload = null;
+
+      if (localFileMode == false) {
+        gnosDownload = gnosDownloadBaseJob(analysisId, bamFile);
+        gnosDownload.setMaxMemory(memGnosDownload);
+        gnosDownload.addParent(startTiming);
+        // the file needs to end up in tumourBam/controlBam
+      }
 
       // get the BAS files
       basJob = basFileBaseJob(analysisId, bamFile);
       basJob.setMaxMemory(memBasFileGet);
-      basJob.addParent(gnosDownload);
+      if (localFileMode == true) {
+        
+      } else {
+        basJob.addParent(gnosDownload);
+      }
     }
     return basJob;
   }
@@ -354,9 +363,13 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     List<String> tumourAnalysisIds = new ArrayList<String>();
     List<String> tumourAliquotIds = new ArrayList<String>();
     String controlAnalysisId = new String();
+
+    Job startDownload = markTime("download", "start");
+    startDownload.setMaxMemory(memMarkTime);
     
-    Job startWorkflow = markTime("start");
+    Job startWorkflow = markTime("workflow", "start");
     startWorkflow.setMaxMemory(memMarkTime);
+    startWorkflow.addParent(startDownload);
     
     try {
       if(testMode) {
@@ -376,12 +389,20 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
         prepTum.setThreads(2);
         prepTum.addParent(startWorkflow);
         tumourBasJobs.add(prepTum);
+
+        Job stopDownload = markTime("download", "end");
+        stopDownload.setMaxMemory(memMarkTime);
+        stopDownload.addParent(prepTum);
       }
       else {
+
+        List<Job> downloadJobsList = new ArrayList<Job>();
         controlAnalysisId = getProperty("controlAnalysisId");
         controlBam = controlAnalysisId + "/" + getProperty("controlBam");
         controlBasJob = bamProvision(controlAnalysisId, controlBam, startWorkflow);
-        
+        downloadJobsList.add(controlBasJob);
+
+        // TODO
         // optional upload of the downloaded tumor bam
         if (hasPropertyAndNotNull("bamUploadServer") && hasPropertyAndNotNull("bamUploadPemFile")) {
           //Job normalBamUpload = alignedBamUploadJob(controlBasJob, bamUploadServer, bamUploadPemFile, controlAnalysisId, getProperty("controlBam"));
@@ -402,12 +423,20 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
           Job tumourBasJob = bamProvision(tumourAnalysisIds.get(i), tumourBam, startWorkflow);
           tumourBasJobs.add(tumourBasJob);  
           tumourBams.add(tumourBam);
+          downloadJobsList.add(tumourBasJob);
           
           // optional upload of the downloaded tumor bam
           if (hasPropertyAndNotNull("bamUploadServer") && hasPropertyAndNotNull("bamUploadPemFile")) {
             //Job tumourBamUpload = alignedBamUploadJob(tumourBasJob, bamUploadServer, bamUploadPemFile, tumourAnalysisIds.get(i), rawBams.get(i));
             //tumourBamUpload.addParent(tumourBasJob);
           }
+        }
+
+        // save timing info for downloads
+        Job stopDownload = markTime("download", "end");
+        stopDownload.setMaxMemory(memMarkTime);
+        for (Job currJob : downloadJobsList) {
+          stopDownload.addParent(currJob);
         }
       }
 
@@ -489,7 +518,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
         // tumour contamination is linked in buildPairWorkflow()
       }
 
-      Job endWorkflow = markTime("end");
+      Job endWorkflow = markTime("workflow", "end");
       endWorkflow.setMaxMemory(memMarkTime);
       endWorkflow.addParent(cavemanTbiCleanJob);
 
@@ -530,6 +559,9 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       renameCountsMd5Job.addParent(ngsCountMergeJob);
 
       if(uploadServer != null || (hasPropertyAndNotNull("upload-skip") && Boolean.valueOf(getProperty("upload-skip")))) {
+
+        // track all the upload jobs
+        List<Job> uploadJobs = new ArrayList<Job>();
         
         String[] resultTypes = {"snv_mnv","cnv","sv","indel"};
         Job uploadJob = vcfUpload(resultTypes, controlAnalysisId, tumourAnalysisIds, tumourAliquotIds);
@@ -539,6 +571,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
         uploadJob.addParent(renameImputeMd5Job);
         uploadJob.addParent(renameCountsJob);
         uploadJob.addParent(renameCountsMd5Job);
+        uploadJobs.add(uploadJob);
 
         // this is used to create a tarball of the upload directory and store it in the specified path
         if (hasPropertyAndNotNull("saveUploadArchive") && Boolean.valueOf(getProperty("saveUploadArchive")) && hasPropertyAndNotNull("uploadArchivePath")) {
@@ -547,11 +580,13 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
             // this is used to copy the contents of the upload directory to an SFTP server
             Job uploadToSFTP = uploadArchiveToSFTP(uploadArchivePath + "/" + uuid + ".tar.gz");
             uploadToSFTP.addParent(uploadJob);
+            uploadJobs.add(uploadToSFTP);
           }
           if (hasPropertyAndNotNull("S3UploadArchive") && Boolean.valueOf(getProperty("S3UploadArchive"))) {
             // this is used to copy the contents of the upload directory to an SFTP server
             Job uploadToS3 = uploadArchiveToS3(uploadArchivePath + "/" + uuid + ".tar.gz");
             uploadToS3.addParent(uploadJob);
+            uploadJobs.add(uploadToS3);
           }
         }
         
@@ -559,18 +594,21 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
           // this is used to copy the contents of the upload directory to an SFTP server
           Job uploadToSFTP = uploadFilesToSFTP(uploadArchivePath + "/" + uuid, uuid, tumourAliquotIds);
           uploadToSFTP.addParent(uploadJob);
+          uploadJobs.add(uploadToSFTP);
         }
         if (hasPropertyAndNotNull("S3UploadFiles") && Boolean.valueOf(getProperty("S3UploadFiles"))) {
           // this is used to copy the contents of the upload directory to an SFTP server
           Job uploadToS3 = uploadFilesToS3(uploadArchivePath + "/" + uuid, uuid, tumourAliquotIds);
-          uploadToS3.addParent(uploadJob);        
+          uploadToS3.addParent(uploadJob);
+          uploadJobs.add(uploadToS3);
         }
 
-        // TODO: this only should go if the above jobs are OK
         if (cleanup || cleanupBams) {
           // if we upload to GNOS then go ahead and delete all the large files
           Job cleanJob = cleanJob();
-          cleanJob.addParent(uploadJob);
+          for(Job currUpload : uploadJobs) {
+            cleanJob.addParent(currUpload);
+          }
         }
 
       } else {
@@ -1049,10 +1087,10 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       .addArgument("--timing-metrics-json " + OUTDIR + "/process_metrics.json")
       .addArgument("--workflow-src-url "+Version.WORKFLOW_SRC_URL)
       .addArgument("--workflow-url "+Version.WORKFLOW_URL)
-        .addArgument("--workflow-name "+ Version.WORKFLOW_NAME)
-        .addArgument("--workflow-version " + Version.WORKFLOW_VERSION)
-        .addArgument("--seqware-version " + Version.SEQWARE_VERSION)
-        .addArgument("--vm-instance-type " +vmInstanceType)
+      .addArgument("--workflow-name " + Version.WORKFLOW_NAME)
+      .addArgument("--workflow-version " + Version.WORKFLOW_VERSION)
+      .addArgument("--seqware-version " + Version.SEQWARE_VERSION)
+      .addArgument("--vm-instance-type " + vmInstanceType)
       .addArgument("--vm-instance-cores " +vmInstanceCores)
       .addArgument("--vm-instance-mem-gb " +vmInstanceMemGb)
       .addArgument("--vm-location-code " +vmLocationCode)
@@ -1375,8 +1413,8 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     return thisJob;
   }
   
-  private Job markTime(String item) {
-    String timeFile = TIMEDIR + "/workflow_" + item;
+  private Job markTime(String name, String item) {
+    String timeFile = TIMEDIR + "/" + name + "_" + item;
     Job thisJob = getWorkflow().createBashJob("mark_" + item);
     thisJob.getCommand().addArgument("date +%s > " + timeFile);
     return thisJob;

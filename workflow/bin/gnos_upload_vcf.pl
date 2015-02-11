@@ -930,7 +930,7 @@ END
         </ANALYSIS_ATTRIBUTE>
 ";
 
-    # some metadata about this workflow
+    # some metadata about this vm
     $analysis_xml .= "        <ANALYSIS_ATTRIBUTE>
           <TAG>vm_instance_type</TAG>
           <VALUE>$vm_instance_type</VALUE>

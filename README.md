@@ -57,6 +57,10 @@ All of the above on one line to make it easy to cut and paste into a terminal:
 
 Note: on BioNimbus I ran into an issue with r-cran-rcolorbrewer not being up to date with R 3.x.  See http://stackoverflow.com/questions/16503554/r-3-0-0-update-has-left-loads-of-2-x-packages-incompatible
 
+## New Dependencies
+
+    https://trac.cyberduck.io/wiki/help/en/howto/cli
+
 ## Tabix Server
 
 You need a tabix HTTP server serving up controlled access data that's used in the variant calling pipeline.  We can't share this publicaly so email the authors for information about this component. 
