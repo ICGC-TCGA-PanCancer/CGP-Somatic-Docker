@@ -92,6 +92,9 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   private boolean SFTPUploadFiles = false;
   private boolean S3UploadFiles = false;
   private boolean SFTPUploadArchive = false;
+
+  // re-upload Bam
+  private String bamUploadStudyRefnameOverride, bamUploadAnalysisCenterOverride, controlAnalysisId, bamUploadScriptJobMem, bamUploadScriptJobSlots;
   
   private String 
           uploadArchivePath,
@@ -326,6 +329,13 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       vmInstanceCores = getProperty("vm_instance_cores");
       vmInstanceMemGb = getProperty("vm_instance_mem_gb");
       vmLocationCode = getProperty("vm_location_code");
+
+      // reupload bam
+      bamUploadStudyRefnameOverride = getProperty("bamUploadStudyRefnameOverride");
+      bamUploadAnalysisCenterOverride = getProperty("bamUploadAnalysisCenterOverride");
+      controlAnalysisId = getProperty("controlAnalysisId");
+      bamUploadScriptJobMem = getProperty("bamUploadScriptJobMem");
+      bamUploadScriptJobSlots = getProperty("bamUploadScriptJobSlots");
       
     } catch (Exception ex) {
       throw new RuntimeException(ex);
@@ -363,7 +373,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   @Override
   public void buildWorkflow() {
     Job controlBasJob = null;
-    String controlBam;
+    String controlBam = null;
     List<String> tumourBams = new ArrayList<String>();
     List<Job> tumourBasJobs = new ArrayList<Job>();
     
@@ -405,7 +415,9 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
 
         List<Job> downloadJobsList = new ArrayList<Job>();
         controlAnalysisId = getProperty("controlAnalysisId");
-        if (!localFileMode) {
+        if (localFileMode) {
+          controlBam = getProperty("controlBam");
+        } else {
           controlBam = controlAnalysisId + "/" + getProperty("controlBam");
         }
         controlBasJob = bamProvision(controlAnalysisId, controlBam, startWorkflow);
@@ -417,11 +429,11 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
         }
         downloadJobsList.add(controlBasJob);
 
-        // TODO
+        // TODO: just makes an echo command
         // optional upload of the downloaded tumor bam
         if (hasPropertyAndNotNull("bamUploadServer") && hasPropertyAndNotNull("bamUploadPemFile")) {
-          //Job normalBamUpload = alignedBamUploadJob(controlBasJob, bamUploadServer, bamUploadPemFile, controlAnalysisId, getProperty("controlBam"));
-          //normalBamUpload.addParent(controlBasJob);
+          Job normalBamUpload = alignedBamUploadJob(controlBasJob, gnosServer, bamUploadStudyRefnameOverride, bamUploadAnalysisCenterOverride, bamUploadServer, bamUploadPemFile, controlAnalysisId, getProperty("controlBam"), bamUploadScriptJobMem, bamUploadScriptJobSlots);
+          normalBamUpload.addParent(controlBasJob);
         }
 
         tumourAnalysisIds = Arrays.asList(getProperty("tumourAnalysisIds").split(":"));
@@ -446,11 +458,12 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
           }
           tumourBams.add(tumourBam);
           downloadJobsList.add(tumourBasJob);
-          
+
+          // TODO: just makes an echo command
           // optional upload of the downloaded tumor bam
           if (hasPropertyAndNotNull("bamUploadServer") && hasPropertyAndNotNull("bamUploadPemFile")) {
-            //Job tumourBamUpload = alignedBamUploadJob(tumourBasJob, bamUploadServer, bamUploadPemFile, tumourAnalysisIds.get(i), rawBams.get(i));
-            //tumourBamUpload.addParent(tumourBasJob);
+            Job tumourBamUpload = alignedBamUploadJob(tumourBasJob, gnosServer, bamUploadStudyRefnameOverride, bamUploadAnalysisCenterOverride, bamUploadServer, bamUploadPemFile, tumourAnalysisIds.get(i), rawBams.get(i), bamUploadScriptJobMem, bamUploadScriptJobSlots);
+            tumourBamUpload.addParent(tumourBasJob);
           }
         }
 
