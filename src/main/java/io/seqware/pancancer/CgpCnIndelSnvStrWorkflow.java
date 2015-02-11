@@ -36,6 +36,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   private static String COUNTDIR;
   private static String BBDIR;
   private boolean testMode=false;
+  private boolean localFileMode=false;
   private boolean cleanup = false;
   private boolean cleanupBams = false;
   
@@ -181,6 +182,11 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       if(hasPropertyAndNotNull("testMode")) {
         testMode=Boolean.valueOf(getProperty("testMode"));
         System.err.println("WARNING\n\tRunning in test mode, direct access BAM files will be used, change 'testMode' in ini file to disable\n");
+      }
+
+      if(hasPropertyAndNotNull("localFileMode")) {
+        localFileMode=Boolean.valueOf(getProperty("localFileMode"));
+        System.err.println("WARNING\n\tRunning in direct file mode, direct access BAM files will be used and assumed to be full paths but metadata will still be downloaded from GNOS, change 'localFileMode' in ini file to disable\n");
       }
       
       if(hasPropertyAndNotNull("uploadServer")) {
@@ -339,16 +345,17 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
         gnosDownload.setMaxMemory(memGnosDownload);
         gnosDownload.addParent(startTiming);
         // the file needs to end up in tumourBam/controlBam
+      } else {
+        // then need to symlink so the downstream isn't broken
+        gnosDownload = gnosSymlinkBaseJob(analysisId, bamFile);
+        gnosDownload.setMaxMemory(memGnosDownload);
+        gnosDownload.addParent(startTiming);
       }
 
       // get the BAS files
       basJob = basFileBaseJob(analysisId, bamFile);
       basJob.setMaxMemory(memBasFileGet);
-      if (localFileMode == true) {
-        
-      } else {
-        basJob.addParent(gnosDownload);
-      }
+      basJob.addParent(gnosDownload);
     }
     return basJob;
   }
@@ -393,13 +400,21 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
         Job stopDownload = markTime("download", "end");
         stopDownload.setMaxMemory(memMarkTime);
         stopDownload.addParent(prepTum);
-      }
-      else {
+
+      } else {
 
         List<Job> downloadJobsList = new ArrayList<Job>();
         controlAnalysisId = getProperty("controlAnalysisId");
-        controlBam = controlAnalysisId + "/" + getProperty("controlBam");
+        if (!localFileMode) {
+          controlBam = controlAnalysisId + "/" + getProperty("controlBam");
+        }
         controlBasJob = bamProvision(controlAnalysisId, controlBam, startWorkflow);
+        // this is being done because the above makes a symlink to <analysisId>/<bamname.bam>
+        // and subsequent steps expect this, so controlBam must be just the filename and not the full path
+        if (localFileMode) {
+          List<String> bamPath = Arrays.asList(getProperty("controlBam").split("/"));
+          controlBam = controlAnalysisId + "/" + bamPath.get(bamPath.size() - 1);
+        }
         downloadJobsList.add(controlBasJob);
 
         // TODO
@@ -419,9 +434,16 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
           throw new RuntimeException("Properties tumourAliquotIds and tumourBam decode to lists of different sizes");
         }
         for(int i=0; i<rawBams.size(); i++) {
-          String tumourBam = tumourAnalysisIds.get(i) + "/" + rawBams.get(i);
+          String tumourBam = rawBams.get(i);
+          if (!localFileMode) {
+            tumourBam = tumourAnalysisIds.get(i) + "/" + rawBams.get(i);
+          }
           Job tumourBasJob = bamProvision(tumourAnalysisIds.get(i), tumourBam, startWorkflow);
-          tumourBasJobs.add(tumourBasJob);  
+          tumourBasJobs.add(tumourBasJob);
+          if (localFileMode) {
+            List<String> bamPath = Arrays.asList(tumourBam.split("/"));
+            tumourBam = tumourAnalysisIds.get(i) + "/" + bamPath.get(bamPath.size() - 1);
+          }
           tumourBams.add(tumourBam);
           downloadJobsList.add(tumourBasJob);
           
@@ -1175,6 +1197,15 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
                   .addArgument("--retries 10 --sleep-min 1 --timeout-min 60");
                   /*.addArgument("gtdownload -c " + pemFile)
                   .addArgument("-v " + gnosServer + "/cghub/data/analysis/download/" + analysisId); */
+    return thisJob;
+  }
+
+  private Job gnosSymlinkBaseJob(String analysisId, String bamFile) {
+    Job thisJob = getWorkflow().createBashJob("GNOSSymlink");
+
+    thisJob.getCommand()
+        .addArgument("mkdir -p " + analysisId + "; ln -s "+bamFile+" "+analysisId+"/");
+
     return thisJob;
   }
   
