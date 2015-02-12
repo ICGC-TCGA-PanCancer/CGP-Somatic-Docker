@@ -194,12 +194,16 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       
       if(hasPropertyAndNotNull("testMode")) {
         testMode=Boolean.valueOf(getProperty("testMode"));
-        System.err.println("WARNING\n\tRunning in test mode, direct access BAM files will be used, change 'testMode' in ini file to disable\n");
+        if (testMode) {
+          System.err.println("WARNING\n\tRunning in test mode, direct access BAM files will be used, change 'testMode' in ini file to disable\n");
+        }
       }
 
       if(hasPropertyAndNotNull("localFileMode")) {
         localFileMode=Boolean.valueOf(getProperty("localFileMode"));
-        System.err.println("WARNING\n\tRunning in direct file mode, direct access BAM files will be used and assumed to be full paths but metadata will still be downloaded from GNOS, change 'localFileMode' in ini file to disable\n");
+        if (localFileMode) {
+          System.err.println("WARNING\n\tRunning in direct file mode, direct access BAM files will be used and assumed to be full paths but metadata will still be downloaded from GNOS, change 'localFileMode' in ini file to disable\n");
+        }
       }
       
       if(hasPropertyAndNotNull("uploadServer")) {
