@@ -377,17 +377,23 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
         gnosDownload.setMaxMemory(memGnosDownload);
         gnosDownload.addParent(startTiming);
         // the file needs to end up in tumourBam/controlBam
+        // get the BAS files
+        basJob = basFileBaseJob(analysisId, bamFile);
+        basJob.setMaxMemory(memBasFileGet);
+        basJob.addParent(gnosDownload); 
       } else {
         // then need to symlink so the downstream isn't broken
         gnosDownload = gnosSymlinkBaseJob(analysisId, bamFile);
         gnosDownload.setMaxMemory(memGnosDownload);
         gnosDownload.addParent(startTiming);
+        String[] bamPath = bamFile.split("/");
+        String newBamFile = analysisId + "/" + bamPath[bamPath.length - 1];
+        // get the BAS files
+        basJob = basFileBaseJob(analysisId, newBamFile);
+        basJob.setMaxMemory(memBasFileGet);
+        basJob.addParent(gnosDownload);   
       }
-
-      // get the BAS files
-      basJob = basFileBaseJob(analysisId, bamFile);
-      basJob.setMaxMemory(memBasFileGet);
-      basJob.addParent(gnosDownload);
+      
     }
     return basJob;
   }
@@ -680,6 +686,19 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       throw new RuntimeException(e);
     }
   }
+  
+    private Job uploadFilesToSynapse(String uploadPath, String uuid, List<String> tumourAliquotIds) {
+      Job upload = getWorkflow().createBashJob("uploadFilesToSFTP");
+      String glob = "";
+      for(String tumourAliquotId : tumourAliquotIds) {
+        glob = glob + " " + tumourAliquotId + ".*";
+      }
+      upload.getCommand()
+          .addArgument("cp "+uploadPath+"/"+uuid+"/analysis.xml "+uploadPath+"/"+uuid+"/"+uuid+".analysis.xml;")
+          .addArgument("cd "+uploadPath+"/"+uuid+";")
+          .addArgument("duck -e " + SFTPUploadMode + " -r -p '" + SFTPUploadPassword + "' -u " + SFTPUploadUsername + " --upload  sftp://" + SFTPUploadServer + "/" + SFTPUploadPath + " " + glob + " " +uuid+".analysis.xml;");
+      return(upload);
+    }
 
     private Job uploadFilesToSFTP(String uploadPath, String uuid, List<String> tumourAliquotIds) {
       Job upload = getWorkflow().createBashJob("uploadFilesToSFTP");
@@ -1252,8 +1271,8 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
             .addArgument(installBase)
             .addArgument("xml_to_bas.pl")
             .addArgument("-d " + gnosServer + "/cghub/metadata/analysisFull/" + analysisId)
-            .addArgument("-b " + analysisId + "/" + sampleBam)
-            .addArgument("-o " + analysisId + "/" + sampleBam + ".bas")
+            .addArgument("-b " + sampleBam)
+            .addArgument("-o " + sampleBam + ".bas")
             ;
     return thisJob;
   }
