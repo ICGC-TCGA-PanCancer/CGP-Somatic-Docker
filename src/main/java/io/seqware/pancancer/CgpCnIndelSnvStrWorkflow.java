@@ -92,6 +92,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   private boolean SFTPUploadFiles = false;
   private boolean S3UploadFiles = false;
   private boolean SFTPUploadArchive = false;
+  private boolean SynapseUpload = false;
 
   // re-upload Bam
   private String bamUploadStudyRefnameOverride, bamUploadAnalysisCenterOverride, controlAnalysisId, bamUploadScriptJobMem, bamUploadScriptJobSlots;
@@ -108,6 +109,10 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   private String vmInstanceType, vmInstanceCores, vmInstanceMemGb, vmLocationCode;
 
   private int coresAddressable, memWorkflowOverhead, memHostMbAvailable;
+  
+  private String SynapseUploadSFTPUsername, SynapseUploadSFTPPassword, 
+          SynapseUploadUsername, SynapseUploadPassword, SynapseUploadURL,
+          SynapseUploadParent;
 
   // UUID
   private String uuid = UUID.randomUUID().toString().toLowerCase();
@@ -172,6 +177,10 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       
       if(hasPropertyAndNotNull("SFTPUploadArchive")) {
         SFTPUploadArchive=Boolean.valueOf(getProperty("SFTPUploadArchive"));
+      }
+      
+      if(hasPropertyAndNotNull("SynapseUpload")) {
+        SynapseUpload=Boolean.valueOf(getProperty("SynapseUpload"));
       }
       
       if(hasPropertyAndNotNull("cleanup")) {
@@ -336,6 +345,14 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       controlAnalysisId = getProperty("controlAnalysisId");
       bamUploadScriptJobMem = getProperty("bamUploadScriptJobMem");
       bamUploadScriptJobSlots = getProperty("bamUploadScriptJobSlots");
+      
+      // synapse upload
+      SynapseUploadSFTPUsername = getProperty("SynapseUploadSFTPUsername");
+      SynapseUploadSFTPPassword = getProperty("SynapseUploadSFTPPassword");
+      SynapseUploadUsername = getProperty("SynapseUploadUsername");
+      SynapseUploadPassword = getProperty("SynapseUploadPassword");
+      SynapseUploadURL = getProperty("SynapseUploadURL");
+      SynapseUploadParent = getProperty("SynapseUploadParent");
       
     } catch (Exception ex) {
       throw new RuntimeException(ex);
