@@ -110,6 +110,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
 
   private int coresAddressable, memWorkflowOverhead, memHostMbAvailable;
   
+  // synapse upload variables
   private String SynapseUploadSFTPUsername, SynapseUploadSFTPPassword, 
           SynapseUploadUsername, SynapseUploadPassword, SynapseUploadURL,
           SynapseUploadParent;
@@ -324,10 +325,10 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       SFTPUploadPath = getProperty("SFTPUploadPath");
       if (!SFTPUploadPath.endsWith("/")) { SFTPUploadPath = SFTPUploadPath + "/"; }
       SFTPUploadServer = getProperty("SFTPUploadServer");
-      S3UploadBucketURL = getProperty("S3BucketURL");
+      S3UploadBucketURL = getProperty("S3UploadBucketURL");
       if (!S3UploadBucketURL.endsWith("/")) { S3UploadBucketURL = S3UploadBucketURL + "/"; }
-      S3UploadKey = getProperty("S3Key");
-      S3UploadSecretKey = getProperty("S3SecretKey");
+      S3UploadKey = getProperty("S3UploadKey");
+      S3UploadSecretKey = getProperty("S3UploadSecretKey");
       SFTPUploadMode = getProperty("SFTPUploadMode");
       SFTPUploadArchiveMode = getProperty("SFTPUploadArchiveMode");
       S3UploadFileMode = getProperty("S3UploadFileMode");
