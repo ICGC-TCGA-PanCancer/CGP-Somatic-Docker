@@ -57,9 +57,23 @@ All of the above on one line to make it easy to cut and paste into a terminal:
 
 Note: on BioNimbus I ran into an issue with r-cran-rcolorbrewer not being up to date with R 3.x.  See http://stackoverflow.com/questions/16503554/r-3-0-0-update-has-left-loads-of-2-x-packages-incompatible
 
-## New Dependencies
+You will also need Duck to transfer data to S3/SFTP.
 
-    https://trac.cyberduck.io/wiki/help/en/howto/cli
+See https://trac.cyberduck.io/wiki/help/en/howto/cli
+
+Finally, if you plan on using Synapse uploads see the setup instructions at https://github.com/ICGC-TCGA-PanCancer/vcf-uploader
+
+Specifically, this tool requires:
+
+    sudo apt-get install python-dev python-pip
+    sudo pip install synapseclient
+    sudo pip install python-dateutil
+    sudo pip install elasticsearch
+    sudo pip install xmltodict
+    sudo pip install pysftp
+    sudo pip install paramiko
+
+There are settings files that the workflow will attempt to create for you given the parameters you pass in.
 
 ## Tabix Server
 
