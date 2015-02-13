@@ -697,7 +697,6 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       Job upload = getWorkflow().createBashJob("uploadFilesToSynapse");
       upload.getCommand()
           .addArgument("cp "+uploadPath+"/"+uuid+"/analysis.xml "+uploadPath+"/"+uuid+"/"+uuid+".analysis.xml;")
-          .addArgument("cd "+uploadPath+"/"+uuid+";")
           .addArgument("synapse login -u '"+SynapseUploadUsername+"' -p '"+SynapseUploadPassword+"'  --rememberMe ;")
           .addArgument("echo '[sftp://tcgaftps.nci.nih.gov]\n" +
                        "username = "+SynapseUploadSFTPUsername+"\n" +
