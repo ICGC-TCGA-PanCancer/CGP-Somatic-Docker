@@ -656,19 +656,19 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
         
         if (hasPropertyAndNotNull("SFTPUploadFiles") && Boolean.valueOf(getProperty("SFTPUploadFiles"))) {
           // this is used to copy the contents of the upload directory to an SFTP server
-          Job uploadToSFTP = uploadFilesToSFTP(uploadArchivePath + "/" + uuid, uuid, tumourAliquotIds);
+          Job uploadToSFTP = uploadFilesToSFTP(uploadArchivePath, uuid, tumourAliquotIds);
           uploadToSFTP.addParent(uploadJob);
           uploadJobs.add(uploadToSFTP);
         }
         if (hasPropertyAndNotNull("S3UploadFiles") && Boolean.valueOf(getProperty("S3UploadFiles"))) {
           // this is used to copy the contents of the upload directory to an SFTP server
-          Job uploadToS3 = uploadFilesToS3(uploadArchivePath + "/" + uuid, uuid, tumourAliquotIds);
+          Job uploadToS3 = uploadFilesToS3(uploadArchivePath, uuid, tumourAliquotIds);
           uploadToS3.addParent(uploadJob);
           uploadJobs.add(uploadToS3);
         }
         if (SynapseUpload) {
           // this is used to copy the contents of the upload directory to an SFTP server
-          Job uploadToSynapse = uploadFilesToSynapse(uploadArchivePath + "/" + uuid, uuid);
+          Job uploadToSynapse = uploadFilesToSynapse(uploadArchivePath, uuid);
           uploadToSynapse.addParent(uploadJob);
           uploadJobs.add(uploadToSynapse);
         }
