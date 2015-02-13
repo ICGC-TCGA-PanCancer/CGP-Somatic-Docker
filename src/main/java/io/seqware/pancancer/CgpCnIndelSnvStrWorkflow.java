@@ -666,6 +666,12 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
           uploadToS3.addParent(uploadJob);
           uploadJobs.add(uploadToS3);
         }
+        if (SynapseUpload) {
+          // this is used to copy the contents of the upload directory to an SFTP server
+          Job uploadToSynapse = uploadFilesToSynapse(uploadArchivePath + "/" + uuid, uuid);
+          uploadToSynapse.addParent(uploadJob);
+          uploadJobs.add(uploadToSynapse);
+        }
 
         if (cleanup || cleanupBams) {
           // if we upload to GNOS then go ahead and delete all the large files
@@ -687,16 +693,16 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     }
   }
   
-    private Job uploadFilesToSynapse(String uploadPath, String uuid, List<String> tumourAliquotIds) {
-      Job upload = getWorkflow().createBashJob("uploadFilesToSFTP");
-      String glob = "";
-      for(String tumourAliquotId : tumourAliquotIds) {
-        glob = glob + " " + tumourAliquotId + ".*";
-      }
+    private Job uploadFilesToSynapse(String uploadPath, String uuid) {
+      Job upload = getWorkflow().createBashJob("uploadFilesToSynapse");
       upload.getCommand()
           .addArgument("cp "+uploadPath+"/"+uuid+"/analysis.xml "+uploadPath+"/"+uuid+"/"+uuid+".analysis.xml;")
           .addArgument("cd "+uploadPath+"/"+uuid+";")
-          .addArgument("duck -e " + SFTPUploadMode + " -r -p '" + SFTPUploadPassword + "' -u " + SFTPUploadUsername + " --upload  sftp://" + SFTPUploadServer + "/" + SFTPUploadPath + " " + glob + " " +uuid+".analysis.xml;");
+          .addArgument("synapse login -u '"+SynapseUploadUsername+"' -p '"+SynapseUploadPassword+"'  --rememberMe ;")
+          .addArgument("echo '[sftp://tcgaftps.nci.nih.gov]\n" +
+                       "username = "+SynapseUploadSFTPUsername+"\n" +
+                       "password = "+SynapseUploadSFTPPassword+"' > ~/.synapseConfig; ")
+          .addArgument("perl " + getWorkflowBaseDir() + "/bin/synapse_upload_vcf.pl --local-xml "+uploadPath+"/"+uuid+"/"+uuid+".analysis.xml --local-path "+uploadPath+"/"+uuid+" --parent-id "+SynapseUploadParent+" --sftp-url "+SynapseUploadURL+" ; ");
       return(upload);
     }
 
