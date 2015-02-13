@@ -1600,7 +1600,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
                 .addArgument("--workflow-version " + this.getBundle_version())
                 .addArgument("--seqware-version " + this.getSeqware_version());
 
-        job.setMaxMemory(uploadScriptJobMem + "900");
+        job.setMaxMemory(uploadScriptJobMem);
         job.setThreads(Integer.valueOf(uploadScriptJobSlots));
         job.addParent(parentJob);
         
