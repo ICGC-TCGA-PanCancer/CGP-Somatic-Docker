@@ -96,7 +96,7 @@ my $vm_instance_mem_gb = "unknown";
 my $vm_location_code   = "unknown";
 
 # TODO: check the argument counts here
-if ( scalar(@ARGV) < 12 || scalar(@ARGV) > 46 ) {
+if ( scalar(@ARGV) < 20 || scalar(@ARGV) > 63 ) {
     die "USAGE: 'perl gnos_upload_vcf.pl
        --metadata-urls <URLs_for_specimen-level_aligned_BAM_input_comma_sep>
        --vcfs <sample-level_vcf_file_path_comma_sep_if_multiple>
