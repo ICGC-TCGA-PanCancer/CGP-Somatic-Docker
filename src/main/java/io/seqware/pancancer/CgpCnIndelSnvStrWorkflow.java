@@ -724,7 +724,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       upload.getCommand()
           .addArgument("cp "+uploadPath+"/"+uuid+"/analysis.xml "+uploadPath+"/"+uuid+"/"+uuid+".analysis.xml;")
           .addArgument("cd "+uploadPath+"/"+uuid+";")
-          .addArgument("duck -e " + SFTPUploadMode + " -r -p '" + SFTPUploadPassword + "' -u " + SFTPUploadUsername + " --upload  sftp://" + SFTPUploadServer + "/" + SFTPUploadPath + " " + glob + " " +uuid+".analysis.xml;");
+          .addArgument("duck -e " + SFTPUploadMode + " -y -r -p '" + SFTPUploadPassword + "' -u " + SFTPUploadUsername + " --upload  sftp://" + SFTPUploadServer + "/" + SFTPUploadPath + " " + glob + " " +uuid+".analysis.xml;");
       return(upload);
     }
 
@@ -737,7 +737,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       upload.getCommand()
           .addArgument("cp "+uploadPath+"/"+uuid+"/analysis.xml "+uploadPath+"/"+uuid+"/"+uuid+".analysis.xml;")
           .addArgument("cd "+uploadPath+"/"+uuid+";")
-          .addArgument("duck -e " + S3UploadFileMode + " -r -p '" + S3UploadSecretKey + "' -u " + S3UploadKey + " --upload  " + S3UploadBucketURL + " " + glob + " " +uuid+".analysis.xml;");
+          .addArgument("duck -e " + S3UploadFileMode + " -y -r -p '" + S3UploadSecretKey + "' -u " + S3UploadKey + " --upload  " + S3UploadBucketURL + " " + glob + " " +uuid+".analysis.xml;");
       return(upload);
     }
 
@@ -745,14 +745,14 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       Job upload = getWorkflow().createBashJob("uploadArchiveToSFTP");
       //  sshpass -p 'password' sftp -o StrictHostKeyChecking=no username@tcgaftps.nci.nih.gov:/tcgapancan/pancan/variant_calling_pilot_64/OICR_Sanger_Core
       // duck -e overwrite -r -p 'password' -u username -d sftp://tcgaftps.nci.nih.gov/tcgapancan/pancan/variant_calling_pilot_64/OICR_Sanger_Core/f9c3bc8e-dbc4-1ed0-e040-11ac0d4803a9.svcp_1-0-2.20150106.somatic.sv.vcf.gz.tbi test.tbi
-      upload.getCommand().addArgument("duck -e " + SFTPUploadArchiveMode + " -r -p '" + SFTPUploadArchivePassword + "' -u " + SFTPUploadArchiveUsername + " --upload  sftp://" + SFTPUploadArchiveServer + "/" + SFTPUploadArchivePath + " " +  archivePath);
+      upload.getCommand().addArgument("duck -e " + SFTPUploadArchiveMode + " -y -r -p '" + SFTPUploadArchivePassword + "' -u " + SFTPUploadArchiveUsername + " --upload  sftp://" + SFTPUploadArchiveServer + "/" + SFTPUploadArchivePath + " " +  archivePath);
       return(upload);
     }
 
     private Job uploadArchiveToS3(String archivePath) {
       Job upload = getWorkflow().createBashJob("uploadArchiveToS3");
       // duck -e skip -r -p 'secretkey' -u 'key' -d s3://pan-cancer-testing/m2.tar.gz m2.tar.gz
-      upload.getCommand().addArgument("duck -e " + S3UploadArchiveMode + " -r -p '" + S3UploadArchiveSecretKey + "' -u '" + S3UploadArchiveKey + "' --upload  " + S3UploadArchiveBucketURL + " " +  archivePath);
+      upload.getCommand().addArgument("duck -e " + S3UploadArchiveMode + " -y -r -p '" + S3UploadArchiveSecretKey + "' -u '" + S3UploadArchiveKey + "' --upload  " + S3UploadArchiveBucketURL + " " +  archivePath);
       return(upload);
     }
 
