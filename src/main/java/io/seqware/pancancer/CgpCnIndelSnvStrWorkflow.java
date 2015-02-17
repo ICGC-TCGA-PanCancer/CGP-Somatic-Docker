@@ -114,6 +114,8 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   private String SynapseUploadSFTPUsername, SynapseUploadSFTPPassword, 
           SynapseUploadUsername, SynapseUploadPassword, SynapseUploadURL,
           SynapseUploadParent;
+  
+  private String duckJobMem;
 
   // UUID
   private String uuid = UUID.randomUUID().toString().toLowerCase();
@@ -358,6 +360,9 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       SynapseUploadPassword = getProperty("SynapseUploadPassword");
       SynapseUploadURL = getProperty("SynapseUploadURL");
       SynapseUploadParent = getProperty("SynapseUploadParent");
+      
+      // upload 
+      duckJobMem = getProperty("duckJobMem");
       
     } catch (Exception ex) {
       throw new RuntimeException(ex);
@@ -643,12 +648,14 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
           if (hasPropertyAndNotNull("SFTPUploadArchive") && Boolean.valueOf(getProperty("SFTPUploadArchive"))) {
             // this is used to copy the contents of the upload directory to an SFTP server
             Job uploadToSFTP = uploadArchiveToSFTP(uploadArchivePath + "/" + uuid + ".tar.gz");
+            uploadToSFTP.setMaxMemory(duckJobMem);
             uploadToSFTP.addParent(uploadJob);
             uploadJobs.add(uploadToSFTP);
           }
           if (hasPropertyAndNotNull("S3UploadArchive") && Boolean.valueOf(getProperty("S3UploadArchive"))) {
             // this is used to copy the contents of the upload directory to an SFTP server
             Job uploadToS3 = uploadArchiveToS3(uploadArchivePath + "/" + uuid + ".tar.gz");
+            uploadToS3.setMaxMemory(duckJobMem);
             uploadToS3.addParent(uploadJob);
             uploadJobs.add(uploadToS3);
           }
@@ -657,18 +664,21 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
         if (hasPropertyAndNotNull("SFTPUploadFiles") && Boolean.valueOf(getProperty("SFTPUploadFiles"))) {
           // this is used to copy the contents of the upload directory to an SFTP server
           Job uploadToSFTP = uploadFilesToSFTP(uploadArchivePath, uuid, tumourAliquotIds);
+          uploadToSFTP.setMaxMemory(duckJobMem);
           uploadToSFTP.addParent(uploadJob);
           uploadJobs.add(uploadToSFTP);
         }
         if (hasPropertyAndNotNull("S3UploadFiles") && Boolean.valueOf(getProperty("S3UploadFiles"))) {
           // this is used to copy the contents of the upload directory to an SFTP server
           Job uploadToS3 = uploadFilesToS3(uploadArchivePath, uuid, tumourAliquotIds);
+          uploadToS3.setMaxMemory(duckJobMem);
           uploadToS3.addParent(uploadJob);
           uploadJobs.add(uploadToS3);
         }
         if (SynapseUpload) {
           // this is used to copy the contents of the upload directory to an SFTP server
           Job uploadToSynapse = uploadFilesToSynapse(uploadArchivePath, uuid);
+          uploadToSynapse.setMaxMemory(duckJobMem);
           uploadToSynapse.addParent(uploadJob);
           uploadJobs.add(uploadToSynapse);
         }
