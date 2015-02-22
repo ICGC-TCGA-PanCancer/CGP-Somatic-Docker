@@ -181,7 +181,11 @@ GetOptions(
 say "SETTING UP OUTPUT DIR";
 
 my $ug = Data::UUID->new;
-if ($uuid eq "") {
+# So if the UUID exists then this submission has been tried before and failed
+# The right thing to do here is create a new UUID for the submission since 
+# writing the code to pick up a partial submission and complete it would
+# require a complete refactor of this tool
+if ($uuid eq "" || -e "$output_dir/$uuid") {
   $uuid = lc($ug->create_str());
 }
 
@@ -255,7 +259,7 @@ for ( my $i = 0 ; $i < scalar(@tarball_arr) ; $i++ ) {
     my $tarball_check = `cat $md5_tarball_file_arr[$i]`;
     chomp $tarball_check;
     push @tarball_checksums, $tarball_check;
-    run("$link_method $pwd/$tarball_arr[$i] $output_dir/");
+    run("$link_method $pwd/$tarball_arr[$i] $output_dir/") if (not (-e "$output_dir/$tarball_arr[$i]"));
 }
 
 say 'DOWNLOADING METADATA FILES';
