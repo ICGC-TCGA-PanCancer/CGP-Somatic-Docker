@@ -1,5 +1,13 @@
 # 1.0.5
 
+## TODO
+
+* Romina needs to read the metadata from local file path
+* we need better error catching in the various upload tools
+
+## Done
+
+* Please see the important note in the README about upload paths for S3, SFTP, and Synapse uploads.
 * Added a download entry to the timing JSON object. So overall runtime of the workflow (not including upload) and just the download portion in seconds can be found in variant_timing_metrics, `{"workflow":{"Wall_s":<seconds>}, "download":{"Wall_s":<seconds>}}`
 * Note about output options, there are now several, please read carefully:
     * You can specify the output_prefix and output_dir as an external/shared filesystem for safekeeping of the output files. Note, your output_dir should include a unique string so it doesn't overwrite previous results.

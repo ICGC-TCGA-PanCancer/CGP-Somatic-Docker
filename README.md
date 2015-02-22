@@ -204,11 +204,17 @@ In these cases _do not_ modify the ``*-qsub.opts`` file but instead reduce the p
 
 (the numeric component of 'script stub' was correct at time of writing, it may drift)
 
-## Notes About Upload Paths
+## Note About SFTP Upload Paths
 
 You *must* create the upload directories ahead of time for SFTP/Synapse uploads.  The tools I'm using *will not* automatically create new directories for you.  What's worse, they exit with "0" exit status if the remote path doesn't exist, making it very difficult to detect if the upload has failed.  Make sure you create the destination directories ahead of time.
 
+## Note About S3 Upload Path
+
 For S3, the path will automatically be created.
+
+## Note About Synapse Upload Path
+
+You must have permission to the parent-id, for example syn3155834 for the Sanger submissions for the PanCancer project.  If you don't have permissions the tool will crash but not report an error!  So make sure you can add to the parent ahead of time.
 
 ## Building CGP Workflow Dependencies - Optional
 
