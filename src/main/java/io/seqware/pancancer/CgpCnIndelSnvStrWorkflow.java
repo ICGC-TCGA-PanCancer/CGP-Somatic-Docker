@@ -719,12 +719,12 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       Job upload = getWorkflow().createBashJob("uploadFilesToSFTP");
       String glob = "";
       for(String tumourAliquotId : tumourAliquotIds) {
-        glob = glob + " " + tumourAliquotId + ".*";
+        glob = glob + " `pwd`/" + tumourAliquotId + ".*";
       }
       upload.getCommand()
           .addArgument("cp "+uploadPath+"/"+uuid+"/analysis.xml "+uploadPath+"/"+uuid+"/"+uuid+".analysis.xml;")
           .addArgument("cd "+uploadPath+"/"+uuid+";")
-          .addArgument("duck -e " + SFTPUploadMode + " -y -r -p '" + SFTPUploadPassword + "' -u " + SFTPUploadUsername + " --upload  sftp://" + SFTPUploadServer + "/" + SFTPUploadPath + " " + glob + " " +uuid+".analysis.xml;");
+          .addArgument("duck -e " + SFTPUploadMode + " -y -r -p '" + SFTPUploadPassword + "' -u " + SFTPUploadUsername + " --upload  sftp://" + SFTPUploadServer + "/" + SFTPUploadPath + " " + glob + " `pwd`/" +uuid+".analysis.xml;");
       return(upload);
     }
 
@@ -732,12 +732,12 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       Job upload = getWorkflow().createBashJob("uploadFilesToS3");
       String glob = "";
       for(String tumourAliquotId : tumourAliquotIds) {
-        glob = glob + " " + tumourAliquotId + ".*";
+        glob = glob + " `pwd`/" + tumourAliquotId + ".*";
       }
       upload.getCommand()
           .addArgument("cp "+uploadPath+"/"+uuid+"/analysis.xml "+uploadPath+"/"+uuid+"/"+uuid+".analysis.xml;")
           .addArgument("cd "+uploadPath+"/"+uuid+";")
-          .addArgument("duck -e " + S3UploadFileMode + " -y -r -p '" + S3UploadSecretKey + "' -u " + S3UploadKey + " --upload  " + S3UploadBucketURL + " " + glob + " " +uuid+".analysis.xml;");
+          .addArgument("duck -e " + S3UploadFileMode + " -y -r -p '" + S3UploadSecretKey + "' -u " + S3UploadKey + " --upload  " + S3UploadBucketURL + " " + glob + " `pwd`/" +uuid+".analysis.xml;");
       return(upload);
     }
 
