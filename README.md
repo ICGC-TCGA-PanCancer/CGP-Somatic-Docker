@@ -57,11 +57,11 @@ All of the above on one line to make it easy to cut and paste into a terminal:
 
 Note: on BioNimbus I ran into an issue with r-cran-rcolorbrewer not being up to date with R 3.x.  See http://stackoverflow.com/questions/16503554/r-3-0-0-update-has-left-loads-of-2-x-packages-incompatible
 
-You will also need Duck to transfer data to S3/SFTP.
+You will also need Duck to transfer data to SFTP.
 
 See https://trac.cyberduck.io/wiki/help/en/howto/cli
 
-Finally, if you plan on using Synapse uploads see the setup instructions at https://github.com/ICGC-TCGA-PanCancer/vcf-uploader
+If you plan on using Synapse uploads see the setup instructions at https://github.com/ICGC-TCGA-PanCancer/vcf-uploader
 
 Specifically, this tool requires:
 
@@ -74,6 +74,18 @@ Specifically, this tool requires:
     sudo pip install paramiko
 
 There are settings files that the workflow will attempt to create for you given the parameters you pass in.
+
+If you plan on uploading to S3 you will need the Amazon command line tools.  Install them using:
+
+        sudo apt-get install python-pip
+        sudo pip install awscli
+
+The workflow will setup your credential files when called.
+
+Further details can be found at the following:
+
+* https://aws.amazon.com/cli/
+* http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html
 
 ## Tabix Server
 

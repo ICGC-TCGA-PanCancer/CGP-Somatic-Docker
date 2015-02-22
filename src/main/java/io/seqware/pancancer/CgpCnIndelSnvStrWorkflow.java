@@ -728,7 +728,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       return(upload);
     }
 
-    private Job uploadFilesToS3(String uploadPath, String uuid, List<String> tumourAliquotIds) {
+    private Job uploadFilesToS3Duck(String uploadPath, String uuid, List<String> tumourAliquotIds) {
       Job upload = getWorkflow().createBashJob("uploadFilesToS3");
       String glob = "";
       for(String tumourAliquotId : tumourAliquotIds) {
@@ -741,6 +741,23 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       return(upload);
     }
 
+    private Job uploadFilesToS3(String uploadPath, String uuid, List<String> tumourAliquotIds) {
+      Job upload = getWorkflow().createBashJob("uploadFilesToS3");
+      String glob = "";
+      for(String tumourAliquotId : tumourAliquotIds) {
+        glob = glob + " `pwd`/" + tumourAliquotId + ".*";
+      }
+      upload.getCommand()
+        .addArgument("mkdir -p ~/.aws/; ")
+        .addArgument("echo '[default]\n" +
+          "aws_access_key_id = "+S3UploadArchiveKey+"\n" +
+          "aws_secret_access_key = "+S3UploadArchiveSecretKey+"' > ~/.aws/config; ")
+        .addArgument("cp "+uploadPath+"/"+uuid+"/analysis.xml "+uploadPath+"/"+uuid+"/"+uuid+".analysis.xml;")
+        .addArgument("cd "+uploadPath+"/"+uuid+";")
+        .addArgument("aws s3 cp " + glob + " `pwd`/" +uuid+".analysis.xml " + S3UploadArchiveBucketURL + ";");
+      return(upload);
+    }    
+    
     private Job uploadArchiveToSFTP(String archivePath) {
       Job upload = getWorkflow().createBashJob("uploadArchiveToSFTP");
       //  sshpass -p 'password' sftp -o StrictHostKeyChecking=no username@tcgaftps.nci.nih.gov:/tcgapancan/pancan/variant_calling_pilot_64/OICR_Sanger_Core
@@ -749,13 +766,24 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       return(upload);
     }
 
-    private Job uploadArchiveToS3(String archivePath) {
+    private Job uploadArchiveToS3Duck(String archivePath) {
       Job upload = getWorkflow().createBashJob("uploadArchiveToS3");
       // duck -e skip -r -p 'secretkey' -u 'key' -d s3://pan-cancer-testing/m2.tar.gz m2.tar.gz
       upload.getCommand().addArgument("duck -e " + S3UploadArchiveMode + " -y -r -p '" + S3UploadArchiveSecretKey + "' -u '" + S3UploadArchiveKey + "' --upload  " + S3UploadArchiveBucketURL + " `readlink -f " +  archivePath + "`");
       return(upload);
     }
 
+    private Job uploadArchiveToS3(String archivePath) {
+      Job upload = getWorkflow().createBashJob("uploadArchiveToS3");
+      upload.getCommand()
+        .addArgument("mkdir -p ~/.aws/; ")
+        .addArgument("echo '[default]\n" +
+          "aws_access_key_id = "+S3UploadArchiveKey+"\n" +
+          "aws_secret_access_key = "+S3UploadArchiveSecretKey+"' > ~/.aws/config; ")
+        .addArgument("aws s3 cp `readlink -f " + archivePath + "` " + S3UploadArchiveBucketURL + ";");
+      return(upload);
+    }    
+    
     /**
    * This builds the workflow for a pair of samples
    * The generic buildWorkflow section will choose the pair to be processed and 
