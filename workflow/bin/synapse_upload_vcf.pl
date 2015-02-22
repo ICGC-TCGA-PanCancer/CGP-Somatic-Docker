@@ -14,6 +14,8 @@ use XML::XPath;
 use XML::XPath::XMLParser;
 use JSON;
 
+use Cwd 'abs_path';
+
 use Data::Dumper;
 
 #############################################################################################
@@ -146,7 +148,10 @@ while (my ($analysis_id,$metad) = each %to_be_processed) {
 
     my $upload_flag = $local_path ? '--upload-files' : '';
 
-    run("./synapse_upload_vcf $upload_flag --parentId $parent_id  < $output_dir/$analysis_id.json");
+    my $helper = abs_path($0);
+    $helper =~ s/\.pl//g;
+
+    run("$helper $upload_flag --parentId $parent_id  < $output_dir/$analysis_id.json");
 
 }
 
