@@ -204,6 +204,12 @@ In these cases _do not_ modify the ``*-qsub.opts`` file but instead reduce the p
 
 (the numeric component of 'script stub' was correct at time of writing, it may drift)
 
+## Notes About Upload Paths
+
+You *must* create the upload directories ahead of time for SFTP/Synapse uploads.  The tools I'm using *will not* automatically create new directories for you.  What's worse, they exit with "0" exit status if the remote path doesn't exist, making it very difficult to detect if the upload has failed.  Make sure you create the destination directories ahead of time.
+
+For S3, the path will automatically be created.
+
 ## Building CGP Workflow Dependencies - Optional
 
 The workflow build process pulls the various binary dependencies hosted on our Artifactory server.  If, for some reason, you need to rebuild these follow this process. If you're using x86\_64 on Ubuntu 12.04 then you should be fine, this is just provided if you need to start from scratch.
