@@ -1108,16 +1108,21 @@ sub getBlock {
 sub download_url {
     my ( $url, $path ) = @_;
 
-    my $response = run("wget -q -O $path $url");
-    if ($response) {
+    if ($url =~ /^https:\/\// || $url =~ /^http:\/\//) {
+      my $response = run("wget -q -O $path $url");
+      if ($response) {
         $ENV{PERL_LWP_SSL_VERIFY_HOSTNAME} = 0;
         $response = run("lwp-download $url $path");
         if ($response) {
-            say "ERROR DOWNLOADING: $url";
-            exit 1;
+          say "ERROR DOWNLOADING: $url";
+          exit 1;
         }
+      }
+      return $path;
+    } else {
+      my $response = run("cp $url $path");
+      die "PROBLEMS COPYING FILE: 'cp $url $path'" if ($response);
     }
-    return $path;
 }
 
 sub getVal {
