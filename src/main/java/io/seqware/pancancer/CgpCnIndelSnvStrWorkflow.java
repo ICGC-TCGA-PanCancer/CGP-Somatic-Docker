@@ -1345,11 +1345,15 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     thisJob.getCommand()
             .addArgument(getWorkflowBaseDir()+ "/bin/wrapper.sh")
             .addArgument(installBase)
-            .addArgument("xml_to_bas.pl")
-            .addArgument("-d " + gnosServer + "/cghub/metadata/analysisFull/" + analysisId)
+            .addArgument("xml_to_bas.temp.pl")
             .addArgument("-b " + sampleBam)
             .addArgument("-o " + sampleBam + ".bas")
             ;
+    if (localFileMode && localXMLMetadataPath != null) {
+      thisJob.getCommand().addArgument("-l " + localXMLMetadataPath + "/data_" + analysisId + ".xml");
+    } else {
+      thisJob.getCommand().addArgument("-d " + gnosServer + "/cghub/metadata/analysisFull/" + analysisId);
+    }
     return thisJob;
   }
   
