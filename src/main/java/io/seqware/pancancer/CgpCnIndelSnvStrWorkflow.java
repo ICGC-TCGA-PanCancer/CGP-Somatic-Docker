@@ -1305,7 +1305,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     Job thisJob = getWorkflow().createBashJob("GNOSSymlink");
 
     thisJob.getCommand()
-        .addArgument("mkdir -p " + analysisId + "; ln -s "+bamFile+" "+analysisId+"/");
+        .addArgument("mkdir -p " + analysisId + " && ln -s "+bamFile+" "+analysisId+"/ && ln -s "+bamFile+".bai "+analysisId+"/");
 
     return thisJob;
   }
