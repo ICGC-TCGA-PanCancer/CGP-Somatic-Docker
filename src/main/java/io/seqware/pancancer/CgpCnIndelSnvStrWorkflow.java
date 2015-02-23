@@ -120,6 +120,9 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   // UUID
   private String uuid = UUID.randomUUID().toString().toLowerCase();
 
+  // if localFileMode, this is the path at which the workflow will find the XML files used for metadata in the upload of VCF
+  private String localXMLMetadataPath = null;
+  private String localBamFilePathPrefix = null;
 
   private void init() {
     try {
@@ -205,6 +208,12 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
         localFileMode=Boolean.valueOf(getProperty("localFileMode"));
         if (localFileMode) {
           System.err.println("WARNING\n\tRunning in direct file mode, direct access BAM files will be used and assumed to be full paths but metadata will still be downloaded from GNOS, change 'localFileMode' in ini file to disable\n");
+          if(hasPropertyAndNotNull("localXMLMetadataPath")) {
+            localXMLMetadataPath = getProperty("localXMLMetadataPath");
+          }
+          if(hasPropertyAndNotNull("localBamFilePathPrefix")) {
+            localBamFilePathPrefix = getProperty("localBamFilePathPrefix");
+          }
         }
       }
       
@@ -1140,15 +1149,32 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     Job thisJob = getWorkflow().createBashJob("vcfUpload");
     
     String metadataUrls = new String();
-    metadataUrls = metadataUrls.concat(gnosServer)
-                              .concat("/cghub/metadata/analysisFull/")
-                              .concat(controlAnalysisId);
-    for(String tumourAnalysisId : tumourAnalysisIds) {
-      metadataUrls = metadataUrls.concat(",")
-                              .concat(gnosServer)
-                              .concat("/cghub/metadata/analysisFull/")
-                              .concat(tumourAnalysisId);
-                              
+    
+    // construct the metadata URLs or, if local file mode, generate a path to them
+    // using prefix and file naming convention from decider
+    if (localFileMode && localXMLMetadataPath != null) {
+      metadataUrls = metadataUrls.concat(localXMLMetadataPath)
+                                .concat("/data_")
+                                .concat(controlAnalysisId)
+                                .concat(".xml");
+      for(String tumourAnalysisId : tumourAnalysisIds) {
+        metadataUrls = metadataUrls.concat(",")
+                                .concat(localXMLMetadataPath)
+                                .concat("/data_")
+                                .concat(tumourAnalysisId)
+                                .concat(".xml");
+      }
+    } else {
+      metadataUrls = metadataUrls.concat(gnosServer)
+                                .concat("/cghub/metadata/analysisFull/")
+                                .concat(controlAnalysisId);
+      for(String tumourAnalysisId : tumourAnalysisIds) {
+        metadataUrls = metadataUrls.concat(",")
+                                .concat(gnosServer)
+                                .concat("/cghub/metadata/analysisFull/")
+                                .concat(tumourAnalysisId);
+
+      }
     }
     
     String vcfs = new String();
@@ -1303,9 +1329,13 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
 
   private Job gnosSymlinkBaseJob(String analysisId, String bamFile) {
     Job thisJob = getWorkflow().createBashJob("GNOSSymlink");
-
+    String newBamFile = bamFile;
+    // So this is really ugly but if this is true then your using a decider and need to construct the input path
+    if (this.localFileMode && this.localBamFilePathPrefix != null) {
+      newBamFile = this.localBamFilePathPrefix + "/" + analysisId + "/" + bamFile;
+    }
     thisJob.getCommand()
-        .addArgument("mkdir -p " + analysisId + " && ln -s "+bamFile+" "+analysisId+"/ && ln -s "+bamFile+".bai "+analysisId+"/");
+        .addArgument("mkdir -p " + analysisId + " && ln -s "+newBamFile+" "+analysisId+"/ && ln -s "+newBamFile+".bai "+analysisId+"/");
 
     return thisJob;
   }
