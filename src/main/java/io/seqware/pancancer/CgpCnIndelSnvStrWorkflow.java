@@ -1238,6 +1238,9 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       if(hasPropertyAndNotNull("upload-skip") && Boolean.valueOf(getProperty("upload-skip"))) {
         thisJob.getCommand().addArgument("--skip-upload");
       }
+      if(hasPropertyAndNotNull("skip-validate") && Boolean.valueOf(getProperty("skip-validate"))) {
+        thisJob.getCommand().addArgument("--skip-validate");
+      }
     } catch (Exception e) {
       throw new RuntimeException(e);
     }

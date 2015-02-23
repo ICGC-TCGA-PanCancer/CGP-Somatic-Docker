@@ -181,11 +181,7 @@ GetOptions(
 say "SETTING UP OUTPUT DIR";
 
 my $ug = Data::UUID->new;
-# So if the UUID exists then this submission has been tried before and failed
-# The right thing to do here is create a new UUID for the submission since 
-# writing the code to pick up a partial submission and complete it would
-# require a complete refactor of this tool
-if ($uuid eq "" || -e "$output_dir/$uuid") {
+if ($uuid eq "") {
   $uuid = lc($ug->create_str());
 }
 
@@ -259,7 +255,7 @@ for ( my $i = 0 ; $i < scalar(@tarball_arr) ; $i++ ) {
     my $tarball_check = `cat $md5_tarball_file_arr[$i]`;
     chomp $tarball_check;
     push @tarball_checksums, $tarball_check;
-    run("$link_method $pwd/$tarball_arr[$i] $output_dir/") if (not (-e "$output_dir/$tarball_arr[$i]"));
+    run("$link_method $pwd/$tarball_arr[$i] $output_dir/");
 }
 
 say 'DOWNLOADING METADATA FILES';
@@ -403,20 +399,20 @@ sub upload_submission {
 
     my $cmd = "cgsubmit -s $upload_url -o metadata_upload.log -u $sub_path -c $key";
     #my $cmd = "cgsubmit -s $upload_url -o metadata_upload.log -u $sub_path -vv -c $key";
-    say "UPLOADING METADATA: $cmd";
+    say "UPLOADING METADATA CMD: $cmd";
     if ( not $test && not $skip_upload ) {
         croak "ABORT: No cgsubmit installed, aborting!" if( system("which cgsubmit"));
         return 1 if ( run($cmd) );
     }
 
     # we need to hack the manifest.xml to drop any files that are inputs and I won't upload again
-    modify_manifest_file( "$sub_path/manifest.xml", $sub_path ) unless ($test);
+    modify_manifest_file( "$sub_path/manifest.xml", $sub_path ) unless ($test || $skip_upload);
 
     my $log_file = 'upload.log';
     my $gt_upload_command = "cd $sub_path; gtupload -v -c $key -l ./$log_file -u ./manifest.xml; cd -";
-    say "UPLOADING DATA: $gt_upload_command LOG: $sub_path/$log_file";
+    say "UPLOADING DATA CMD: $gt_upload_command LOG: $sub_path/$log_file";
 
-    unless ( $test ) {
+    unless ( $test || $skip_upload ) {
         die "ABORT: No gtupload installed, aborting!" if ( system("which gtupload") );
         return 1 if ( GNOS::Upload->run_upload($gt_upload_command, "$sub_path/$log_file", $retries, $cooldown, $timeout_min) );
     }
