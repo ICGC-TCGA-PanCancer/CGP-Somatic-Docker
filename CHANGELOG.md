@@ -1,8 +1,8 @@
 # 1.0.5
 
-* Fixed an issue with cleanup option where rm failed previously.
+* Fixed an issue with cleanup option where "rm" failed previously.
 * You can now read the metadata XML files from a local file path rather than GNOS
-* xml_to_bas.temp.pl was created to give an option to reach metadata from disk, this needs to be patched upstream so the pom dependency has the fix
+* xml_to_bas.temp.pl was created to give an option to reach metadata from disk, this needs to be patched upstream so the pom dependency has the fix.
 * Note, make sure you read the below on various file upload options.  It's confusing and they don't produce errors reliably so be careful that your workflows are uploading where you think they are!
 * Please see the important note in the README about upload paths for S3, SFTP, and Synapse uploads.
 * Added a download entry to the timing JSON object. So overall runtime of the workflow (not including upload) and just the download portion in seconds can be found in variant_timing_metrics, `{"workflow":{"Wall_s":<seconds>}, "download":{"Wall_s":<seconds>}}`
