@@ -1406,7 +1406,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     }
     // this removes the whole working directory
     if (cleanup) {
-      thisJob.getCommand().addArgument("rm -rf .; ");
+      thisJob.getCommand().addArgument("rm -rf *; ");
     }
     return thisJob;
   }
