@@ -53,6 +53,12 @@
       <version>1.2.1</version>
       <type>tar.gz</type>
     </dependency>
+    <dependency>
+        <groupId>gt-upload-download-wrapper</groupId>
+        <artifactId>gt-upload-download-wrapper</artifactId>
+        <version>1.0.0</version>
+        <type>zip</type>
+    </dependency>
   </dependencies>
 
   <repositories>
