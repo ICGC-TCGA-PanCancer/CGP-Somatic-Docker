@@ -247,7 +247,7 @@ for ( my $i = 0 ; $i < scalar(@vcf_arr) ; $i++ ) {
 
     foreach my $file (@files) {
         my $command = "$link_method $pwd/$file $output_dir/";
-        run($command) if (not (-e "$pwd/$output_dir/$file"));
+        run($command) if (!(-e "$pwd/$output_dir/$file"));
     }
 }
 
@@ -391,6 +391,7 @@ sub validate_submission {
         die "ABORT: No cgsubmit installed, aborting!" if ( system("which cgsubmit") );
         return run($cmd);
     }
+    return(0);
 }
 
 # TODO: need to standardize on the return values... 1 or 0!!
@@ -400,7 +401,7 @@ sub upload_submission {
     my $cmd = "cgsubmit -s $upload_url -o metadata_upload.log -u $sub_path -c $key";
     #my $cmd = "cgsubmit -s $upload_url -o metadata_upload.log -u $sub_path -vv -c $key";
     say "UPLOADING METADATA CMD: $cmd";
-    if ( not $test && not $skip_upload ) {
+    if ( !$test && !$skip_upload ) {
         croak "ABORT: No cgsubmit installed, aborting!" if( system("which cgsubmit"));
         return 1 if ( run($cmd) );
     }
@@ -1118,11 +1119,11 @@ sub download_url {
           exit 1;
         }
       }
-      return $path;
     } else {
       my $response = run("cp $url $path");
       die "PROBLEMS COPYING FILE: 'cp $url $path'" if ($response);
     }
+    return $path;
 }
 
 sub getVal {

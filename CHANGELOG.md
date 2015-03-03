@@ -1,3 +1,7 @@
+# 1.0.5.1 Hotfix
+
+* fixes problems with gnos_upload_vcf.pl when working in "local file mode"
+
 # 1.0.5
 
 * Fixed an issue with cleanup option where "rm" failed previously.
