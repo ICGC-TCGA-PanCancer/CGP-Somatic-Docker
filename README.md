@@ -45,17 +45,47 @@ The following are the packages needed for Ubuntu 12.04:
     sudo apt-get install libglib2.0-dev
     sudo apt-get install zlib1g-dev
     # for the vcf-uploader
-    sudo apt-get install libxml-dom-perl libxml-xpath-perl libjson-perl libxml-libxml-perl
+    sudo apt-get install libxml-dom-perl libxml-xpath-perl libjson-perl libxml-libxml-perl time libdata-uuid-libuuid-perl libcarp-always-perl libipc-system-simple-perl 
 
 These packages are needed for execution, **even when pulling from Artifactory**:
 
-    sudo apt-get install r-base r-base-core r-cran-rcolorbrewer
+    sudo apt-get install r-base r-base-core r-cran-rcolorbrewer 
 
 All of the above on one line to make it easy to cut and paste into a terminal:
 
-    sudo apt-get autoclean; sudo apt-get update; sudo apt-get -y upgrade; sudo apt-get -y install libxml-dom-perl libxml-xpath-perl libjson-perl libxml-libxml-perl zlib1g-dev libglib2.0-dev libpstreams-dev libboost-all-dev libgd2-xpm-dev libncurses5-dev g++ pkg-config dh-autoreconf r-base r-base-core r-cran-rcolorbrewer
+    sudo apt-get autoclean; sudo apt-get update; sudo apt-get -y upgrade; sudo apt-get -y install libxml-dom-perl libxml-xpath-perl libjson-perl libxml-libxml-perl zlib1g-dev libglib2.0-dev libpstreams-dev libboost-all-dev libgd2-xpm-dev libncurses5-dev g++ pkg-config dh-autoreconf r-base r-base-core r-cran-rcolorbrewer time libdata-uuid-libuuid-perl libcarp-always-perl libipc-system-simple-perl 
 
 Note: on BioNimbus I ran into an issue with r-cran-rcolorbrewer not being up to date with R 3.x.  See http://stackoverflow.com/questions/16503554/r-3-0-0-update-has-left-loads-of-2-x-packages-incompatible
+
+You will also need Duck to transfer data to SFTP.
+
+See https://trac.cyberduck.io/wiki/help/en/howto/cli
+
+If you plan on using Synapse uploads see the setup instructions at https://github.com/ICGC-TCGA-PanCancer/vcf-uploader
+
+Specifically, this tool requires:
+
+    sudo apt-get install python-dev python-pip
+    sudo pip install synapseclient
+    sudo pip install python-dateutil
+    sudo pip install elasticsearch
+    sudo pip install xmltodict
+    sudo pip install pysftp
+    sudo pip install paramiko
+
+There are settings files that the workflow will attempt to create for you given the parameters you pass in.
+
+If you plan on uploading to S3 you will need the Amazon command line tools.  Install them using:
+
+        sudo apt-get install python-pip
+        sudo pip install awscli
+
+The workflow will setup your credential files when called.
+
+Further details can be found at the following:
+
+* https://aws.amazon.com/cli/
+* http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html
 
 ## Tabix Server
 
@@ -125,6 +155,23 @@ appropriate ``mem*PerThread`` and not the generic ``coresAddressable`` or ``memH
 
 As these steps will be running multiple threads (internally) each can share/donate memory to those running at the same time and so memory failures are reduced.
 
+### STDOUT/ERR under these processes
+
+For the processes where core and memory utilisation is managed by the underlying perl code and not Seqware/SGE directly (other than total available) the logs are written
+to the log area for the specific algorithm.  This is done so that the output from multiple threads isn't mixed on a single stream.
+
+It is easy to see where things got up to with something like:
+
+    ls -ltrh seqware-results/0/<ALG>/tmp*/logs/*.err | tail -n 10
+
+Where ``<ALG>`` can be:
+
+    brass
+    caveman
+    pindel
+
+There are also ``*.out`` files.
+
 ### How to update mem*PerThread part way through execution
 
 In these cases _do not_ modify the ``*-qsub.opts`` file but instead reduce the parallel threads by 2 as follows:
@@ -157,6 +204,18 @@ In these cases _do not_ modify the ``*-qsub.opts`` file but instead reduce the p
 
 (the numeric component of 'script stub' was correct at time of writing, it may drift)
 
+## Note About SFTP Upload Paths
+
+You *must* create the upload directories ahead of time for SFTP/Synapse uploads.  The tools I'm using *will not* automatically create new directories for you.  What's worse, they exit with "0" exit status if the remote path doesn't exist, making it very difficult to detect if the upload has failed.  Make sure you create the destination directories ahead of time.
+
+## Note About S3 Upload Path
+
+For S3, the path will automatically be created.
+
+## Note About Synapse Upload Path
+
+You must have permission to the parent-id, for example syn3155834 for the Sanger submissions for the PanCancer project.  If you don't have permissions the tool will crash but not report an error!  So make sure you can add to the parent ahead of time.
+
 ## Building CGP Workflow Dependencies - Optional
 
 The workflow build process pulls the various binary dependencies hosted on our Artifactory server.  If, for some reason, you need to rebuild these follow this process. If you're using x86\_64 on Ubuntu 12.04 then you should be fine, this is just provided if you need to start from scratch.
@@ -165,10 +224,10 @@ You need to build and install the following in this order:
 
 * [PCAP v1.2.3](https://github.com/ICGC-TCGA-PanCancer/PCAP-core/archive/v1.2.3.tar.gz)
 * [cgpBinCounts v1.0.0](https://github.com/cancerit/cgpBinCounts/archive/v1.0.0.tar.gz)
-* [cgpNgsQc v1.0.0](https://github.com/cancerit/cgpNgsQc/archive/v1.0.0.tar.gz)
+* [cgpNgsQc v1.0.2](https://github.com/cancerit/cgpNgsQc/archive/v1.0.2.tar.gz)
 * [cgpVcf v1.2.2](https://github.com/cancerit/cgpVcf/archive/v1.2.2.tar.gz)
 * [alleleCount v1.2.1](https://github.com/cancerit/alleleCount/archive/v1.2.1.tar.gz)
-* [ascatNgs v1.5.0](https://github.com/cancerit/ascatNgs/archive/v1.5.0.tar.gz)
+* [ascatNgs v1.5.1](https://github.com/cancerit/ascatNgs/archive/v1.5.1.tar.gz)
 * [cgpPindel v1.2.0](https://github.com/cancerit/cgpPindel/archive/v1.2.0.tar.gz)
 * [cgpCaVEManPostProcessing v1.0.2](https://github.com/cancerit/cgpCaVEManPostProcessing/archive/v1.0.2.tar.gz)
 * [cgpCaVEManWrapper v1.2.0](https://github.com/cancerit/cgpCaVEManWrapper/archive/v1.2.0.tar.gz)
