@@ -1,3 +1,7 @@
+# NEXT
+
+* Changes to core Sanger packages to fix error in limit based processing
+
 # 1.0.5.1 Hotfix
 
 * fixes problems with gnos_upload_vcf.pl when working in "local file mode"
