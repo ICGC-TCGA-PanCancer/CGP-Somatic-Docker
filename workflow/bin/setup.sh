@@ -44,12 +44,14 @@ repos=(
 
 # clear log file
 INIT_DIR=$(dirname $(readlink -f $0))
+export PERL5LIB $PERL5LIB
 echo > $INIT_DIR/setup.log
 set -eu
 
 for i in "${repos[@]}" ; do
   echo -n "Installing $i..."
   (
+    rm -rf current current.tar.gz
     get_distro $i
     cd current
     ./setup.sh $INIT_DIR/opt
