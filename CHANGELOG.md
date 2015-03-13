@@ -1,6 +1,8 @@
 # NEXT
 
 * Changes to core Sanger packages to fix error in limit based processing
+      * ArtifactId: SeqWare-CGP-SomaticCore_opt
+      * Version: 1.2.2
 
 # 1.0.5.1 Hotfix
 
