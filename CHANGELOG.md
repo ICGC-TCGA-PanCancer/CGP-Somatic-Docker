@@ -1,3 +1,9 @@
+# 1.0.6
+
+Todo:
+
+* need to add a new param that passes the URL for metadata even when working in full offline mode
+
 # 1.0.5.1 Hotfix
 
 * fixes problems with gnos_upload_vcf.pl when working in "local file mode"
