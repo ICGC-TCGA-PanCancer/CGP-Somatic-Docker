@@ -3,6 +3,7 @@
 Todo:
 
 * need to add a new param that passes the URL for metadata even when working in full offline mode
+* check to see if I expose timeouts in the conf file
 
 # 1.0.5.1 Hotfix
 
