@@ -4,6 +4,7 @@ Todo:
 
 * need to add a new param that passes the URL for metadata even when working in full offline mode, this is a workaround for Romina so she can generate valid XML while using local files
 * check to see if I expose timeouts in the conf file
+* patch in at least packageResults.pl to force SM field in BAM headers to lower case
 
 # 1.0.5.1 Hotfix
 
