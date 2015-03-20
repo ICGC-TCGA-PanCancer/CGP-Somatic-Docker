@@ -867,8 +867,8 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     Job[] pindelInputJobs = new Job[2];
     for(int i=0; i<2; i++) {
       Job inputParse = pindelBaseJob(tumourCount, tumourBam, controlBam, "cgpPindel", "input", i+1);
-      // If you tell SGE you are using ,multiple cores it multiplies the requested memory
-      inputParse.setMaxMemory( Integer.toString( Integer.parseInt(memPindelInput) / inputParse.getThreads() ) );
+      // If you tell SGE you are using ,multiple cores it multiplies the requested memory for you
+      inputParse.setMaxMemory( memPindelInput );
       inputParse.addParent(getTbiJob);
       pindelInputJobs[i] = inputParse;
     }
