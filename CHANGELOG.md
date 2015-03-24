@@ -4,9 +4,9 @@ Todo:
 
 * need to add a new param that passes the URL for metadata even when working in full offline mode, this is a workaround for Romina so she can generate valid XML while using local files
 * check to see if I expose timeouts in the conf file
-* patch in at least packageResults.pl to force SM field in BAM headers to lower case
+* patch in at least packageResults.pl to force SM field in BAM headers to lower case?
 * get corrected version of Keiran's tools that properly handle threading
-* updated version of Adam's GNOS wrappers that correctly timeout on a 0% upload GNOS connection.
+* updated version of Adam's GNOS wrappers that correctly timeout on a 0% upload GNOS connection... this new version of the code doesn't use perl threading which can be unreliable.  Also need to take this as an opportunity to make artifacts
 * an S3 mode where XML/BAMs are read from S3 URLs and the results written back to S3... we have the latter but the former needs to be done
 
 # 1.0.5.1 Hotfix
