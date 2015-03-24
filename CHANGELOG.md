@@ -7,6 +7,7 @@ Todo:
 * patch in at least packageResults.pl to force SM field in BAM headers to lower case
 * get corrected version of Keiran's tools that properly handle threading
 * updated version of Adam's GNOS wrappers that correctly timeout on a 0% upload GNOS connection.
+* an S3 mode where XML/BAMs are read from S3 URLs and the results written back to S3... we have the latter but the former needs to be done
 
 # 1.0.5.1 Hotfix
 
