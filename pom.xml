@@ -221,7 +221,7 @@
 							<outputDirectory>${basedir}/workflow/bin/lib/GNOS</outputDirectory>
 							<resources>
 								<resource>
-									<directory>${basedir}/target/tmp/gt-download-upload-wrapper-${gt-download-upload-wrapper.version}/lib/GNOS</directory>
+									<directory>${workflow-dir}/bin/gt-download-upload-wrapper-${gt-download-upload-wrapper.version}/lib/GNOS</directory>
 									<includes>
 										<include>*.pm</include>
 									</includes>
@@ -258,15 +258,14 @@
 				<version>2.10</version>
 				<executions>
 					<execution>
-						<id>unpack-gt-download-upload-scripts</id>
+						<id>unpack-gt-download-upload-wrapper-scripts</id>
 						<phase>process-sources</phase>
 						<goals>
 							<goal>unpack-dependencies</goal>
 						</goals>
 						<configuration>
 							<includeArtifactIds>gt-download-upload-wrapper</includeArtifactIds>
-							<includes>**/**/*.pm</includes>
-							<outputDirectory>${basedir}/target/tmp/</outputDirectory>
+							<outputDirectory>${workflow-dir}/bin</outputDirectory>
 						</configuration>
 					</execution>
 					<execution>
