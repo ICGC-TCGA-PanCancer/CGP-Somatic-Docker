@@ -11,7 +11,7 @@
   <!-- MAKE SURE YOU UPDATE THE workflow.properties FILE TOO -->
   <artifactId>SangerPancancerCgpCnIndelSnvStr</artifactId>
   <!-- MAKE SURE YOU UPDATE THE workflow.properties FILE TOO -->
-  <version>1.0.5</version>
+  <version>1.0.6</version>
   <packaging>jar</packaging>
   <!-- MAKE SURE YOU UPDATE THE workflow.properties FILE TOO -->
   <name>SangerPancancerCgpCnIndelSnvStr</name>
@@ -56,7 +56,7 @@
     <dependency>
         <groupId>gt-upload-download-wrapper</groupId>
         <artifactId>gt-upload-download-wrapper</artifactId>
-        <version>1.0.0</version>
+        <version>1.0.4</version>
         <type>zip</type>
     </dependency>
   </dependencies>
