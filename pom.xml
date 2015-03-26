@@ -26,8 +26,8 @@
 		<workflow-dir>${project.build.directory}/${workflow-full-name}/Workflow_Bundle_SangerPancancerCgpCnIndelSnvStr/${workflow-version}</workflow-dir>
 		<version.template.file>src/main/java/io/seqware/pancancer/Version.java.template</version.template.file>
 		<version.file>src/main/java/io/seqware/pancancer/Version.java</version.file>
-		<gt-download-upload-wrapper.version>1.0.3</gt-download-upload-wrapper.version>
-		<!-- <gt-download-upload-wrapper.path>gt-download-upload-wrapper-${gt-download-upload-wrapper.version}</gt-download-upload-wrapper.path> -->
+		<gt-download-upload-wrapper.version>2.0.1</gt-download-upload-wrapper.version>
+		<vcf-uploader.version>2.0.0</vcf-uploader.version>
 	</properties>
 
 	<dependencies>
@@ -37,6 +37,12 @@
 			<version>1.1.0</version>
 			<type>tar.gz</type>
 		</dependency> -->
+		<dependency>
+		    <groupId>vcf-uploader</groupId>
+		    <artifactId>vcf-uploader</artifactId>
+		    <version>${vcf-uploader.version}</version>
+		    <type>zip</type>
+		</dependency>
 		<dependency>
 			<groupId>io.seqware</groupId>
 			<artifactId>seqware-bin-linux-x86-64-jre-7.0.51</artifactId>
@@ -230,6 +236,27 @@
 							</resources>
 						</configuration>
 					</execution>
+					<!-- This execution will copy the vcf-uploader scripts from the unpacked dependency to the correct path in the output directory. -->
+					<execution>
+						<id>copy-vcf-downloader-uploader-files</id>
+						<phase>process-resources</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${basedir}/workflow/bin</outputDirectory>
+							<resources>
+								<resource>
+									<directory>${workflow-dir}/bin/vcf-uploader-${vcf-uploader.version}</directory>
+									<includes>
+										<include>*.pl</include>
+										<include>*.py</include>
+									</includes>
+									<filtering>true</filtering>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
 					<execution>
 						<id>copy-classes</id>
 						<!-- here the phase you need -->
@@ -265,6 +292,17 @@
 						</goals>
 						<configuration>
 							<includeArtifactIds>gt-download-upload-wrapper</includeArtifactIds>
+							<outputDirectory>${workflow-dir}/bin</outputDirectory>
+						</configuration>
+					</execution>
+					<execution>
+						<id>unpack-vcf-uploader</id>
+						<phase>process-sources</phase>
+						<goals>
+							<goal>unpack-dependencies</goal>
+						</goals>
+						<configuration>
+							<includeArtifactIds>vcf-uploader</includeArtifactIds>
 							<outputDirectory>${workflow-dir}/bin</outputDirectory>
 						</configuration>
 					</execution>

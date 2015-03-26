@@ -39,14 +39,15 @@ my $milliseconds_in_an_hour = 3600000;
 # VARIABLES #
 #############
 
-# min to wait for a retry
-my $cooldown = 1;
+# seconds to wait for a retry
+my $cooldown = 60;
 # 30 retries at 60 seconds each is 30 hours
 my $retries = 30;
 # retries for md5sum, 4 hours
-my $timeout_min = 60;
+my $md5_sleep = 240;
 
 my $vcfs;
+my $vcf_types;
 my $md5_file = "";
 my $vcfs_idx;
 my $md5_idx_file = "";
@@ -79,8 +80,6 @@ my $changelog_url =
 my $force_copy      = 0;
 my $study_ref_name  = "icgc_pancancer_vcf";
 my $analysis_center = "OICR";
-my $center_override = "";
-my $refcenter_override = "";
 my $metadata_url;
 my $make_runxml        = 0;
 my $make_expxml        = 0;
@@ -88,15 +87,9 @@ my $description_file   = "";
 my $pipeline_json_file = "";
 my $qc_json_file       = "";
 my $timing_json_file   = "";
-my $upload_archive     = "";
-my $uuid               = "";
-my $vm_instance_type   = "unknown";
-my $vm_instance_cores  = "unknown";
-my $vm_instance_mem_gb = "unknown";
-my $vm_location_code   = "unknown";
 
 # TODO: check the argument counts here
-if ( scalar(@ARGV) < 20 || scalar(@ARGV) > 63 ) {
+if ( scalar(@ARGV) < 12 || scalar(@ARGV) > 46 ) {
     die "USAGE: 'perl gnos_upload_vcf.pl
        --metadata-urls <URLs_for_specimen-level_aligned_BAM_input_comma_sep>
        --vcfs <sample-level_vcf_file_path_comma_sep_if_multiple>
@@ -115,8 +108,6 @@ if ( scalar(@ARGV) < 20 || scalar(@ARGV) > 63 ) {
        [--seqware-version <seqware_version_workflow_compiled_with>]
        [--description-file <file_path_for_description_txt>]
        [--study-refname-override <study_refname_override>]
-       [--center-override <center_override>]
-       [--ref-center-override <center_override>]
        [--analysis-center-override <analysis_center_override>]
        [--pipeline-json <pipeline_json_file>]
        [--qc-metrics-json <qc_metrics_json_file>]
@@ -126,12 +117,6 @@ if ( scalar(@ARGV) < 20 || scalar(@ARGV) > 63 ) {
        [--force-copy]
        [--skip-validate]
        [--skip-upload]
-       [--upload-archive <path_of_dir_to_copy_upload_to_and_make_tarball_uuid.tar.gz>]
-       [--vm-instance-type <vmInstanceType>]
-       [--vm-instance-cores <vmInstanceCores>]
-       [--vm-instance-mem-gb <vmInstanceMemGb>]
-       [--vm-location-code <vmLocationCode>]
-       [--uuid <uuis_for_use_as_upload_analysis_id>]
        [--test]\n";
 }
 
@@ -153,8 +138,6 @@ GetOptions(
     "seqware-version=s"          => \$seqware_version,
     "description-file=s"         => \$description_file,
     "study-refname-override=s"   => \$study_ref_name,
-    "center-override=s"          => \$center_override,
-    "ref-center-override=s"      => \$refcenter_override,
     "analysis-center-override=s" => \$analysis_center,
     "pipeline-json=s"            => \$pipeline_json_file,
     "qc-metrics-json=s"          => \$qc_json_file,
@@ -165,12 +148,6 @@ GetOptions(
     "skip-validate"              => \$skip_validate,
     "skip-upload"                => \$skip_upload,
     "test"                       => \$test,
-    "upload-archive=s"           => \$upload_archive,
-    "vm-instance-type=s"         => \$vm_instance_type,
-    "vm-instance-cores=s"        => \$vm_instance_cores,
-    "vm-instance-mem-gb=s"       => \$vm_instance_mem_gb,
-    "vm-location-code=s"         => \$vm_location_code,
-    "uuid=s"                     => \$uuid,
 );
 
 ##############
@@ -180,24 +157,22 @@ GetOptions(
 # setup output dir
 say "SETTING UP OUTPUT DIR";
 
+my $uuid = '';
 my $ug = Data::UUID->new;
-if ($uuid eq "") {
-  $uuid = lc($ug->create_str());
-}
 
-#if(-d "$output_dir") {
-#    opendir( my $dh, $output_dir);
-#    my @dirs = grep {-d "$output_dir/$_" && ! /^\.{1,2}$/} readdir($dh);
-#    if (scalar @dirs == 1) {
-#        $uuid = $dirs[0];
-#    }
-#    else {
-#        $uuid = lc($ug->create_str());
-#    }
-#}
-#else {
-#    $uuid = lc($ug->create_str());
-#}
+if(-d "$output_dir") {
+    opendir( my $dh, $output_dir);
+    my @dirs = grep {-d "$output_dir/$_" && ! /^\.{1,2}$/} readdir($dh);
+    if (scalar @dirs == 1) {
+        $uuid = $dirs[0];
+    }
+    else {
+        $uuid = lc($ug->create_str());
+    }
+}
+else {
+    $uuid = lc($ug->create_str());
+}
 
 $output_dir = "vcf/$output_dir";
 run("mkdir -p $output_dir/$uuid");
@@ -209,6 +184,7 @@ my $final_touch_file = $output_dir."upload_complete.txt";
 # parse values
 my @vcf_arr          = split /,/, $vcfs;
 my @md5_file_arr     = split /,/, $md5_file;
+my @vcf_types_arr    = split /,/, $vcf_types;
 my @vcfs_idx_arr     = split /,/, $vcfs_idx;
 my @md5_idx_file_arr = split /,/, $md5_idx_file;
 my @vcf_checksums;
@@ -247,7 +223,7 @@ for ( my $i = 0 ; $i < scalar(@vcf_arr) ; $i++ ) {
 
     foreach my $file (@files) {
         my $command = "$link_method $pwd/$file $output_dir/";
-        run($command) if (!(-e "$pwd/$output_dir/$file"));
+        run($command) if (not (-e "$pwd/$output_dir/$file"));
     }
 }
 
@@ -391,36 +367,25 @@ sub validate_submission {
         die "ABORT: No cgsubmit installed, aborting!" if ( system("which cgsubmit") );
         return run($cmd);
     }
-    return(0);
 }
 
 # TODO: need to standardize on the return values... 1 or 0!!
 sub upload_submission {
     my ($sub_path) = @_;
 
-    my $cmd = "cgsubmit -s $upload_url -o metadata_upload.log -u $sub_path -c $key";
-    #my $cmd = "cgsubmit -s $upload_url -o metadata_upload.log -u $sub_path -vv -c $key";
-    say "UPLOADING METADATA CMD: $cmd";
-    if ( !$test && !$skip_upload ) {
+    my $cmd = "cgsubmit -s $upload_url -o metadata_upload.log -u $sub_path -vv -c $key";
+    say "UPLOADING METADATA: $cmd";
+    if ( not $test && not $skip_upload ) {
         croak "ABORT: No cgsubmit installed, aborting!" if( system("which cgsubmit"));
         return 1 if ( run($cmd) );
     }
 
     # we need to hack the manifest.xml to drop any files that are inputs and I won't upload again
-    modify_manifest_file( "$sub_path/manifest.xml", $sub_path ) unless ($test || $skip_upload);
+    modify_manifest_file( "$sub_path/manifest.xml", $sub_path ) unless ($test);
 
-    my $log_file = 'upload.log';
-    my $gt_upload_command = "cd $sub_path; gtupload -v -c $key -l ./$log_file -u ./manifest.xml; cd -";
-    say "UPLOADING DATA CMD: $gt_upload_command LOG: $sub_path/$log_file";
-
-    unless ( $test || $skip_upload ) {
+    unless ( $test ) {
         die "ABORT: No gtupload installed, aborting!" if ( system("which gtupload") );
-        return 1 if ( GNOS::Upload->run_upload($gt_upload_command, "$sub_path/$log_file", $retries, $cooldown, $timeout_min) );
-    }
-
-    # now make an archive tarball if requested
-    if ($upload_archive ne "") {
-      return 1 if (run("mkdir -p $upload_archive/$uuid && rsync -Lrauv $sub_path/* $upload_archive/$uuid/ && cd $upload_archive && tar zcf $uuid.tar.gz $uuid"));
+        return 1 if ( GNOS::Upload->run_upload($sub_path, $key, $retries, $cooldown) );
     }
 
     # just touch this file to ensure monitoring tools know upload is complete
@@ -464,7 +429,7 @@ sub generate_submission {
 
     # populate refcenter from original BAM submission
     # @RG CN:(.*)
-    my $refcenter = "";
+    my $refcenter = "OICR";
 
     # @CO sample_id
     my $sample_id = "";
@@ -555,7 +520,7 @@ sub generate_submission {
         $participant_id = $participant_ids[0];
         my $index = 0;
         foreach my $bam_info ( @{ $m->{$file}{'run'} } ) {
-            if (defined($bam_info) && $bam_info->{data_block_name} ne '' ) {
+            if ( $bam_info->{data_block_name} ne '' ) {
 
                 my $pi = {};
                 $pi->{'input_info'}{'donor_id'}              = $participant_id;
@@ -582,11 +547,6 @@ sub generate_submission {
             }
         }
     }
-
-    # override if given on the command line
-    if (defined($center_override) && $center_override ne "") { $center_name = $center_override; }
-    if (defined($refcenter_override) && $refcenter_override ne "") { $refcenter = $refcenter_override; }
-
     my $str = to_json($pi2);
     $global_attr->{"pipeline_input_info"}{$str} = 1;
 
@@ -931,25 +891,6 @@ END
         </ANALYSIS_ATTRIBUTE>
 ";
 
-    # some metadata about this vm
-    $analysis_xml .= "        <ANALYSIS_ATTRIBUTE>
-          <TAG>vm_instance_type</TAG>
-          <VALUE>$vm_instance_type</VALUE>
-        </ANALYSIS_ATTRIBUTE>
-        <ANALYSIS_ATTRIBUTE>
-          <TAG>vm_instance_cores</TAG>
-          <VALUE>$vm_instance_cores</VALUE>
-        </ANALYSIS_ATTRIBUTE>
-        <ANALYSIS_ATTRIBUTE>
-          <TAG>vm_instance_mem_gb</TAG>
-          <VALUE>$vm_instance_mem_gb</VALUE>
-        </ANALYSIS_ATTRIBUTE>
-        <ANALYSIS_ATTRIBUTE>
-          <TAG>vm_location_code</TAG>
-          <VALUE>$vm_location_code</VALUE>
-        </ANALYSIS_ATTRIBUTE>
-";
-
     # TODO QC
     $analysis_xml .= "        <ANALYSIS_ATTRIBUTE>
           <TAG>variant_qc_metrics</TAG>
@@ -1109,19 +1050,14 @@ sub getBlock {
 sub download_url {
     my ( $url, $path ) = @_;
 
-    if ($url =~ /^https:\/\// || $url =~ /^http:\/\//) {
-      my $response = run("wget -q -O $path $url");
-      if ($response) {
+    my $response = run("wget -q -O $path $url");
+    if ($response) {
         $ENV{PERL_LWP_SSL_VERIFY_HOSTNAME} = 0;
         $response = run("lwp-download $url $path");
         if ($response) {
-          say "ERROR DOWNLOADING: $url";
-          exit 1;
+            say "ERROR DOWNLOADING: $url";
+            exit 1;
         }
-      }
-    } else {
-      my $response = run("cp $url $path");
-      die "PROBLEMS COPYING FILE: 'cp $url $path'" if ($response);
     }
     return $path;
 }
@@ -1129,9 +1065,7 @@ sub download_url {
 sub getVal {
     my ( $node, $key ) = @_;
 
-    if (!defined($node)) { return undef; }
-
-    if ( defined($node) && $node != undef ) {
+    if ( $node != undef ) {
         if ( defined( $node->getElementsByTagName($key) ) ) {
             if ( defined( $node->getElementsByTagName($key)->item(0) ) ) {
                 if (

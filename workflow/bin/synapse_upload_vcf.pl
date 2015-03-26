@@ -14,8 +14,6 @@ use XML::XPath;
 use XML::XPath::XMLParser;
 use JSON;
 
-use Cwd 'abs_path';
-
 use Data::Dumper;
 
 #############################################################################################
@@ -38,7 +36,7 @@ use constant xml_dir      => 'xml';              #
 use constant parent_id    => 'syn3155834';       #
 use constant pem_conf     => 'conf/pem.conf';    #
 
-use constant sftp_url     => 'sftp://tcgaftps.nci.nih.gov/tcgapancan/pancan/variant_calling_pilot_64/OICR_Sanger_Core';
+use constant jamboree_sftp_url  => 'sftp://tcgaftps.nci.nih.gov/tcgapancan/pancan/Sanger_workflow_variants/batch02';
 
 #############
 # VARIABLES #
@@ -50,16 +48,16 @@ my $xml_dir       = xml_dir;
 my $pem_file      = pem_file;
 my $parent_id     = parent_id;
 my $pem_conf      = pem_conf;
-my $sftp_url      = sftp_url;
 my $download      = 0;
+my $upload        = 0;
+my $jamboree_sftp_url = jamboree_sftp_url;
 
-my ($metadata_url,$use_cached_xml,$help,$pemconf,$local_path,$local_xml);
+my ($synapse_sftp_url,$metadata_url,$use_cached_xml,$help,$pemconf,$local_path,$local_xml,$metadata_url_file);
 $help = 1 unless @ARGV > 0;
 GetOptions(
     "metadata-url=s"   => \$metadata_url,
     "use-cached-xml"   => \$use_cached_xml,
     "local-xml=s"      => \$local_xml,
-    "sftp-url=s"       => \$sftp_url,
     "output-dir=s"     => \$output_dir,
     "xml-dir=s"        => \$xml_dir,
     "pem-file=s"       => \$pem_file,
@@ -67,25 +65,37 @@ GetOptions(
     "pem-conf=s"       => \$pem_conf,
     "local-path=s"     => \$local_path,
     "download"         => \$download,
-    "help"             => \$help
+    "upload"           => \$upload,
+    "help"             => \$help,
+    "jamboree-sftp-url=s" => \$jamboree_sftp_url,
+    "synapse-sftp-url=s"  => \$synapse_sftp_url,
+    "metadata-url-file=s" => \$metadata_url_file
     );
 
-die << 'END' if $help;
+say << 'END' and exit if $help;
 Usage: synapse_upload_vcf.pl[--metadata-url url] 
                             [--use-cached_xml] 
                             [--local-xml /path/to/local/metadata.xml -- Note: still downloads BWA metadata from GNOS]
+                            [--metadata-url-file /path/to/metadata_url_file -- a list of metadata urls]
                             [--output-dir dir]
                             [--xml-dir]
                             [--pem-file file.pem]
                             [--parent-id syn2897245]
-                            [--perm-conf conf/pem.conf]
-                            [--local-path /path/to/local/files] 
-                            [--sftp-url sftp://tcgaftps.nci.nih.gov/tcgapancan/pancan/variant_calling_pilot_64/OICR_Sanger_Core]
-                            [--download optional flag to Download files from GNOS]
+                            [--pem-conf conf/pem.conf]
+                            [--local-path /path/to/local/files turns off upload -- must have jamboree url also] 
+                            [--jamboree-sftp-url url of files that are ALREADY on the jamboree sftp server]
+                            [--synapse-sftp-url url to which files will be uploaded via synapse] 
+                            [--download optional flag to download vcf files from GNOS]
+                            [--upload files will only be uploaded to synapse if this option is selected]
                             [--help]
 END
 ;
- 
+
+
+unless ($upload || $download) {
+    die "You asked for neither download nor upload, nothing to do here.";
+}
+
 
 $output_dir = "vcf/$output_dir";
 run("mkdir -p $output_dir");
@@ -94,12 +104,23 @@ run("mkdir -p $xml_dir");
 my $pwd = `pwd`;
 chomp $pwd;
 
+
 # If we don't have a url, get the list by elastic search
 my @metadata_urls;
-unless ($metadata_url || $local_xml) {
-    say "Getting metadata URLs by elastic search...";
-    @metadata_urls = `./get_donors_by_elastic_search.pl`;
-    chomp @metadata_urls;
+unless ($metadata_url || $local_xml || $metadata_url_file) {
+    die "no metadata instructions, nothing to do here";
+#    say "Getting metadata URLs by elastic search...";
+#    @metadata_urls = `./get_donors_by_elastic_search.pl`;
+#    chomp @metadata_urls;
+}
+
+if ($metadata_url_file) {
+    open MFILE, $metadata_url_file or die "Could not open $metadata_url_file";
+    while (<MFILE>) {
+	chomp;
+	push @metadata_urls, $_;
+    }
+    close MFILE;
 }
 else {
     @metadata_urls = grep {defined $_} ($local_xml,$metadata_url);
@@ -133,11 +154,11 @@ if ($pem_conf && -e $pem_conf) {
     close CONF;
 }
 
+
 # Then, do the upload only for the most recent version
-my $go;
-while (my ($analysis_id,$metad) = each %to_be_processed) {
+META: while (my ($analysis_id,$metad) = each %to_be_processed) {
     next unless newest_workflow_version($metad);
-    #next unless $analysis_id =~ /2f8bb636-5828-4106-97cc-041a6842cf27|6a60ea77-f728-48c4-b83b-8a84bb61248a|803ca8c2-a57e-4d25-b6ae-410f60365b39/;
+
     my $json  = generate_output_json($metad);
 
     open JFILE, ">$output_dir/$analysis_id.json";
@@ -146,13 +167,13 @@ while (my ($analysis_id,$metad) = each %to_be_processed) {
 
     say "JSON saved as $output_dir/$analysis_id.json";
 
-    my $upload_flag = $local_path ? '--upload-files' : '';
-
-    my $helper = abs_path($0);
-    $helper =~ s/\.pl//g;
-
-    run("$helper $upload_flag --parentId $parent_id  < $output_dir/$analysis_id.json");
-
+  
+    if ($upload) {
+	my $upload_flag = $local_path ? '--upload-files' : '';
+	my $url_flag    = $synapse_sftp_url ? "--url $synapse_sftp_url" : '';
+	say "./synapse_upload_vcf $upload_flag $url_flag --parentId $parent_id  $output_dir/$analysis_id.json";
+	run("./synapse_upload_vcf $upload_flag $url_flag --parentId $parent_id  $output_dir/$analysis_id.json")
+    }
 }
 
 # Check to see if this donor has VCF results from a more recent
@@ -273,28 +294,30 @@ sub download_vcf_files {
     (my $base_url = $url) =~ s!^(https?://[^/]+)\S+!$1!;
     my $pem = $pem{$base_url} || $pem_file;
 
-    say "This is where I will be downloading files from GNOS";
+    # make sure the output dir path is not relative
     chdir $output_dir or die $!;
+    chomp($output_dir = `pwd`);
+
+    my $downloaded;
     for my $file (@files) {
-	chomp($file = `basename $file`);
+	chomp(my $basename = `basename $file`);
+
 	my $download_url = $metad->{$url}->{download_url};
 	my ($analysis_id) = $download_url =~ m!/([^/]+)$!;
-	my $command = "gtdownload -c $pem_file ";
-	$command .= "$download_url/$file";
+	my $command = "gtdownload -c $pem_file $download_url";
+	
+	# gtdownload downloads all of the files in one go   
+	unless ($downloaded) {
+	    say $command;
+	    run($command);
+	    $downloaded++;
+	}
 
-        #say "This would be the download command:";
-	say $command;
-
-	# real download
-	# system $command;
-
-	# fake download!
-	my $rand = rand()*100;
-	system "echo $rand > $file";
-
-	unless (-e $file) {
+	my $downloaded_file = "$output_dir/$analysis_id/$basename";
+	unless (-e "$downloaded_file") {
 	    die "There was a problem getting this file: $file";
 	}
+
     }
 
     chdir $pwd or die $!;
@@ -306,9 +329,10 @@ sub get_files {
     my ($analysis_id) = $url =~ m!/([^/]+)$!;
     my $file_data     = $metad->{$url}->{file};
 
-    if ($download && !$local_path) {
+    if ($download) {
 	my @files_to_download = map{"$output_dir/$analysis_id/$_"} map {$_->{filename}} @$file_data;
 	download_vcf_files($metad,$url,@files_to_download);
+	$local_path = "$output_dir/$analysis_id";
     }
 
     if ($local_path) {
@@ -318,8 +342,10 @@ sub get_files {
 	$local_path =~ s!/$!!;
     }
 
-
-    my $file_path = $local_path || $sftp_url;
+    # use local path or user supplied URL if available
+    # if $local_path, the files are local (upload to synapse)
+    # if $jamboree_sftp_url, files are already on jamboree (do not upload to synapse)
+    my $file_path = $local_path || $jamboree_sftp_url || jamboree_sftp_url;
     my @files_to_upload   = map{$file_path . "/$_"} map {$_->{filename}} @$file_data;
     return \@files_to_upload;
 }
@@ -464,8 +490,9 @@ sub download_url {
         $ENV{PERL_LWP_SSL_VERIFY_HOSTNAME} = 0;
         $response = run("lwp-download $url $path");
         if ($response) {
-            say "ERROR DOWNLOADING: $url";
-            exit 1;
+            say STDERR "ERROR DOWNLOADING: $url aborting this donor";
+	    next META;
+            #exit 1;
         }
     }
     return $path;

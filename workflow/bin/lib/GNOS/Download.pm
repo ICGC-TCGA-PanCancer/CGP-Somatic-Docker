@@ -7,10 +7,7 @@ use feature qw(say);
 use autodie;
 use Carp qw( croak );
 
-use Config;
-$Config{useithreads} or croak('Recompile Perl with threads to run this program.');
-use threads 'exit' => 'threads_only';
-use Storable 'dclone';
+use File::Tail;
 
 use constant {
     MILLISECONDS_IN_AN_HOUR => 3600000,
@@ -21,100 +18,82 @@ use constant {
 #############################################################################################
 #  This module is wraps the gtdownload script and retries the downloads if it freezes up.   #
 #############################################################################################
-# USAGE: run_upload($command, $file, $retries, $cooldown_min, $timeout_min);                #
+# USAGE: run_download($class, $pem, $url, $file, $max_attempts, $timeout_minutes);          #
 #        Where the command is the full gtdownlaod command                                   #
 #############################################################################################
 
 sub run_download {
-    my ($class, $command, $file, $retries, $cooldown_min, $timeout_min) = @_;
+    my ($class, $pem, $url, $file, $max_attempts, $timeout_minutes) = @_;
 
-    $retries //= 30;
-    $timeout_min //= 60;
-    $cooldown_min //= 1;
+    $max_attempts //= 30;
+    $timeout_minutes //= 60;
 
-    my $timeout_mili = ($timeout_min / 60) * MILLISECONDS_IN_AN_HOUR;
-    my $cooldown_sec = $cooldown_min * 60;
+    my $timeout_milliseconds = ($timeout_minutes / 60) * MILLISECONDS_IN_AN_HOUR;
+    say "TIMEOUT: $timeout_minutes minutes ( $timeout_milliseconds milliseconds )";
 
-    say "TIMEOUT: min $timeout_min milli $timeout_mili";
+    my ($log_filepath, $time_stamp, $pid);
+    my $attempt = 0;
+    do {
+        my @now = localtime();
+        $time_stamp = sprintf("%04d-%02d-%02d-%02d-%02d-%02d", 
+                                 $now[5]+1900, $now[4]+1, $now[3],
+                                 $now[2],      $now[1],   $now[0]);
 
-    my $thr = threads->create(\&launch_and_monitor, $command, $timeout_mili);
+        $log_filepath = "gtdownload-$time_stamp.log"; 
+        say "STARTING DOWNLOAD WITH LOG FILE $log_filepath ATTEMPT ".++$attempt." OUT OF $max_attempts";
 
-    my $count = 0;
-    while( not (-e $file) ) {
-        say "FILE: $file DOES NOT EXIST... WAITING FOR THREAD TO COMPLETE...";
-        if ( not $thr->is_running()) {
-            if (++$count < $retries ) {
-                say 'ERROR: THREAD NOT RUNNING BUT OUTPUT MISSING, RESTARTING THE THREAD!!';
-                # kill and wait to exit
-                $thr->kill('KILL')->join();
-                $thr = threads->create(\&launch_and_monitor, $command, $timeout_mili);
-            }
-            else {
-               say "ERROR: Surpassed the number of retries: $retries with count $count, EXITING!!";
-               exit 1;
-            }
+        `gtdownload -l $log_filepath --max-children 4 --rate-limit 200 -c $pem -vv -d $url -k 60 </dev/null >/dev/null 2>&1 &`;
+
+        sleep 10; # to give gtdownload a chance to make the log files. 
+
+        if ( read_output($log_filepath, $timeout_milliseconds) ) {
+            say "KILLING PROCESS";
+            `pkill -f 'gtdownload -l $log_filepath'`;
         }
-
-        sleep $cooldown_sec;
-    }
-
-    say "OUTPUT FILE $file EXISTS AND THREAD EXITED NORMALLY, Total number of tries: $count";
-    say 'DONE';
+        sleep 10; # to make sure that the file has been created. 
+    } while ( ($attempt < $max_attempts) and ( not (-e $file) ) );
     
-    # This still needs to be tested to make sure it works. The perl documentation seams to be clear that it will work.
-    # but it still should be run several times to make sure it works. The only implecation is a perl warning that gets
-    # written to standard out when the program finishes without joining a thread that has already completed
-    $thr->join() if ($thr->is_running() || $thr->is_joinable());
-
-    return 0;
+    return 0 if ( (-e $file) and (say "DOWNLOADED FILE $file AFTER $attempt ATTEMPTS") );
+    
+    say "FAILED TO DOWNLOAD FILE: $file AFTER $attempt ATTEMPTS";
+    return 1;
+    
 }
 
-sub launch_and_monitor {
-    my ($command, $timeout) = @_;
 
-    my $my_object = threads->self;
-    my $my_tid = $my_object->tid;
+sub read_output {
+    my ($output_log, $timeout) = @_;
 
-    local $SIG{KILL} = sub { say "GOT KILL FOR THREAD: $my_tid";
-                             threads->exit;
-                           };
-
-    say "THREAD STARTING, CMD: $command TIMEOUT: $timeout";
-
-    my $pid = open my $in, '-|', "$command 2>&1";
-
+    my $start_time = time;
     my $time_last_downloading = 0;
-    my $last_reported_size = 0;
-    while(<$in>) {
+    my $last_reported_percent = 0;
 
-        # just print the output for debugging reasons
-        print "$_";
+    my $file=File::Tail->new($output_log);
+    my $line;
 
-        # these will be defined if the program is actively downloading
-        my ($size, $percent, $rate) = $_ =~ m/^Status:\s*(\d+.\d+|\d+|\s*)\s*[M|G]B\s*downloaded\s*\((\d+.\d+|\d+|\s)%\s*complete\)\s*current rate:\s+(\d+.\d+|\d+| )\s+MB\/s/g;
-
-	# override, let's use percent for size because it's always increasing whereas the units of the size change and this will interfere with the > $last_reported_size
-	$size = $percent;
-
-        # test to see if the thread is md5sum'ing after an earlier failure
-        # this actually doesn't produce new lines, it's all on one line but you
-        # need to check since the md5sum can take hours and this would cause a timeout
-        # and a kill when the next download line appears since it could be well past
-        # the timeout limit
-        my $md5sum = ($_ =~ m/^Download resumed, validating checksums for existing data/g)? 1: 0;
-
-        if ((defined($size) &&  defined($last_reported_size) && $size > $last_reported_size) || $md5sum) {
+    while( defined($line=$file->read) ) {
+        my ($size, $percent, $rate) = $line =~ m/^Status:\s*(\d+.\d+|\d+|\s*)\s*[M|G]B\s*downloaded\s*\((\d+.\d+|\d+|\s)%\s*complete\)\s*current rate:\s+(\d+.\d+|\d+| )\s+MB\/s/g;
+        $percent = $last_reported_percent unless( defined $percent);
+        
+        my $md5sum = ($line =~ m/^Download resumed, validating checksums for existing data/g)? 1: 0;
+        
+        if ( ($percent > $last_reported_percent) || $md5sum) {
             $time_last_downloading = time;
             say "UPDATING LAST DOWNLOAD TIME: $time_last_downloading";
-            if (defined($last_reported_size) && defined($size)) { say "  LAST REPORTED SIZE $last_reported_size SIZE: $size"; }
-            if (defined($md5sum)) { say "  IS MD5Sum State: $md5sum"; }
+            say "  REPORTED PERCENT DOWNLOADED - LAST: $last_reported_percent CURRENT: $size" if ($percent > $last_reported_percent);
+            say "  IS MD5Sum State: $md5sum" if ($md5sum);
         }
-        elsif (($time_last_downloading != 0) and ( (time - $time_last_downloading) > $timeout) ) {
-            say 'ERROR: Killing Thread - Timed out '.time;
-            exit;
+        elsif ((($time_last_downloading != 0) and ( (time - $time_last_downloading) > $timeout) )
+                 or ( ($percent == 0) and ( (time - $start_time) > (3 * $timeout)) )) { 
+                # This should trigger if gtdownload stops being able to download for a certain amount of time 
+                #     or if it never starts downloading - giving time for the md5 check
+            say "BASED ON OUTPUT DOWNLOAD IS NEEDING TO BE RESTARTED";
+            return 1;
         }
-        $last_reported_size = $size;
+        $last_reported_percent = $percent;
     }
+
+    return 0;
 }
 
 1;
