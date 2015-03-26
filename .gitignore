@@ -16,3 +16,8 @@ hs_err_pid*
 *.pem
 /target/
 /src/main/java/io/seqware/pancancer/Version.java
+
+# Eclipse files
+.classpath
+.project
+.settings/*
