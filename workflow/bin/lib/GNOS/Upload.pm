@@ -44,34 +44,32 @@ sub run_upload {
 
     do {
 
+        sleep $cooldown_sec; #makes sure log file exists the first time through the loop
+        
         #check if upload completed
-        if(-e $log_file) {
-          open my $fh, '<', $log_file;
-          my @lines = <$fh>;
-          close $fh;
-  
-          if ( {grep {/(100.000% complete)/s} @lines} ) {
-              $completed = 1;
-          }
-          elsif (not $thr->is_running()) {
-              if (++$count < $retries ) {
-                  say 'KILLING THE THREAD!!';
-                  # kill and wait to exit
-                  $thr->kill('KILL')->join();
-                  $thr = threads->create(\&launch_and_monitor, $command, $timeout_mili);
-  
-              }
-              else {
-                  say "Surpassed the number of retries: $retries";
-                  say 'KILLING THE THREAD!!';
-                  # kill and wait to exit
-                  $thr->kill('KILL')->join();
-                  exit 1;
-              }
-          }
+
+        open my $fh, '<', $log_file;
+        my @lines = <$fh>;
+        close $fh;
+
+        if ( {grep {/(100.000% complete)/s} @lines} ) {
+            $completed = 1;
+        }
+        elsif (not $thr->is_running()) {
+            if (++$count < $retries ) {
+                say 'KILLING THE THREAD!!';
+                # kill and wait to exit
+                $thr->kill('KILL')->join();
+                $thr = threads->create(\&launch_and_monitor, $command, $timeout_mili);
+
+            }
+            else {
+                say "Surpassed the number of retries: $retries";
+                exit 1;
+            }
         }
 
-        sleep $cooldown_sec;
+
 
     } while (not $completed);
 
@@ -91,21 +89,13 @@ sub launch_and_monitor {
     local $SIG{KILL} = sub { say "GOT KILL FOR THREAD: $my_tid";
                              threads->exit;
                            };
-
-    print "COMMAND TO RUN: $command\n";
-
-    # looks like the multiple commands are messing up the pipe so make a temp script
-    open OUT, ">temp.script.sh" or die;
-    print OUT "#!/bin/bash\n\n";
-    print OUT $command;
-    close OUT;
-
-    my $pid = open my $in, '-|', "bash temp.script.sh 2>&1";
-    #my $pid = open my $in, '-|', "$command 2>&1";
+    # system doesn't work, can't kill it but the open below does allow the sub-process to be killed
+    #system($cmd);
+    my $pid = open my $in, '-|', "$command 2>&1";
 
     # TODO: there's actually a progress file e.g.
     # /mnt/seqware-oozie/oozie-15b6645f-9922-4a1b-96aa-817bd4939084/seqware-results/upload/29ef0288-0d29-481d-b5d8-0672bfe1462d/29ef0288-0d29-481d-b5d8-0672bfe1462d.gto.progress
-    # could be an alternative if the below proves unreliable
+    # could be an alternative if the below prooves unreliable
     my $time_last_uploading = time;
     my $last_reported_uploaded = 0;
 
@@ -116,8 +106,7 @@ sub launch_and_monitor {
 
         my ($uploaded, $percent, $rate) = $_ =~ m/^Status:\s+(\d+.\d+|\d+| )\s+[M|G]B\suploaded\s*\((\d+.\d+|\d+| )%\s*complete\)\s*current\s*rate:\s*(\d+.\d+|\d+| )\s*[M|k]B\/s/g;
 
-        my $md5sum = 0;
-        if ($_ =~ m/^Download resumed, validating checksums for existing data/g) { $md5sum = 1; } else { $md5sum = 0; }
+        my $md5sum = ($_ =~ m/^Download resumed, validating checksums for existing data/g)? 1: 0;
 
         if ((defined($percent) && defined($last_reported_uploaded) && $percent > $last_reported_uploaded) || $md5sum) {
             $time_last_uploading = time;
@@ -131,7 +120,6 @@ sub launch_and_monitor {
         # using percent here and not amount because
         $last_reported_uploaded = $percent;
     }
-
 }
 
 1;
