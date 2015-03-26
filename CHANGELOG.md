@@ -8,7 +8,7 @@ Todo:
 * get corrected version of Keiran's tools that properly handle threading
 * updated version of Adam's GNOS wrappers that correctly timeout on a 0% upload GNOS connection... this new version of the code doesn't use perl threading which can be unreliable.  Also need to take this as an opportunity to make artifacts
 * an S3 mode where XML/BAMs are read from S3 URLs and the results written back to S3... we have the latter but the former needs to be done
-* eliminate the use of the forked pcap script since Keiran accepted the local file fix
+* eliminate the use of the forked pcap script since Keiran accepted the local file fix -- WAITING FOR KEIRAN, the artifact below didn't include a needed change to xml_to_bas.pl to support local file mode
 * Changes to core Sanger packages to fix error in limit based processing
       * ArtifactId: SeqWare-CGP-SomaticCore_opt
       * Version: 1.2.2
