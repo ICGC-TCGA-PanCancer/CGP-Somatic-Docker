@@ -1150,32 +1150,36 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     Job thisJob = getWorkflow().createBashJob("vcfUpload");
     
     String metadataUrls = new String();
+    String metadataPaths = null;
     
     // construct the metadata URLs or, if local file mode, generate a path to them
     // using prefix and file naming convention from decider
     if (localFileMode && localXMLMetadataPath != null) {
-      metadataUrls = metadataUrls.concat(localXMLMetadataPath)
+      
+      metadataPaths = new String();
+      
+      metadataPaths = metadataPaths.concat(localXMLMetadataPath)
                                 .concat("/data_")
                                 .concat(controlAnalysisId)
                                 .concat(".xml");
       for(String tumourAnalysisId : tumourAnalysisIds) {
-        metadataUrls = metadataUrls.concat(",")
+        metadataPaths = metadataPaths.concat(",")
                                 .concat(localXMLMetadataPath)
                                 .concat("/data_")
                                 .concat(tumourAnalysisId)
                                 .concat(".xml");
       }
-    } else {
-      metadataUrls = metadataUrls.concat(gnosServer)
-                                .concat("/cghub/metadata/analysisFull/")
-                                .concat(controlAnalysisId);
-      for(String tumourAnalysisId : tumourAnalysisIds) {
-        metadataUrls = metadataUrls.concat(",")
-                                .concat(gnosServer)
-                                .concat("/cghub/metadata/analysisFull/")
-                                .concat(tumourAnalysisId);
+    }
+      
+    metadataUrls = metadataUrls.concat(gnosServer)
+                              .concat("/cghub/metadata/analysisFull/")
+                              .concat(controlAnalysisId);
+    for(String tumourAnalysisId : tumourAnalysisIds) {
+      metadataUrls = metadataUrls.concat(",")
+                              .concat(gnosServer)
+                              .concat("/cghub/metadata/analysisFull/")
+                              .concat(tumourAnalysisId);
 
-      }
     }
     
     String vcfs = new String();
@@ -1217,10 +1221,16 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       tarmd5s = tarmd5s.concat("," + baseFile + "genotype.tar.gz.md5");
       tarmd5s = tarmd5s.concat("," + baseFile + "verifyBamId.tar.gz.md5");
     }
+    
+    String metadataPathsString = "";
+    if (metadataPaths != null) {
+      metadataPathsString = "--metadata-paths "+metadataPaths;
+    }
 
     thisJob.getCommand()
       .addArgument("perl -I " + getWorkflowBaseDir() + "/bin/lib " + getWorkflowBaseDir() + "/bin/gnos_upload_vcf.pl")
       .addArgument("--metadata-urls " + metadataUrls)
+      .addArgument(metadataPathsString)
       .addArgument("--vcfs " + vcfs)
       .addArgument("--vcf-md5sum-files " + vcfmd5s)
       .addArgument("--vcf-idxs " + tbis)
