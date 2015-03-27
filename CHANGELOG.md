@@ -12,6 +12,7 @@ Todo:
 * Changes to core Sanger packages to fix error in limit based processing
       * ArtifactId: SeqWare-CGP-SomaticCore_opt
       * Version: 1.2.2
+* Kyle reported and error on cleanup: "Can't delete folder: /datastore/oozie-e706677a-b7ff-4905-90f2-c717ce2622bf/./temp-62eb639e-cf9f-48cf-a2d3-d0ab996aac05" 
 
 # 1.0.5.1 Hotfix
 
