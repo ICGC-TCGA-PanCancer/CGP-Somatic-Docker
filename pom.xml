@@ -232,7 +232,7 @@
 					</execution>
 					<!-- This execution will copy the vcf-uploader scripts from the unpacked dependency to the correct path in the output directory. -->
 					<execution>
-						<id>copy-vcf-downloader-uploader-files</id>
+						<id>copy-vcf-uploader-files</id>
 						<phase>process-resources</phase>
 						<goals>
 							<goal>copy-resources</goal>
@@ -246,7 +246,7 @@
 										<include>*.pl</include>
 										<include>*.py</include>
 										<include>*.sh</include>
-										<include>synapse_vcf_upload</include>
+										<include>synapse_upload_vcf</include>
 									</includes>
 									<filtering>true</filtering>
 								</resource>
