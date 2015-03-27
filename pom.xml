@@ -31,12 +31,6 @@
 	</properties>
 
 	<dependencies>
-		<!-- <dependency>
-			<groupId>SeqWare-PanCancer</groupId>
-			<artifactId>vcf-uploader</artifactId> 
-			<version>1.1.0</version>
-			<type>tar.gz</type>
-		</dependency> -->
 		<dependency>
 		    <groupId>vcf-uploader</groupId>
 		    <artifactId>vcf-uploader</artifactId>
@@ -224,7 +218,7 @@
 							<goal>copy-resources</goal>
 						</goals>
 						<configuration>
-							<outputDirectory>${basedir}/workflow/bin/lib/GNOS</outputDirectory>
+							<outputDirectory>${workflow-dir}/bin/lib/GNOS</outputDirectory>
 							<resources>
 								<resource>
 									<directory>${workflow-dir}/bin/gt-download-upload-wrapper-${gt-download-upload-wrapper.version}/lib/GNOS</directory>
@@ -244,13 +238,15 @@
 							<goal>copy-resources</goal>
 						</goals>
 						<configuration>
-							<outputDirectory>${basedir}/workflow/bin</outputDirectory>
+							<outputDirectory>${workflow-dir}/bin</outputDirectory>
 							<resources>
 								<resource>
 									<directory>${workflow-dir}/bin/vcf-uploader-${vcf-uploader.version}</directory>
 									<includes>
 										<include>*.pl</include>
 										<include>*.py</include>
+										<include>*.sh</include>
+										<include>synapse_vcf_upload</include>
 									</includes>
 									<filtering>true</filtering>
 								</resource>
