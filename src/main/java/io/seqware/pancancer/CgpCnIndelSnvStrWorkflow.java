@@ -123,6 +123,9 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   // if localFileMode, this is the path at which the workflow will find the XML files used for metadata in the upload of VCF
   private String localXMLMetadataPath = null;
   private String localBamFilePathPrefix = null;
+  
+  private String timeoutMin = "20";
+  private String retries = "3";
 
   private void init() {
     try {
@@ -372,6 +375,10 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       
       // upload 
       duckJobMem = getProperty("duckJobMem");
+      
+      // GNOS timeouts
+      timeoutMin = getProperty("gnos_timeout_min");
+      retries = getProperty("gnos_retries");
       
     } catch (Exception ex) {
       throw new RuntimeException(ex);
@@ -1252,6 +1259,8 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       .addArgument("--vm-instance-mem-gb " +vmInstanceMemGb)
       .addArgument("--vm-location-code " +vmLocationCode)
       .addArgument("--uuid " + uuid)
+      .addArgument("--timeout-min "+timeoutMin)
+      .addArgument("--retries "+retries)
       ;
     try {
       if (hasPropertyAndNotNull("saveUploadArchive") && hasPropertyAndNotNull("uploadArchivePath") && "true".equals(getProperty("saveUploadArchive"))) {
@@ -1332,7 +1341,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
                   .addArgument(" -k 60")
                   .addArgument("-vv " + gnosServer + "/cghub/data/analysis/download/" + analysisId + "'")
                   .addArgument("--file " + bamFile)
-                  .addArgument("--retries 10 --sleep-min 1 --timeout-min 60");
+                  .addArgument("--retries "+retries+" --sleep-min 1 --timeout-min "+timeoutMin);
                   /*.addArgument("gtdownload -c " + pemFile)
                   .addArgument("-v " + gnosServer + "/cghub/data/analysis/download/" + analysisId); */
     return thisJob;
