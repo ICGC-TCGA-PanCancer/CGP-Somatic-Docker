@@ -23,8 +23,8 @@ get_distro () {
     wget -nv -O current.tar.gz $1
   fi
   set -e
-  mkdir -p current
-  tar --strip-components 1 -C current -zxf current.tar.gz
+  mkdir -p $2
+  tar --strip-components 1 -C $2 -zxf current.tar.gz
 }
 
 repos=(
@@ -32,7 +32,7 @@ repos=(
   "https://github.com/cancerit/cgpVcf/archive/v1.2.2.tar.gz"
   "https://github.com/cancerit/alleleCount/archive/v1.2.1.tar.gz"
   "https://github.com/cancerit/cgpBinCounts/archive/v1.0.0.tar.gz"
-  "https://github.com/cancerit/cgpNgsQc/archive/v1.0.2.tar.gz"
+  "https://github.com/cancerit/cgpNgsQc/archive/v1.0.3.tar.gz"
   "https://github.com/cancerit/ascatNgs/archive/v1.5.1.tar.gz"
   "https://github.com/cancerit/cgpPindel/archive/v1.3.2.tar.gz"
   "https://github.com/cancerit/cgpCaVEManPostProcessing/archive/v1.1.0.tar.gz"
@@ -42,28 +42,32 @@ repos=(
   "https://github.com/cancerit/grass/archive/v1.0.1.tar.gz"
  )
 
+export PERL5LIB=$PERL5LIB
+
 # clear log file
 INIT_DIR=$(dirname $(readlink -f $0))
-PROGRESS=$INIT_DIR/setup_prog
-mkdir -p $PROGRESS
-export PERL5LIB $PERL5LIB
 echo > $INIT_DIR/setup.log
 set -eu
+PROGRESS=$INIT_DIR/setup_prog
+mkdir -p $PROGRESS
 
 for i in "${repos[@]}" ; do
-  DIST=`cut -d '/' -f 4 $i`
+  DIST=`echo $i | cut -d '/' -f 5`
   DIST_DONE=$PROGRESS/$DIST
-  if[ -f $DIST_DONE ]; then
-    echo "Skipping $DIST, already installed"
+  if [ -f $DIST_DONE ]; then
+    echo -n "Skipping $DIST, already installed..."
   else 
     echo -n "Installing $DIST..."
     (
-      rm -rf current current.tar.gz
-      get_distro $i
-      cd current
+      if [ ! -f current.tar.gz ]; then
+        rm -rf $DIST
+        get_distro $i $DIST
+      fi
+      cd $DIST
       ./setup.sh $INIT_DIR/opt
       cd $INIT_DIR
-      rm -rf current current.tar.gz
+      touch $DIST_DONE
+      rm -rf $DIST current.tar.gz
       echo; echo
     ) >>$INIT_DIR/setup.log 2>&1
   fi
