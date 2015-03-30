@@ -37,7 +37,7 @@ repos=(
   "https://github.com/cancerit/cgpPindel/archive/v1.3.2.tar.gz"
   "https://github.com/cancerit/cgpCaVEManPostProcessing/archive/v1.1.0.tar.gz"
   "https://github.com/cancerit/cgpCaVEManWrapper/archive/v1.4.1.tar.gz"
-  "https://github.com/cancerit/BRASS/archive/v2.1.1.tar.gz"
+  "https://github.com/cancerit/BRASS/archive/v2.2.0.tar.gz"
   "https://github.com/cancerit/VAGrENT/archive/v2.0.0.tar.gz"
   "https://github.com/cancerit/grass/archive/v1.0.1.tar.gz"
  )
