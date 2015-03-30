@@ -562,7 +562,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
 
       // these are not paired but per individual sample
       List<Job> ngsCountJobs = new ArrayList<Job>();
-      for(int i=1; i<=24; i++) {
+      for(int i=0; i<24; i++) {
         for(int j=0; j<tumourBams.size(); j++) {
           Job ngsCountJob = ngsCount(j, tumourBams.get(j), "tumour", i);
           ngsCountJob.setMaxMemory(memPicnicCounts);
