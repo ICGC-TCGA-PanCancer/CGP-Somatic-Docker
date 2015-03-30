@@ -3,7 +3,7 @@
 Todo:
 
 * need to add a new param that passes the URL for metadata even when working in full offline mode, this is a workaround for Romina so she can generate valid XML while using local files -- DONE
-* check to see if I expose timeouts in the conf file -- TODO, Solomon review
+* check to see if I expose timeouts in the conf file -- DONE, Solomon review
 * patch in at least packageResults.pl to force SM field in BAM headers to lower case? -- WON'T FIX
 * get corrected version of Keiran's tools that properly handle threading -- DONE
      * Changes to core Sanger packages to fix error in limit based processing
