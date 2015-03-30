@@ -28,7 +28,7 @@ get_distro () {
 }
 
 repos=(
-  "https://github.com/ICGC-TCGA-PanCancer/PCAP-core/archive/v1.6.3.tar.gz"
+  "https://github.com/ICGC-TCGA-PanCancer/PCAP-core/archive/v1.7.0.tar.gz"
   "https://github.com/cancerit/cgpVcf/archive/v1.2.2.tar.gz"
   "https://github.com/cancerit/alleleCount/archive/v1.2.1.tar.gz"
   "https://github.com/cancerit/cgpBinCounts/archive/v1.0.0.tar.gz"
