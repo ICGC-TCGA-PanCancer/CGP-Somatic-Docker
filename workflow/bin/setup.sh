@@ -44,22 +44,32 @@ repos=(
 
 # clear log file
 INIT_DIR=$(dirname $(readlink -f $0))
+PROGRESS=$INIT_DIR/setup_prog
+mkdir -p $PROGRESS
 export PERL5LIB $PERL5LIB
 echo > $INIT_DIR/setup.log
 set -eu
 
 for i in "${repos[@]}" ; do
-  echo -n "Installing $i..."
-  (
-    rm -rf current current.tar.gz
-    get_distro $i
-    cd current
-    ./setup.sh $INIT_DIR/opt
-    cd $INIT_DIR
-    rm -rf current current.tar.gz
-    echo; echo
-  ) >>$INIT_DIR/setup.log 2>&1
+  DIST=`cut -d '/' -f 4 $i`
+  DIST_DONE=$PROGRESS/$DIST
+  if[ -f $DIST_DONE ] then
+    echo "Skipping $DIST, already installed"
+  else 
+    echo -n "Installing $DIST..."
+    (
+      rm -rf current current.tar.gz
+      get_distro $i
+      cd current
+      ./setup.sh $INIT_DIR/opt
+      cd $INIT_DIR
+      rm -rf current current.tar.gz
+      echo; echo
+    ) >>$INIT_DIR/setup.log 2>&1
+  fi
   done_message "" "Failed during installation of $i."
 done
 
 find $INIT_DIR/opt -type l -exec cp {} {}.tmp$$ \; -exec mv {}.tmp$$ {} \;
+
+rm -rf $PROGRESS
