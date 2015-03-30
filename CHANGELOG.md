@@ -6,13 +6,13 @@ Todo:
 * check to see if I expose timeouts in the conf file -- TODO, Solomon review
 * patch in at least packageResults.pl to force SM field in BAM headers to lower case? -- WON'T FIX
 * get corrected version of Keiran's tools that properly handle threading -- DONE
+     * Changes to core Sanger packages to fix error in limit based processing
+           * ArtifactId: SeqWare-CGP-SomaticCore_opt
+           * Version: 1.2.2
 * updated version of Adam's GNOS wrappers that correctly timeout on a 0% upload GNOS connection... this new version of the code doesn't use perl threading which can be unreliable.  Also need to take this as an opportunity to make artifacts -- Solomon TODO
-* an S3 mode where XML/BAMs are read from S3 URLs and the results written back to S3... we have the latter but the former needs to be done
+* an S3 mode where XML/BAMs are read from S3 URLs and the results written back to S3... we have the latter but the former needs to be done -- TODO
 * eliminate the use of the forked pcap script since Keiran accepted the local file fix  -- WAITING FOR KEIRAN, the artifact below didn't include a needed change to xml_to_bas.pl to support local file mode
-* Changes to core Sanger packages to fix error in limit based processing
-      * ArtifactId: SeqWare-CGP-SomaticCore_opt
-      * Version: 1.2.2
-* Kyle reported and error on cleanup: "Can't delete folder: /datastore/oozie-e706677a-b7ff-4905-90f2-c717ce2622bf/./temp-62eb639e-cf9f-48cf-a2d3-d0ab996aac05" 
+* Kyle reported and error on cleanup: "Can't delete folder: /datastore/oozie-e706677a-b7ff-4905-90f2-c717ce2622bf/./temp-62eb639e-cf9f-48cf-a2d3-d0ab996aac05"  -- TODO
 
 # 1.0.5.1 Hotfix
 
