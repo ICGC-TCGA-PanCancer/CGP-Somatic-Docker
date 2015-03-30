@@ -126,6 +126,13 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   
   private String timeoutMin = "20";
   private String retries = "3";
+  
+  // used for downloading from S3
+  private boolean downloadBamsFromS3 = false;
+  private String normalS3Url = "";
+  private ArrayList<String> tumorS3Urls = null;
+  private String S3DownloadKey = "";
+  private String S3DownloadSecretKey = "";
 
   private void init() {
     try {
@@ -198,6 +205,10 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       
       if(hasPropertyAndNotNull("cleanupBams")) {
         cleanupBams = Boolean.valueOf(getProperty("cleanupBams"));
+      }
+         
+      if(hasPropertyAndNotNull("downloadBamsFromS3")) {
+        downloadBamsFromS3 = Boolean.valueOf(getProperty("downloadBamsFromS3"));
       }
       
       if(hasPropertyAndNotNull("testMode")) {
@@ -380,6 +391,14 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       timeoutMin = getProperty("gnos_timeout_min");
       retries = getProperty("gnos_retries");
       
+      // S3 downloads
+      if (downloadBamsFromS3) {
+        normalS3Url = getProperty("normalS3Url");
+        tumorS3Urls = new ArrayList<String>(Arrays.asList(getProperty("tumorS3Urls").split(",")));
+        S3DownloadKey = getProperty("S3DownloadKey");
+        S3DownloadSecretKey = getProperty("S3DownloadSecretKey");
+      }
+      
     } catch (Exception ex) {
       throw new RuntimeException(ex);
     }
@@ -387,13 +406,14 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     return getFiles();
   }
   
-  private Job bamProvision(String analysisId, String bamFile, Job startTiming) {
+  private Job bamProvision(String analysisId, String bamFile, String bamS3Url, Job startTiming) {
     Job basJob = null;
     if(testMode == false) {
 
       Job gnosDownload = null;
 
-      if (localFileMode == false) {
+      // use GNOS
+      if (localFileMode == false && downloadBamsFromS3 == false) {
         gnosDownload = gnosDownloadBaseJob(analysisId, bamFile);
         gnosDownload.setMaxMemory(memGnosDownload);
         gnosDownload.addParent(startTiming);
@@ -402,6 +422,15 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
         basJob = basFileBaseJob(analysisId, bamFile);
         basJob.setMaxMemory(memBasFileGet);
         basJob.addParent(gnosDownload); 
+      } else if (localFileMode == false && downloadBamsFromS3) {
+        // then need to download from S3
+        gnosDownload = gnosS3DownloadBaseJob(analysisId, bamFile, bamS3Url);
+        gnosDownload.setMaxMemory(memGnosDownload);
+        gnosDownload.addParent(startTiming);
+        // get the BAS files
+        basJob = basFileBaseJob(analysisId, bamFile);
+        basJob.setMaxMemory(memBasFileGet);
+        basJob.addParent(gnosDownload);  
       } else {
         // then need to symlink so the downstream isn't broken
         gnosDownload = gnosSymlinkBaseJob(analysisId, bamFile);
@@ -469,7 +498,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
         } else {
           controlBam = controlAnalysisId + "/" + getProperty("controlBam");
         }
-        controlBasJob = bamProvision(controlAnalysisId, controlBam, startWorkflow);
+        controlBasJob = bamProvision(controlAnalysisId, controlBam, normalS3Url, startWorkflow);
         // this is being done because the above makes a symlink to <analysisId>/<bamname.bam>
         // and subsequent steps expect this, so controlBam must be just the filename and not the full path
         if (localFileMode) {
@@ -500,7 +529,11 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
           if (!localFileMode) {
             tumourBam = tumourAnalysisIds.get(i) + "/" + rawBams.get(i);
           }
-          Job tumourBasJob = bamProvision(tumourAnalysisIds.get(i), tumourBam, startWorkflow);
+          String tumorS3Url = null;
+          if (tumorS3Urls != null && tumorS3Urls.size() == rawBams.size()) {
+            tumorS3Url = tumorS3Urls.get(i);
+          }
+          Job tumourBasJob = bamProvision(tumourAnalysisIds.get(i), tumourBam, tumorS3Url, startWorkflow);
           tumourBasJobs.add(tumourBasJob);
           if (localFileMode) {
             List<String> bamPath = Arrays.asList(tumourBam.split("/"));
@@ -1344,6 +1377,20 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
                   .addArgument("--retries "+retries+" --sleep-min 1 --timeout-min "+timeoutMin);
                   /*.addArgument("gtdownload -c " + pemFile)
                   .addArgument("-v " + gnosServer + "/cghub/data/analysis/download/" + analysisId); */
+    return thisJob;
+  }
+  
+  private Job gnosS3DownloadBaseJob(String analysisId, String bamFile, String s3Url) {
+    
+    Job thisJob = getWorkflow().createBashJob("S3Download");
+    thisJob.getCommand()
+      .addArgument("mkdir -p "+analysisId+"; \n")
+      .addArgument("mkdir -p ~/.aws/; \n")
+      .addArgument("echo '[default]\n" +
+        "aws_access_key_id = "+S3DownloadKey+"\n" +
+        "aws_secret_access_key = "+S3DownloadSecretKey+"' > ~/.aws/config; \n")
+      .addArgument("aws s3 cp " + s3Url + " " + bamFile + " ;");
+
     return thisJob;
   }
 
