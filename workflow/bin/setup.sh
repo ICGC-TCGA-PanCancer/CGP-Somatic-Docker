@@ -53,7 +53,7 @@ set -eu
 for i in "${repos[@]}" ; do
   DIST=`cut -d '/' -f 4 $i`
   DIST_DONE=$PROGRESS/$DIST
-  if[ -f $DIST_DONE ] then
+  if[ -f $DIST_DONE ]; then
     echo "Skipping $DIST, already installed"
   else 
     echo -n "Installing $DIST..."
