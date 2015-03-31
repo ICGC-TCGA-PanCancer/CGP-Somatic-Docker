@@ -31,7 +31,7 @@ repos=(
   "https://github.com/ICGC-TCGA-PanCancer/PCAP-core/archive/v1.7.0.tar.gz"
   "https://github.com/cancerit/cgpVcf/archive/v1.2.2.tar.gz"
   "https://github.com/cancerit/alleleCount/archive/v1.2.1.tar.gz"
-  "https://github.com/cancerit/cgpBinCounts/archive/v1.0.1.tar.gz"
+  "https://github.com/cancerit/cgpBinCounts/archive/v1.0.2.tar.gz"
   "https://github.com/cancerit/cgpNgsQc/archive/v1.0.3.tar.gz"
   "https://github.com/cancerit/ascatNgs/archive/v1.5.1.tar.gz"
   "https://github.com/cancerit/cgpPindel/archive/v1.3.2.tar.gz"
