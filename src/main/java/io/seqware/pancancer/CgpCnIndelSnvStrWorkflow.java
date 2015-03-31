@@ -1375,10 +1375,9 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     */
     thisJob.getCommand()
                   .addArgument("perl -I " + getWorkflowBaseDir() + "/bin/lib " + getWorkflowBaseDir() + "/bin/gnos_download_file.pl ")
-                  .addArgument("--command 'gtdownload -c " + pemFile )
-                  .addArgument(" -l ./download"+analysisId+".log")
-                  .addArgument(" -k 60")
-                  .addArgument("-vv " + gnosServer + "/cghub/data/analysis/download/" + analysisId + "'")
+                  /*.addArgument("--command 'gtdownload -c " + pemFile )*/
+                  /*.addArgument("-vv " + gnosServer + "/cghub/data/analysis/download/" + analysisId + "'")*/
+                  .addArgument(" -k 60") 
                   .addArgument("--file " + bamFile)
                   .addArgument("--retries "+retries+" --sleep-min 1 --timeout-min "+timeoutMin);
                   /*.addArgument("gtdownload -c " + pemFile)
