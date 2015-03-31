@@ -14,6 +14,7 @@ Todo:
 * eliminate the use of the forked pcap script since Keiran accepted the local file fix the artifact below didn't include a needed change to xml_to_bas.pl to support local file mode -- DONE
 * Kyle reported and error on cleanup: "Can't delete folder: /datastore/oozie-e706677a-b7ff-4905-90f2-c717ce2622bf/./temp-62eb639e-cf9f-48cf-a2d3-d0ab996aac05"  -- FIXED, I believe this was fixed in 1.0.5.1 hotfix, waiting for more info from Kyle
 
+
 # 1.0.5.1 Hotfix
 
 * fixes problems with gnos_upload_vcf.pl when working in "local file mode"
