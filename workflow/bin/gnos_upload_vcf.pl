@@ -41,10 +41,10 @@ my $milliseconds_in_an_hour = 3600000;
 
 # min to wait for a retry
 my $cooldown = 1;
-# 30 retries at 60 seconds each is 30 hours
-my $retries = 30;
-# retries for md5sum, 4 hours
-my $timeout_min = 60;
+# 3 retries at 20 min each is 1 hour
+my $retries = 3;
+# retries timeout in min
+my $timeout_min = 20;
 
 my $vcfs;
 my $md5_file = "";
@@ -82,6 +82,7 @@ my $analysis_center = "OICR";
 my $center_override = "";
 my $refcenter_override = "";
 my $metadata_url;
+my $metadata_paths;
 my $make_runxml        = 0;
 my $make_expxml        = 0;
 my $description_file   = "";
@@ -96,7 +97,7 @@ my $vm_instance_mem_gb = "unknown";
 my $vm_location_code   = "unknown";
 
 # TODO: check the argument counts here
-if ( scalar(@ARGV) < 20 || scalar(@ARGV) > 63 ) {
+if ( scalar(@ARGV) < 20 || scalar(@ARGV) > 69 ) {
     die "USAGE: 'perl gnos_upload_vcf.pl
        --metadata-urls <URLs_for_specimen-level_aligned_BAM_input_comma_sep>
        --vcfs <sample-level_vcf_file_path_comma_sep_if_multiple>
@@ -108,6 +109,9 @@ if ( scalar(@ARGV) < 20 || scalar(@ARGV) > 63 ) {
        --outdir <output_dir>
        --key <gnos.pem>
        --upload-url <gnos_server_url>
+       [--timeout-min <20>] 
+       [--retries <3>]
+       [--metadata-paths <local_paths_for_specimen-level_aligned_BAM_xml_comma_sep> ]
        [--workflow-src-url <http://... the source repo>]
        [--workflow-url <http://... the packaged SeqWare Zip>]
        [--workflow-name <workflow_name>]
@@ -137,6 +141,7 @@ if ( scalar(@ARGV) < 20 || scalar(@ARGV) > 63 ) {
 
 GetOptions(
     "metadata-urls=s"            => \$metadata_url,
+    "metadata-paths=s"            => \$metadata_paths,
     "vcfs=s"                     => \$vcfs,
     "vcf-md5sum-files=s"         => \$md5_file,
     "vcf-idxs=s"                 => \$vcfs_idx,
@@ -171,6 +176,8 @@ GetOptions(
     "vm-instance-mem-gb=s"       => \$vm_instance_mem_gb,
     "vm-location-code=s"         => \$vm_location_code,
     "uuid=s"                     => \$uuid,
+    "timeout-min=i"              => \$timeout_min,
+    "retries=i"                  => \$retries,
 );
 
 ##############
@@ -259,7 +266,7 @@ for ( my $i = 0 ; $i < scalar(@tarball_arr) ; $i++ ) {
 }
 
 say 'DOWNLOADING METADATA FILES';
-my $metad            = download_metadata($metadata_url);
+my $metad            = download_metadata($metadata_url, $metadata_paths);
 my $input_json_hash  = generate_input_json($metad);
 my $output_json_hash = generate_output_json($metad);
 
@@ -1055,14 +1062,19 @@ sub read_header {
 }
 
 sub download_metadata {
-    my ($urls_str) = @_;
+    my ($urls_str, $paths_str) = @_;
     my $metad = {};
     run("mkdir -p xml2");
     my @urls = split /,/, $urls_str;
+    my @paths;
+    if ($paths_str ne "" && length($paths_str) > 0) {
+      @paths = split /,/, $paths_str;
+    }
     my $i = 0;
     foreach my $url (@urls) {
+        my $file_path = $paths[$i];
         $i++;
-        my $xml_path = download_url( $url, "xml2/data_$i.xml" );
+        my $xml_path = download_url( $url,  "xml2/data_$i.xml", $file_path );
         $metad->{$url} = parse_metadata($xml_path);
     }
     return ($metad);
@@ -1107,9 +1119,13 @@ sub getBlock {
 }
 
 sub download_url {
-    my ( $url, $path ) = @_;
+    my ( $url, $path, $alt_path ) = @_;
 
-    if ($url =~ /^https:\/\// || $url =~ /^http:\/\//) {
+    if (-e $alt_path) {
+      my $response = run("cp $alt_path $path");
+      die "PROBLEMS COPYING FILE: 'cp $alt_path $path'" if ($response);
+    }
+    elsif ($url =~ /^https:\/\// || $url =~ /^http:\/\//) {
       my $response = run("wget -q -O $path $url");
       if ($response) {
         $ENV{PERL_LWP_SSL_VERIFY_HOSTNAME} = 0;
@@ -1119,9 +1135,6 @@ sub download_url {
           exit 1;
         }
       }
-    } else {
-      my $response = run("cp $url $path");
-      die "PROBLEMS COPYING FILE: 'cp $url $path'" if ($response);
     }
     return $path;
 }
