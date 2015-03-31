@@ -1395,8 +1395,8 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       .addArgument("echo '[default]\n" +
         "aws_access_key_id = "+S3DownloadKey+"\n" +
         "aws_secret_access_key = "+S3DownloadSecretKey+"' > ~/.aws/config; \n")
-      .addArgument("aws s3 cp " + s3Url + " " + bamFile + " && ")
-      .addArgument("aws s3 cp " + s3Url + ".bai " + bamFile + ".bai ");
+      .addArgument("aws s3 cp " + s3Url + " " + analysisId + "/" + bamFile + " && ")
+      .addArgument("aws s3 cp " + s3Url + ".bai " + analysisId + "/" + bamFile + ".bai ");
 
     return thisJob;
   }
