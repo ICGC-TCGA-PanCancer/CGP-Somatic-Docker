@@ -34,22 +34,24 @@ repos=(
   "https://github.com/cancerit/cgpBinCounts/archive/v1.0.0.tar.gz"
   "https://github.com/cancerit/cgpNgsQc/archive/v1.0.2.tar.gz"
   "https://github.com/cancerit/ascatNgs/archive/v1.5.1.tar.gz"
-  "https://github.com/cancerit/cgpPindel/archive/v1.2.0.tar.gz"
-  "https://github.com/cancerit/cgpCaVEManPostProcessing/archive/v1.0.2.tar.gz"
-  "https://github.com/cancerit/cgpCaVEManWrapper/archive/v1.2.0.tar.gz"
-  "https://github.com/cancerit/BRASS/archive/v2.1.0.tar.gz"
+  "https://github.com/cancerit/cgpPindel/archive/v1.3.2.tar.gz"
+  "https://github.com/cancerit/cgpCaVEManPostProcessing/archive/v1.1.0.tar.gz"
+  "https://github.com/cancerit/cgpCaVEManWrapper/archive/v1.4.1.tar.gz"
+  "https://github.com/cancerit/BRASS/archive/v2.1.1.tar.gz"
   "https://github.com/cancerit/VAGrENT/archive/v2.0.0.tar.gz"
   "https://github.com/cancerit/grass/archive/v1.0.1.tar.gz"
  )
 
 # clear log file
 INIT_DIR=$(dirname $(readlink -f $0))
+export PERL5LIB $PERL5LIB
 echo > $INIT_DIR/setup.log
 set -eu
 
 for i in "${repos[@]}" ; do
   echo -n "Installing $i..."
   (
+    rm -rf current current.tar.gz
     get_distro $i
     cd current
     ./setup.sh $INIT_DIR/opt

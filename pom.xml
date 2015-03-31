@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
 
-	<prerequisites>
-		<maven>2.2.1</maven>
-	</prerequisites>
+  <prerequisites>
+    <maven>2.2.1</maven>
+  </prerequisites>
 
-	<groupId>io.seqware</groupId>
-	<!-- MAKE SURE YOU UPDATE THE workflow.properties FILE TOO -->
-	<artifactId>SangerPancancerCgpCnIndelSnvStr</artifactId>
-	<!-- MAKE SURE YOU UPDATE THE workflow.properties FILE TOO -->
-	<version>1.0.6</version>
-	<packaging>jar</packaging>
-	<!-- MAKE SURE YOU UPDATE THE workflow.properties FILE TOO -->
-	<name>SangerPancancerCgpCnIndelSnvStr</name>
-	<url>http://maven.apache.org</url>
+  <groupId>io.seqware</groupId>
+  <!-- MAKE SURE YOU UPDATE THE workflow.properties FILE TOO -->
+  <artifactId>SangerPancancerCgpCnIndelSnvStr</artifactId>
+  <!-- MAKE SURE YOU UPDATE THE workflow.properties FILE TOO -->
+  <version>1.0.6</version>
+  <packaging>jar</packaging>
+  <!-- MAKE SURE YOU UPDATE THE workflow.properties FILE TOO -->
+  <name>SangerPancancerCgpCnIndelSnvStr</name>
+  <url>http://maven.apache.org</url>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -63,116 +63,116 @@
 		</dependency>
 	</dependencies>
 
-	<repositories>
-		<repository>
-			<id>com.github.seqware</id>
-			<name>SeqWare Maven Repository</name>
-			<url>http://seqwaremaven.oicr.on.ca/artifactory/seqware-release</url>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-		</repository>
-		<repository>
-			<id>snapshot.com.github.seqware</id>
-			<name>SeqWare Snapshot Maven Repository</name>
-			<url>http://seqwaremaven.oicr.on.ca/artifactory/seqware-snapshot</url>
-			<releases>
-				<enabled>false</enabled>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-		</repository>
-		<repository>
-			<id>dependencies.com.github.seqware</id>
-			<name>SeqWare Dependencies Maven Repository</name>
-			<url>http://seqwaremaven.oicr.on.ca/artifactory/seqware-dependencies</url>
-		</repository>
-	</repositories>
+  <repositories>
+    <repository>
+      <id>com.github.seqware</id>
+      <name>SeqWare Maven Repository</name>
+      <url>http://seqwaremaven.oicr.on.ca/artifactory/seqware-release</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>snapshot.com.github.seqware</id>
+      <name>SeqWare Snapshot Maven Repository</name>
+      <url>http://seqwaremaven.oicr.on.ca/artifactory/seqware-snapshot</url>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>dependencies.com.github.seqware</id>
+      <name>SeqWare Dependencies Maven Repository</name>
+      <url>http://seqwaremaven.oicr.on.ca/artifactory/seqware-dependencies</url>
+    </repository>
+  </repositories>
 
-	<build>
+  <build>
 
-		<filters>
-			<filter>workflow.properties</filter>
-		</filters>
+    <filters>
+      <filter>workflow.properties</filter>
+    </filters>
 
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.1</version>
-				<configuration>
-					<source>1.6</source>
-					<target>1.6</target>
-				</configuration>
-			</plugin>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.1</version>
+        <configuration>
+          <source>1.6</source>
+          <target>1.6</target>
+        </configuration>
+      </plugin>
 
-			<plugin>
-				<groupId>com.google.code.maven-replacer-plugin</groupId>
-				<artifactId>maven-replacer-plugin</artifactId>
-				<version>1.4.0</version>
-				<executions>
-					<execution>
-						<phase>process-sources</phase>
-						<goals>
-							<goal>replace</goal>
-						</goals>
-					</execution>
-				</executions>
-				<configuration>
-					<file>${version.template.file}</file>
-					<outputFile>${version.file}</outputFile>
-					<replacements>
-						<replacement>
-							<token>@seqware-version@</token>
-							<value>${seqware-version}</value>
-						</replacement>
-						<replacement>
-							<token>@workflow-name@</token>
-							<value>${workflow-name}</value>
-						</replacement>
-						<replacement>
-							<token>@workflow-version@</token>
-							<value>${project.version}</value>
-						</replacement>
-						<replacement>
-							<token>@workflow-short-name-version@</token>
-							<value>${workflow-short-name-version}</value>
-						</replacement>
-						<replacement>
-							<token>@workflow-url@</token>
-							<value>${workflow-url}</value>
-						</replacement>
-						<replacement>
-							<token>@workflow-src-url@</token>
-							<value>${workflow-src-url}</value>
-						</replacement>
-					</replacements>
-				</configuration>
-			</plugin>
+      <plugin>
+        <groupId>com.google.code.maven-replacer-plugin</groupId>
+        <artifactId>maven-replacer-plugin</artifactId>
+        <version>1.4.0</version>
+        <executions>
+          <execution>
+            <phase>process-sources</phase>
+            <goals>
+              <goal>replace</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <file>${version.template.file}</file>
+          <outputFile>${version.file}</outputFile>
+          <replacements>
+            <replacement>
+              <token>@seqware-version@</token>
+              <value>${seqware-version}</value>
+            </replacement>
+            <replacement>
+              <token>@workflow-name@</token>
+              <value>${workflow-name}</value>
+            </replacement>
+            <replacement>
+              <token>@workflow-version@</token>
+              <value>${project.version}</value>
+            </replacement>
+            <replacement>
+              <token>@workflow-short-name-version@</token>
+              <value>${workflow-short-name-version}</value>
+            </replacement>
+            <replacement>
+              <token>@workflow-url@</token>
+              <value>${workflow-url}</value>
+            </replacement>
+            <replacement>
+              <token>@workflow-src-url@</token>
+              <value>${workflow-src-url}</value>
+            </replacement>
+          </replacements>
+        </configuration>
+      </plugin>
 
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>properties-maven-plugin</artifactId>
-				<version>1.0-alpha-2</version>
-				<executions>
-					<execution>
-						<id>properties-maven-plugin-execution</id>
-						<phase>validate</phase>
-						<goals>
-							<goal>read-project-properties</goal>
-						</goals>
-						<configuration>
-							<files>
-								<file>workflow.properties</file>
-							</files>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>properties-maven-plugin</artifactId>
+        <version>1.0-alpha-2</version>
+        <executions>
+          <execution>
+            <id>properties-maven-plugin-execution</id>
+            <phase>validate</phase>
+            <goals>
+              <goal>read-project-properties</goal>
+            </goals>
+            <configuration>
+              <files>
+                <file>workflow.properties</file>
+              </files>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
 
 			<plugin>
 				<artifactId>maven-resources-plugin</artifactId>
