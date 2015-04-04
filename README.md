@@ -45,7 +45,7 @@ The following are the packages needed for Ubuntu 12.04:
     sudo apt-get install libglib2.0-dev
     sudo apt-get install zlib1g-dev
     # for the vcf-uploader
-    sudo apt-get install libxml-dom-perl libxml-xpath-perl libjson-perl libxml-libxml-perl time libdata-uuid-libuuid-perl libcarp-always-perl libipc-system-simple-perl 
+    sudo apt-get install libxml-dom-perl libxml-xpath-perl libjson-perl libxml-libxml-perl time libdata-uuid-libuuid-perl libcarp-always-perl libipc-system-simple-perl libfile-tail-perl
 
 These packages are needed for execution, **even when pulling from Artifactory**:
 
