@@ -1379,7 +1379,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
                   /*.addArgument("-vv " + gnosServer + "/cghub/data/analysis/download/" + analysisId + "'")*/
                   .addArgument(" -k 60") 
                   .addArgument(" --pem pemFile")
-                  .addArgument(" --url " + gnosServer )
+                  .addArgument(" --url " + gnosServer + "/cghub/data/analysis/download/" + bamFile)
                   .addArgument(" --file " + bamFile )
                   .addArgument(" --retries "+retries+" --sleep-min 1 --timeout-min " + timeoutMin) ;
                   /*.addArgument("gtdownload -c " + pemFile)
