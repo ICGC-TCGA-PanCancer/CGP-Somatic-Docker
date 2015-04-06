@@ -218,7 +218,7 @@
 							<goal>copy-resources</goal>
 						</goals>
 						<configuration>
-							<outputDirectory>${workflow-dir}/bin/lib/GNOS</outputDirectory>
+							<outputDirectory>${workflow-dir}/lib/GNOS</outputDirectory>
 							<resources>
 								<resource>
 									<directory>${workflow-dir}/bin/gt-download-upload-wrapper-${gt-download-upload-wrapper.version}/lib/GNOS</directory>

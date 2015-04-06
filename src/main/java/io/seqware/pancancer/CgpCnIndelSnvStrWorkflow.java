@@ -1268,7 +1268,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     }
 
     thisJob.getCommand()
-      .addArgument("perl -I " + getWorkflowBaseDir() + "/bin/lib " + getWorkflowBaseDir() + "/bin/gnos_upload_vcf.pl")
+      .addArgument("perl -I " + getWorkflowBaseDir() + "/lib " + getWorkflowBaseDir() + "/bin/gnos_upload_vcf.pl")
       .addArgument("--metadata-urls " + metadataUrls)
       .addArgument(metadataPathsString)
       .addArgument("--vcfs " + vcfs)
@@ -1374,12 +1374,12 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     perl -I ../gt-download-upload-wrapper/lib gnos_download_file.pl --command 'gtdownload -c /mnt/home/seqware/.ssh/boconnor_gnos_ebi_keyfile.pem -v https://gtrepo-ebi.annailabs.com/cghub/data/analysis/download/96e252b8-911a-44c7-abc6-b924845e0be6' --file 96e252b8-911a-44c7-abc6b924845e0be6/7d743b10ea1231730151b2c9d91c527f.bam --retries 10 --sleep-min 1 --timeout-min 60
     */
     thisJob.getCommand()
-                  .addArgument("perl -I " + getWorkflowBaseDir() + "/bin/lib " + getWorkflowBaseDir() + "/bin/gnos_download_file.pl ")
+                  .addArgument("perl -I " + getWorkflowBaseDir() + "/lib " + getWorkflowBaseDir() + "/bin/gnos_download_file.pl ")
                   /*.addArgument("--command 'gtdownload -c " + pemFile )*/
                   /*.addArgument("-vv " + gnosServer + "/cghub/data/analysis/download/" + analysisId + "'")*/
                   .addArgument(" -k 60") 
                   .addArgument(" --pem pemFile")
-                  .addArgmeunt(" --url " + gnosServer )
+                  .addArgument(" --url " + gnosServer )
                   .addArgument(" --file " + bamFile )
                   .addArgument(" --retries "+retries+" --sleep-min 1 --timeout-min " + timeoutMin) ;
                   /*.addArgument("gtdownload -c " + pemFile)
