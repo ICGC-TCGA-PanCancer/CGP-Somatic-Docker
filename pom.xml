@@ -26,7 +26,7 @@
 		<workflow-dir>${project.build.directory}/${workflow-full-name}/Workflow_Bundle_SangerPancancerCgpCnIndelSnvStr/${workflow-version}</workflow-dir>
 		<version.template.file>src/main/java/io/seqware/pancancer/Version.java.template</version.template.file>
 		<version.file>src/main/java/io/seqware/pancancer/Version.java</version.file>
-		<gt-download-upload-wrapper.version>2.0.5</gt-download-upload-wrapper.version>
+		<gt-download-upload-wrapper.version>2.0.7</gt-download-upload-wrapper.version>
 		<vcf-uploader.version>2.0.2</vcf-uploader.version>
 	</properties>
 
