@@ -52,7 +52,7 @@
 		<dependency>
 			<groupId>SeqWare-CGP-SomaticCore</groupId>
 			<artifactId>SeqWare-CGP-SomaticCore_opt</artifactId>
-			<version>1.2.1</version>
+			<version>1.2.5</version>
 			<type>tar.gz</type>
 		</dependency>
 		<dependency>
