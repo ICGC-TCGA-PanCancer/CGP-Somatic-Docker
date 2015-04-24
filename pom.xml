@@ -27,7 +27,7 @@
 		<version.template.file>src/main/java/io/seqware/pancancer/Version.java.template</version.template.file>
 		<version.file>src/main/java/io/seqware/pancancer/Version.java</version.file>
 		<gt-download-upload-wrapper.version>2.0.10</gt-download-upload-wrapper.version>
-		<vcf-uploader.version>2.0.3</vcf-uploader.version>
+		<vcf-uploader.version>2.0.4</vcf-uploader.version>
 	</properties>
 
 	<dependencies>
