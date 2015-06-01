@@ -99,9 +99,16 @@ Now that you have a VM built and system-level dependencies installed it's time t
 
 You should see the output in target, the Workflow\_Bundle\_CgpCnIndelSnvStr\_1.0-SNAPSHOT\_SeqWare\_1.1.0-alpha.5 directory.
 
-Assuming you have all the SeqWare and associated components installed correctly on your VM (you should) you would then test execute with:
+In order to test the proper functioning of the workflow with test data, create an ini file (the contents of this will depend on your workflow). For testing purposes, you will require the following ini, note that the ip address for the tabix server will appear in your environment variables as PANCANCER_TABIX_SERVER_PORT_80_TCP_ADDR
 
-    seqware bundle launch --dir target/Workflow\_Bundle\_CgpCnIndelSnvStr\_1.0-SNAPSHOT\_SeqWare\_1.1.0-alpha.5
+ # not "true" means the data will be downloaded using AliquotIDs
+ testMode=true
+ # the server that has various tabix-indexed files on it, see above, update with your URL
+ tabixSrvUri=http://172.17.0.13/   
+
+Run workflow sequentially (inside the container) with
+
+ seqware bundle launch --dir /workflow --no-metadata --ini workflow.ini
 
 That will run the integrated tests.
 
