@@ -26,8 +26,8 @@
 		<workflow-dir>${project.build.directory}/${workflow-full-name}/Workflow_Bundle_SangerPancancerCgpCnIndelSnvStr/${workflow-version}</workflow-dir>
 		<version.template.file>src/main/java/io/seqware/pancancer/Version.java.template</version.template.file>
 		<version.file>src/main/java/io/seqware/pancancer/Version.java</version.file>
-		<gt-download-upload-wrapper.version>2.0.3</gt-download-upload-wrapper.version>
-		<vcf-uploader.version>2.0.1</vcf-uploader.version>
+		<gt-download-upload-wrapper.version>2.0.10</gt-download-upload-wrapper.version>
+		<vcf-uploader.version>2.0.4</vcf-uploader.version>
 	</properties>
 
 	<dependencies>
@@ -52,7 +52,7 @@
 		<dependency>
 			<groupId>SeqWare-CGP-SomaticCore</groupId>
 			<artifactId>SeqWare-CGP-SomaticCore_opt</artifactId>
-			<version>1.2.1</version>
+			<version>1.2.7</version>
 			<type>tar.gz</type>
 		</dependency>
 		<dependency>
@@ -218,7 +218,7 @@
 							<goal>copy-resources</goal>
 						</goals>
 						<configuration>
-							<outputDirectory>${workflow-dir}/bin/lib/GNOS</outputDirectory>
+							<outputDirectory>${workflow-dir}/lib/GNOS</outputDirectory>
 							<resources>
 								<resource>
 									<directory>${workflow-dir}/bin/gt-download-upload-wrapper-${gt-download-upload-wrapper.version}/lib/GNOS</directory>

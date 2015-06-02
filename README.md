@@ -45,7 +45,7 @@ The following are the packages needed for Ubuntu 12.04:
     sudo apt-get install libglib2.0-dev
     sudo apt-get install zlib1g-dev
     # for the vcf-uploader
-    sudo apt-get install libxml-dom-perl libxml-xpath-perl libjson-perl libxml-libxml-perl time libdata-uuid-libuuid-perl libcarp-always-perl libipc-system-simple-perl 
+    sudo apt-get install libxml-dom-perl libxml-xpath-perl libjson-perl libxml-libxml-perl time libdata-uuid-libuuid-perl libcarp-always-perl libipc-system-simple-perl libfile-tail-perl
 
 These packages are needed for execution, **even when pulling from Artifactory**:
 
@@ -229,7 +229,7 @@ The workflow build process pulls the various binary dependencies hosted on our A
 
 You need to build and install the following in this order:
 
-* [PCAP v1.7.0](https://github.com/ICGC-TCGA-PanCancer/PCAP-core/archive/v1.7.0.tar.gz)
+* [PCAP v1.8.0](https://github.com/ICGC-TCGA-PanCancer/PCAP-core/archive/v1.8.0.tar.gz)
 * [cgpVcf v1.2.2](https://github.com/cancerit/cgpVcf/archive/v1.2.2.tar.gz)
 * [alleleCount v1.2.1](https://github.com/cancerit/alleleCount/archive/v1.2.1.tar.gz)
 * [cgpBinCounts v1.0.2](https://github.com/cancerit/cgpBinCounts/archive/v1.0.2.tar.gz)
