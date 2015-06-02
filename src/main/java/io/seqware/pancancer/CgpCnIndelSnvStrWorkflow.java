@@ -123,6 +123,16 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
   // if localFileMode, this is the path at which the workflow will find the XML files used for metadata in the upload of VCF
   private String localXMLMetadataPath = null;
   private String localBamFilePathPrefix = null;
+  
+  private String timeoutMin = "20";
+  private String retries = "3";
+  
+  // used for downloading from S3
+  private boolean downloadBamsFromS3 = false;
+  private String normalS3Url = "";
+  private ArrayList<String> tumorS3Urls = null;
+  private String S3DownloadKey = "";
+  private String S3DownloadSecretKey = "";
 
   private void init() {
     try {
@@ -195,6 +205,10 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       
       if(hasPropertyAndNotNull("cleanupBams")) {
         cleanupBams = Boolean.valueOf(getProperty("cleanupBams"));
+      }
+         
+      if(hasPropertyAndNotNull("downloadBamsFromS3")) {
+        downloadBamsFromS3 = Boolean.valueOf(getProperty("downloadBamsFromS3"));
       }
       
       if(hasPropertyAndNotNull("testMode")) {
@@ -373,6 +387,18 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       // upload 
       duckJobMem = getProperty("duckJobMem");
       
+      // GNOS timeouts
+      timeoutMin = getProperty("gnos_timeout_min");
+      retries = getProperty("gnos_retries");
+      
+      // S3 downloads
+      if (downloadBamsFromS3) {
+        normalS3Url = getProperty("normalS3Url");
+        tumorS3Urls = new ArrayList<String>(Arrays.asList(getProperty("tumorS3Urls").split(",")));
+        S3DownloadKey = getProperty("S3DownloadKey");
+        S3DownloadSecretKey = getProperty("S3DownloadSecretKey");
+      }
+      
     } catch (Exception ex) {
       throw new RuntimeException(ex);
     }
@@ -380,13 +406,14 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     return getFiles();
   }
   
-  private Job bamProvision(String analysisId, String bamFile, Job startTiming) {
+  private Job bamProvision(String analysisId, String bamFile, String bamS3Url, Job startTiming) {
     Job basJob = null;
     if(testMode == false) {
 
       Job gnosDownload = null;
 
-      if (localFileMode == false) {
+      // use GNOS
+      if (localFileMode == false && downloadBamsFromS3 == false) {
         gnosDownload = gnosDownloadBaseJob(analysisId, bamFile);
         gnosDownload.setMaxMemory(memGnosDownload);
         gnosDownload.addParent(startTiming);
@@ -395,6 +422,15 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
         basJob = basFileBaseJob(analysisId, bamFile);
         basJob.setMaxMemory(memBasFileGet);
         basJob.addParent(gnosDownload); 
+      } else if (localFileMode == false && downloadBamsFromS3) {
+        // then need to download from S3
+        gnosDownload = gnosS3DownloadBaseJob(analysisId, bamFile, bamS3Url);
+        gnosDownload.setMaxMemory(memGnosDownload);
+        gnosDownload.addParent(startTiming);
+        // get the BAS files
+        basJob = basFileBaseJob(analysisId, bamFile);
+        basJob.setMaxMemory(memBasFileGet);
+        basJob.addParent(gnosDownload);  
       } else {
         // then need to symlink so the downstream isn't broken
         gnosDownload = gnosSymlinkBaseJob(analysisId, bamFile);
@@ -462,7 +498,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
         } else {
           controlBam = controlAnalysisId + "/" + getProperty("controlBam");
         }
-        controlBasJob = bamProvision(controlAnalysisId, controlBam, startWorkflow);
+        controlBasJob = bamProvision(controlAnalysisId, controlBam, normalS3Url, startWorkflow);
         // this is being done because the above makes a symlink to <analysisId>/<bamname.bam>
         // and subsequent steps expect this, so controlBam must be just the filename and not the full path
         if (localFileMode) {
@@ -493,7 +529,11 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
           if (!localFileMode) {
             tumourBam = tumourAnalysisIds.get(i) + "/" + rawBams.get(i);
           }
-          Job tumourBasJob = bamProvision(tumourAnalysisIds.get(i), tumourBam, startWorkflow);
+          String tumorS3Url = null;
+          if (tumorS3Urls != null && tumorS3Urls.size() == rawBams.size()) {
+            tumorS3Url = tumorS3Urls.get(i);
+          }
+          Job tumourBasJob = bamProvision(tumourAnalysisIds.get(i), tumourBam, tumorS3Url, startWorkflow);
           tumourBasJobs.add(tumourBasJob);
           if (localFileMode) {
             List<String> bamPath = Arrays.asList(tumourBam.split("/"));
@@ -562,7 +602,7 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
 
       // these are not paired but per individual sample
       List<Job> ngsCountJobs = new ArrayList<Job>();
-      for(int i=1; i<=24; i++) {
+      for(int i=0; i<24; i++) {
         for(int j=0; j<tumourBams.size(); j++) {
           Job ngsCountJob = ngsCount(j, tumourBams.get(j), "tumour", i);
           ngsCountJob.setMaxMemory(memPicnicCounts);
@@ -867,7 +907,8 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     Job[] pindelInputJobs = new Job[2];
     for(int i=0; i<2; i++) {
       Job inputParse = pindelBaseJob(tumourCount, tumourBam, controlBam, "cgpPindel", "input", i+1);
-      inputParse.setMaxMemory(memPindelInput);
+      // If you tell SGE you are using ,multiple cores it multiplies the requested memory for you
+      inputParse.setMaxMemory( memPindelInput );
       inputParse.addParent(getTbiJob);
       pindelInputJobs[i] = inputParse;
     }
@@ -1149,32 +1190,36 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     Job thisJob = getWorkflow().createBashJob("vcfUpload");
     
     String metadataUrls = new String();
+    String metadataPaths = null;
     
     // construct the metadata URLs or, if local file mode, generate a path to them
     // using prefix and file naming convention from decider
     if (localFileMode && localXMLMetadataPath != null) {
-      metadataUrls = metadataUrls.concat(localXMLMetadataPath)
+      
+      metadataPaths = new String();
+      
+      metadataPaths = metadataPaths.concat(localXMLMetadataPath)
                                 .concat("/data_")
                                 .concat(controlAnalysisId)
                                 .concat(".xml");
       for(String tumourAnalysisId : tumourAnalysisIds) {
-        metadataUrls = metadataUrls.concat(",")
+        metadataPaths = metadataPaths.concat(",")
                                 .concat(localXMLMetadataPath)
                                 .concat("/data_")
                                 .concat(tumourAnalysisId)
                                 .concat(".xml");
       }
-    } else {
-      metadataUrls = metadataUrls.concat(gnosServer)
-                                .concat("/cghub/metadata/analysisFull/")
-                                .concat(controlAnalysisId);
-      for(String tumourAnalysisId : tumourAnalysisIds) {
-        metadataUrls = metadataUrls.concat(",")
-                                .concat(gnosServer)
-                                .concat("/cghub/metadata/analysisFull/")
-                                .concat(tumourAnalysisId);
+    }
+      
+    metadataUrls = metadataUrls.concat(gnosServer)
+                              .concat("/cghub/metadata/analysisFull/")
+                              .concat(controlAnalysisId);
+    for(String tumourAnalysisId : tumourAnalysisIds) {
+      metadataUrls = metadataUrls.concat(",")
+                              .concat(gnosServer)
+                              .concat("/cghub/metadata/analysisFull/")
+                              .concat(tumourAnalysisId);
 
-      }
     }
     
     String vcfs = new String();
@@ -1216,10 +1261,16 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       tarmd5s = tarmd5s.concat("," + baseFile + "genotype.tar.gz.md5");
       tarmd5s = tarmd5s.concat("," + baseFile + "verifyBamId.tar.gz.md5");
     }
+    
+    String metadataPathsString = "";
+    if (metadataPaths != null) {
+      metadataPathsString = "--metadata-paths "+metadataPaths;
+    }
 
     thisJob.getCommand()
-      .addArgument("perl -I " + getWorkflowBaseDir() + "/bin/lib " + getWorkflowBaseDir() + "/bin/gnos_upload_vcf.pl")
+      .addArgument("perl -I " + getWorkflowBaseDir() + "/lib " + getWorkflowBaseDir() + "/bin/gnos_upload_vcf.pl")
       .addArgument("--metadata-urls " + metadataUrls)
+      .addArgument(metadataPathsString)
       .addArgument("--vcfs " + vcfs)
       .addArgument("--vcf-md5sum-files " + vcfmd5s)
       .addArgument("--vcf-idxs " + tbis)
@@ -1241,6 +1292,8 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
       .addArgument("--vm-instance-mem-gb " +vmInstanceMemGb)
       .addArgument("--vm-location-code " +vmLocationCode)
       .addArgument("--uuid " + uuid)
+      .addArgument("--timeout-min "+timeoutMin)
+      .addArgument("--retries "+retries)
       ;
     try {
       if (hasPropertyAndNotNull("saveUploadArchive") && hasPropertyAndNotNull("uploadArchivePath") && "true".equals(getProperty("saveUploadArchive"))) {
@@ -1299,11 +1352,17 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     
     int memoryAvail = memHostMbAvailable - memWorkflowOverhead;
     
-    if((memoryAvail / threads) > Integer.valueOf(perThreadMemory)) {
+    if((memoryAvail / threads) >= Integer.valueOf(perThreadMemory)) {
       usableThreads = threads;
     }
     else {
       usableThreads = memoryAvail / Integer.valueOf(perThreadMemory);
+    }
+    
+    if(usableThreads == 0) {
+      throw new RuntimeException("memHostMbAvailable - memWorkflowOverhead = memoryAvail (" +
+                                memHostMbAvailable + " - " + memWorkflowOverhead + " = " + memoryAvail +
+                                ") is less than one of the mem*PerThread parameters in provided ini file.");
     }
     
     return usableThreads;
@@ -1315,15 +1374,31 @@ public class CgpCnIndelSnvStrWorkflow extends AbstractWorkflowDataModel {
     perl -I ../gt-download-upload-wrapper/lib gnos_download_file.pl --command 'gtdownload -c /mnt/home/seqware/.ssh/boconnor_gnos_ebi_keyfile.pem -v https://gtrepo-ebi.annailabs.com/cghub/data/analysis/download/96e252b8-911a-44c7-abc6-b924845e0be6' --file 96e252b8-911a-44c7-abc6b924845e0be6/7d743b10ea1231730151b2c9d91c527f.bam --retries 10 --sleep-min 1 --timeout-min 60
     */
     thisJob.getCommand()
-                  .addArgument("perl -I " + getWorkflowBaseDir() + "/bin/lib " + getWorkflowBaseDir() + "/bin/gnos_download_file.pl ")
-                  .addArgument("--command 'gtdownload -c " + pemFile )
-                  .addArgument(" -l ./download"+analysisId+".log")
-                  .addArgument(" -k 60")
-                  .addArgument("-vv " + gnosServer + "/cghub/data/analysis/download/" + analysisId + "'")
-                  .addArgument("--file " + bamFile)
-                  .addArgument("--retries 10 --sleep-min 1 --timeout-min 60");
+                  .addArgument("perl -I " + getWorkflowBaseDir() + "/lib " + getWorkflowBaseDir() + "/bin/gnos_download_file.pl ")
+                  /*.addArgument("--command 'gtdownload -c " + pemFile )*/
+                  /*.addArgument("-vv " + gnosServer + "/cghub/data/analysis/download/" + analysisId + "'")*/
+                  .addArgument(" -k 60") 
+                  .addArgument(" --pem "+ pemFile)
+                  .addArgument(" --url " + gnosServer + "/cghub/data/analysis/download/" + analysisId)
+                  .addArgument(" --file " + bamFile )
+                  .addArgument(" --retries "+retries+" --sleep-min 1 --timeout-min " + timeoutMin) ;
                   /*.addArgument("gtdownload -c " + pemFile)
                   .addArgument("-v " + gnosServer + "/cghub/data/analysis/download/" + analysisId); */
+    return thisJob;
+  }
+  
+  private Job gnosS3DownloadBaseJob(String analysisId, String bamFile, String s3Url) {
+    
+    Job thisJob = getWorkflow().createBashJob("S3Download");
+    thisJob.getCommand()
+      .addArgument("mkdir -p "+analysisId+"; \n")
+      .addArgument("mkdir -p ~/.aws/; \n")
+      .addArgument("echo '[default]\n" +
+        "aws_access_key_id = "+S3DownloadKey+"\n" +
+        "aws_secret_access_key = "+S3DownloadSecretKey+"' > ~/.aws/config; \n")
+      .addArgument("aws s3 cp " + s3Url + " " + analysisId + "/" + bamFile + " && ")
+      .addArgument("aws s3 cp " + s3Url + ".bai " + analysisId + "/" + bamFile + ".bai ");
+
     return thisJob;
   }
 
