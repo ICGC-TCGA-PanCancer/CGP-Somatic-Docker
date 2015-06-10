@@ -237,7 +237,7 @@ You need to build and install the following in this order:
 * [ascatNgs v1.5.1](https://github.com/cancerit/ascatNgs/archive/v1.5.1.tar.gz)
 * [cgpPindel v1.3.2](https://github.com/cancerit/cgpPindel/archive/v1.2.0.tar.gz)
 * [cgpCaVEManPostProcessing v1.2.0](https://github.com/cancerit/cgpCaVEManPostProcessing/archive/v1.2.0.tar.gz)
-* [cgpCaVEManWrapper v1.5.0](https://github.com/cancerit/cgpCaVEManWrapper/archive/v1.5.0.tar.gz)
+* [cgpCaVEManWrapper v1.5.1](https://github.com/cancerit/cgpCaVEManWrapper/archive/v1.5.1.tar.gz)
 * [BRASS v2.2.0](https://github.com/cancerit/BRASS/archive/v2.2.0.tar.gz)
 * [VAGrENT v2.0.0](https://github.com/cancerit/VAGrENT/archive/v2.0.0.tar.gz)
 * [grass v1.0.1](https://github.com/cancerit/grass/archive/v1.0.1.tar.gz)
