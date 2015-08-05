@@ -1,3 +1,8 @@
+# 1.0.8
+
+* SeqWare-CGP-SomaticCore artefact updated to 1.3.1 to handle readgroup count >115 when combining tumour and normal in SNV caller.
+* As part of above updated cgpCaVEManPostProcessing, cgpCaVEManWrapper.
+
 # 1.0.7
 
 * SeqWare-CGP-SomaticCore artefact updated to 1.3.0 to handle very long RG ID fields in BAM headers.
