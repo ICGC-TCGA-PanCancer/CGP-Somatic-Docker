@@ -6,7 +6,7 @@ A Seqware workflow derived from Sanger's Cancer Genome Project core somatic call
 
 Email Brian if you have questions.
 
-* Keiran Raine
+* Keiran Raine <kr2@sanger.ac.uk>
 * Brian O'Connor <boconnor@oicr.on.ca>
 
 ## Environment Requirements
@@ -233,11 +233,11 @@ You need to build and install the following in this order:
 * [cgpVcf v1.2.2](https://github.com/cancerit/cgpVcf/archive/v1.2.2.tar.gz)
 * [alleleCount v1.2.1](https://github.com/cancerit/alleleCount/archive/v1.2.1.tar.gz)
 * [cgpBinCounts v1.0.2](https://github.com/cancerit/cgpBinCounts/archive/v1.0.2.tar.gz)
-* [cgpNgsQc v1.0.2](https://github.com/cancerit/cgpNgsQc/archive/v1.0.3.tar.gz)
+* [cgpNgsQc v1.0.3](https://github.com/cancerit/cgpNgsQc/archive/v1.0.3.tar.gz)
 * [ascatNgs v1.5.1](https://github.com/cancerit/ascatNgs/archive/v1.5.1.tar.gz)
-* [cgpPindel v1.3.2](https://github.com/cancerit/cgpPindel/archive/v1.2.0.tar.gz)
-* [cgpCaVEManPostProcessing v1.2.0](https://github.com/cancerit/cgpCaVEManPostProcessing/archive/v1.2.0.tar.gz)
-* [cgpCaVEManWrapper v1.5.1](https://github.com/cancerit/cgpCaVEManWrapper/archive/v1.5.1.tar.gz)
+* [cgpPindel v1.3.2](https://github.com/cancerit/cgpPindel/archive/v1.3.2.tar.gz)
+* [cgpCaVEManPostProcessing v1.3.0](https://github.com/cancerit/cgpCaVEManPostProcessing/archive/v1.3.0.tar.gz)
+* [cgpCaVEManWrapper v1.7.2](https://github.com/cancerit/cgpCaVEManWrapper/archive/v1.7.2.tar.gz)
 * [BRASS v2.2.0](https://github.com/cancerit/BRASS/archive/v2.2.0.tar.gz)
 * [VAGrENT v2.0.0](https://github.com/cancerit/VAGrENT/archive/v2.0.0.tar.gz)
 * [grass v1.0.1](https://github.com/cancerit/grass/archive/v1.0.1.tar.gz)
