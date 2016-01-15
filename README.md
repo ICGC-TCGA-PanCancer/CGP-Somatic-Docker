@@ -1,6 +1,8 @@
-# SeqWare-CGP-SomaticCore Workflow
+# This is a work in progress, some of the information below has yet to be updated for the simplified Docker process.
 
-A Seqware workflow derived from Sanger's Cancer Genome Project core somatic calling pipeline. This is used by the ICGC/TCGA PanCancer project. See http://pancancer.info for more information. This workflow has been designed to work with [SeqWare 1.1.0](http://seqware.io) VMs setup by [Bindle 2.0](https://github.com/CloudBindle/Bindle).
+# CGP-Somatic Docker
+
+A dockerised version of the Seqware workflow derived from Sanger's Cancer Genome Project core somatic calling pipeline. This is a cleaned up vertion as used in the ICGC/TCGA PanCancer project. See http://pancancer.info for more information. This workflow has been designed to work with [SeqWare 1.1.1](http://seqware.io) VMs setup by [Bindle 2.0](https://github.com/CloudBindle/Bindle).
 
 ## Authors
 
@@ -11,7 +13,7 @@ Email Brian if you have questions.
 
 ## Environment Requirements
 
-This workflow assumes you are working on a VM (running on Amazon, in VirtualBox, etc) that is running SeqWare 1.1.0.  You can find pre-fab AMIs and OVA files on our project site http://seqware.io but 1.1.0 is generally bleeding edge and we may not have posted VMs yet.  If that's the case, please take a look at our internal documentation from the PanCancer staff which describe how to build an up-to-date SeqWare 1.1.0 VM using Bindle 2.0, our provisioner.  See: https://github.com/ICGC-TCGA-PanCancer/pancancer-info/tree/develop/docs
+This workflow assumes you are working on a VM (running on Amazon, in VirtualBox, etc) that is running SeqWare 1.1.1.  You can find pre-fab AMIs and OVA files on our project site http://seqware.io but 1.1.0 is generally bleeding edge and we may not have posted VMs yet.  If that's the case, please take a look at our internal documentation from the PanCancer staff which describe how to build an up-to-date SeqWare 1.1.0 VM using Bindle 2.0, our provisioner.  See: https://github.com/ICGC-TCGA-PanCancer/pancancer-info/tree/develop/docs
 
 Again, this is a bit complex but in the future we will distributed pre-created VMs as OVA files or AMIs that should make this process go much more smoothly.
 
@@ -265,5 +267,4 @@ You shouldn't really need to change these but if you're changing instance types/
 This is fixed on the HVM AMI but if you want to call oozie commands directly then you might need to define the follow env var:
 
     export OOZIE_URL=http://master:11000/oozie
-
 
