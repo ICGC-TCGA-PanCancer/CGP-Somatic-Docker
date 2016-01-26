@@ -11,7 +11,7 @@ docker run \
 	-v $2:/ini:ro \
 	sanger \
 		/home/seqware/bin/seqware bundle launch \
-			--dir /home/seqware/Seqware-CGP-SomaticCore/target/Workflow_Bundle_SangerPancancerCgpCnIndelSnvStr_1.0.8_SeqWare_1.1.0 \
+			--dir /home/seqware/Seqware-CGP-SomaticCore/target/Workflow_Bundle_CgpSomaticCore_1.0.8_SeqWare_1.1.0 \
 			--ini /ini \
 			--no-metadata \
 			--engine whitestar-parallel
