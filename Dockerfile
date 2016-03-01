@@ -15,20 +15,20 @@ ENV PATH $OPT/bin:$PATH
 ENV PERL5LIB $OPT/lib/perl5
 
 
-RUN     apt-get -yqq update && \
-        apt-get -yqq install build-essential autoconf software-properties-common python-software-properties \
-          wget curl zlib1g-dev libncurses5-dev \
-          libgd2-xpm-dev libexpat1-dev python unzip libboost-dev libboost-iostreams-dev \
-          libpstreams-dev libglib2.0-dev libreadline6-dev gfortran libcairo2-dev openjdk-7-jdk\
-          cpanminus && \
-        apt-get clean
+RUN apt-get -yqq update && \
+    apt-get -yqq install libreadline6-dev build-essential autoconf software-properties-common python-software-properties \
+      wget curl zlib1g-dev libncurses5-dev \
+      libgd2-xpm-dev libexpat1-dev python unzip libboost-dev libboost-iostreams-dev \
+      libpstreams-dev libglib2.0-dev gfortran libcairo2-dev cpanminus bsdtar libwww-perl \
+      openjdk-7-jdk && \
+    apt-get clean
 
 #libtest-warn-perl may still be needed
 
 RUN mkdir -p /tmp/downloads $OPT/bin $OPT/etc $OPT/lib $OPT/share
 WORKDIR /tmp/downloads
 
-RUN cpanm --mirror http://cpan.metacpan.org -l $OPT File::ShareDir File::ShareDir::Install LWP::UserAgent Bio::Root::Version Const::Fast Graph && \
+RUN cpanm --mirror http://cpan.metacpan.org -l $OPT File::ShareDir File::ShareDir::Install Bio::Root::Version Const::Fast Graph && \
      rm -rf ~/.cpanm
 
 RUN export SOURCE_JKENT_BIN=https://github.com/ENCODE-DCC/kentUtils/raw/master/bin/linux.x86_64 && \
