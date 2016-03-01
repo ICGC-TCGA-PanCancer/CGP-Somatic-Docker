@@ -8,15 +8,8 @@ RUN apt-get -m update && \
     apt-get install -y apt-utils tar git curl wget dialog net-tools build-essential time tabix && \
     apt-get clean
 
-COPY ./src					/home/seqware/Seqware-CGP-SomaticCore/src
-COPY ./workflow				/home/seqware/Seqware-CGP-SomaticCore/workflow
-COPY ./scripts				/home/seqware/Seqware-CGP-SomaticCore/scripts
-COPY ./pom.xml				/home/seqware/Seqware-CGP-SomaticCore/pom.xml
-COPY ./workflow.properties	/home/seqware/Seqware-CGP-SomaticCore/workflow.properties
-
-RUN chown -R seqware /home/seqware/Seqware-CGP-SomaticCore
-
-# CGP build to layer on:
+### START of CGP INSTALL ###
+#
 ENV OPT /opt/wtsi-cgp
 ENV PATH $OPT/bin:$PATH
 ENV PERL5LIB $OPT/lib/perl5
@@ -24,7 +17,7 @@ ENV PERL5LIB $OPT/lib/perl5
 
 RUN     apt-get -yqq update && \
         apt-get -yqq install build-essential autoconf software-properties-common python-software-properties \
-          wget curl zlib1g-dev libncurses5-dev libgd-dev \
+          wget curl zlib1g-dev libncurses5-dev \
           libgd2-xpm-dev libexpat1-dev python unzip libboost-dev libboost-iostreams-dev \
           libpstreams-dev libglib2.0-dev libreadline6-dev gfortran libcairo2-dev openjdk-7-jdk\
           cpanminus && \
@@ -314,6 +307,17 @@ RUN   curl -sSL -o tmp.tar.gz --retry 10 https://github.com/wrpearson/fasta36/re
       tar -C /tmp/downloads/fasta --strip-components 2 -zxf tmp.tar.gz && \
       cp /tmp/downloads/fasta/bin/ssearch36 $OPT/bin/. && \
       rm -rf /tmp/downloads/fasta
+
+#
+### END of CGP INSTALL ###
+
+COPY ./src					/home/seqware/Seqware-CGP-SomaticCore/src
+COPY ./workflow				/home/seqware/Seqware-CGP-SomaticCore/workflow
+COPY ./scripts				/home/seqware/Seqware-CGP-SomaticCore/scripts
+COPY ./pom.xml				/home/seqware/Seqware-CGP-SomaticCore/pom.xml
+COPY ./workflow.properties	/home/seqware/Seqware-CGP-SomaticCore/workflow.properties
+
+RUN chown -R seqware /home/seqware/Seqware-CGP-SomaticCore
 
 USER seqware
 
