@@ -103,9 +103,9 @@ RUN curl -sSL -o tmp.zip --retry 10 https://github.com/samtools/tabix/archive/ma
     rm -rf /tmp/downloads/tabix-master /tmp/downloads/tmp.zip
 
 # build vcftools using patch from cgpVcf release
-RUN curl -sSL -o tmp.tar.gz http://sourceforge.net/projects/vcftools/files/vcftools_0.1.12a.tar.gz/download && \
+RUN curl -sSL -o tmp.tar.gz --retry 10 http://sourceforge.net/projects/vcftools/files/vcftools_0.1.12a.tar.gz/download && \
     mkdir /tmp/downloads/vcftools && \
-    tar -C /tmp/downloads/vcftools --strip-components 1 -zxf tmp.tar.gz && \
+    tar -C /tmp/downloads/vcftools --strip-components 1 -zxf /tmp/downloads/tmp.tar.gz && \
     cd /tmp/downloads/vcftools && \
     curl -sSL -o vcfToolsInstLocs.diff --retry 10 https://raw.githubusercontent.com/cancerit/cgpVcf/$CGPVCF_UUID/patches/vcfToolsInstLocs.diff && \
     patch Makefile < vcfToolsInstLocs.diff && \
