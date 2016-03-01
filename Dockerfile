@@ -4,9 +4,6 @@ ENV SANGER_VERSION 1.0.8
 LABEL SANGER_VERSION $SANGER_VERSION
 
 USER root
-RUN apt-get -m update && \
-    apt-get install -y apt-utils tar git curl wget dialog net-tools build-essential time tabix && \
-    apt-get clean
 
 ### START of CGP INSTALL ###
 #
@@ -16,7 +13,8 @@ ENV PERL5LIB $OPT/lib/perl5:$PERL5LIB
 
 
 RUN apt-get -yqq update && \
-    apt-get -yqq install libreadline6-dev build-essential autoconf software-properties-common python-software-properties \
+    apt-get -yqq install apt-utils tar git dialog net-tools libreadline6-dev build-essential \
+      autoconf software-properties-common python-software-properties \
       wget curl zlib1g-dev libncurses5-dev \
       libgd2-xpm-dev libexpat1-dev python unzip libboost-dev libboost-iostreams-dev \
       libpstreams-dev libglib2.0-dev gfortran libcairo2-dev cpanminus bsdtar libwww-perl \
