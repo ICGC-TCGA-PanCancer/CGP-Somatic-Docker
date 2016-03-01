@@ -12,7 +12,7 @@ RUN apt-get -m update && \
 #
 ENV OPT /opt/wtsi-cgp
 ENV PATH $OPT/bin:$PATH
-ENV PERL5LIB $OPT/lib/perl5
+ENV PERL5LIB $OPT/lib/perl5:$PERL5LIB
 
 
 RUN apt-get -yqq update && \
@@ -22,8 +22,6 @@ RUN apt-get -yqq update && \
       libpstreams-dev libglib2.0-dev gfortran libcairo2-dev cpanminus bsdtar libwww-perl \
       openjdk-7-jdk && \
     apt-get clean
-
-#libtest-warn-perl may still be needed
 
 RUN mkdir -p /tmp/downloads $OPT/bin $OPT/etc $OPT/lib $OPT/share
 WORKDIR /tmp/downloads
