@@ -13,7 +13,7 @@ Email Brian if you have questions.
 
 ## Environment Requirements
 
-This workflow assumes you are working on a VM (running on Amazon, in VirtualBox, etc) that is running SeqWare 1.1.1.  You can find pre-fab AMIs and OVA files on our project site http://seqware.io but 1.1.0 is generally bleeding edge and we may not have posted VMs yet.  If that's the case, please take a look at our internal documentation from the PanCancer staff which describe how to build an up-to-date SeqWare 1.1.0 VM using Bindle 2.0, our provisioner.  See: https://github.com/ICGC-TCGA-PanCancer/pancancer-info/tree/develop/docs
+This workflow assumes you are working on a docker image of pancancer/seqware_whitestar_pancancer:1.1.2.
 
 Again, this is a bit complex but in the future we will distributed pre-created VMs as OVA files or AMIs that should make this process go much more smoothly.
 
@@ -213,36 +213,23 @@ In these cases _do not_ modify the ``*-qsub.opts`` file but instead reduce the p
 
 (the numeric component of 'script stub' was correct at time of writing, it may drift)
 
-## Note About SFTP Upload Paths
+## Building CGP Workflow Dependencies
 
-You *must* create the upload directories ahead of time for SFTP/Synapse uploads.  The tools I'm using *will not* automatically create new directories for you.  What's worse, they exit with "0" exit status if the remote path doesn't exist, making it very difficult to detect if the upload has failed.  Make sure you create the destination directories ahead of time.
-
-## Note About S3 Upload Path
-
-For S3, the path will automatically be created.
-
-## Note About Synapse Upload Path
-
-You must have permission to the parent-id, for example syn3155834 for the Sanger submissions for the PanCancer project.  If you don't have permissions the tool will crash but not report an error!  So make sure you can add to the parent ahead of time.
-
-## Building CGP Workflow Dependencies - Optional
-
-The workflow build process pulls the various binary dependencies hosted on our Artifactory server.  If, for some reason, you need to rebuild these follow this process. If you're using x86\_64 on Ubuntu 12.04 then you should be fine, this is just provided if you need to start from scratch.
+The Dockerfile adds the following to the pancancer/seqware_whitestar_pancancer image.  This is just provided if you need to start from scratch.
 
 You need to build and install the following in this order:
 
-* [PCAP v1.8.0](https://github.com/ICGC-TCGA-PanCancer/PCAP-core/archive/v1.8.0.tar.gz)
-* [cgpVcf v1.2.2](https://github.com/cancerit/cgpVcf/archive/v1.2.2.tar.gz)
-* [alleleCount v1.2.1](https://github.com/cancerit/alleleCount/archive/v1.2.1.tar.gz)
-* [cgpBinCounts v1.0.2](https://github.com/cancerit/cgpBinCounts/archive/v1.0.2.tar.gz)
+* [PCAP v1.12.1](https://github.com/ICGC-TCGA-PanCancer/PCAP-core/archive/v1.12.1.tar.gz)
+* [cgpVcf v1.3.1](https://github.com/cancerit/cgpVcf/archive/v1.3.1.tar.gz)
+* [alleleCount v2.1.2](https://github.com/cancerit/alleleCount/archive/v2.1.2.tar.gz)
 * [cgpNgsQc v1.0.3](https://github.com/cancerit/cgpNgsQc/archive/v1.0.3.tar.gz)
-* [ascatNgs v1.5.1](https://github.com/cancerit/ascatNgs/archive/v1.5.1.tar.gz)
-* [cgpPindel v1.3.2](https://github.com/cancerit/cgpPindel/archive/v1.3.2.tar.gz)
-* [cgpCaVEManPostProcessing v1.3.0](https://github.com/cancerit/cgpCaVEManPostProcessing/archive/v1.3.0.tar.gz)
-* [cgpCaVEManWrapper v1.7.2](https://github.com/cancerit/cgpCaVEManWrapper/archive/v1.7.2.tar.gz)
-* [BRASS v2.2.0](https://github.com/cancerit/BRASS/archive/v2.2.0.tar.gz)
-* [VAGrENT v2.0.0](https://github.com/cancerit/VAGrENT/archive/v2.0.0.tar.gz)
-* [grass v1.0.1](https://github.com/cancerit/grass/archive/v1.0.1.tar.gz)
+* [ascatNgs v1.5.2](https://github.com/cancerit/ascatNgs/archive/v1.5.2.tar.gz)
+* [cgpPindel v1.5.4](https://github.com/cancerit/cgpPindel/archive/v1.5.4.tar.gz)
+* [cgpCaVEManPostProcessing v1.5.0](https://github.com/cancerit/cgpCaVEManPostProcessing/archive/v1.5.0.tar.gz)
+* [cgpCaVEManWrapper v1.9.0](https://github.com/cancerit/cgpCaVEManWrapper/archive/v1.9.0.tar.gz)
+* [BRASS v4.0.12](https://github.com/cancerit/BRASS/archive/v4.0.12.tar.gz)
+* [VAGrENT v2.1.2](https://github.com/cancerit/VAGrENT/archive/v2.1.2.tar.gz)
+* [grass v1.1.6](https://github.com/cancerit/grass/archive/v1.1.6.tar.gz)
 
 There is a script included in this package that automates this process, just run:
 

@@ -35,8 +35,6 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
   private static String TIMEDIR;
   private static String COUNTDIR;
   private static String BBDIR;
-//  private boolean testMode=false;
-//  private boolean localFileMode=false;
   private boolean cleanup = false;
   private boolean cleanupBams = false;
   
@@ -47,7 +45,7 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
   private String workflowName = Version.WORKFLOW_SHORT_NAME_VERSION;
   
   // MEMORY variables //
-  private String  memBasFileGet, memPackageResults, memMarkTime,
+  private String  memGenerateBasFile, memPackageResults, memMarkTime,
                   memQcMetrics, memGenotype, memContam,
                   memBbMerge,
                   // ascat memory
@@ -55,7 +53,8 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
                   // pindel memory
                   memPindelInput, memPindelPerThread, memPindelVcf, memPindelMerge , memPindelFlag,
                   // brass memory
-                  memBrassInput, memBrassGroup, memBrassFilter, memBrassSplit,
+                  memBrassInput, memBrassCoverPerThread, memBrassCoverMerge, memBrassGroup, memBrassIsize,
+                  memBrassNormCn, memBrassFilter, memBrassSplit,
                   memBrassAssemblePerThread, memBrassGrass, memBrassTabix,
                   // caveman memory
                   memCaveCnPrep,
@@ -154,7 +153,7 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
       coresAddressable = Integer.valueOf(getProperty("coresAddressable"));
 
       // MEMORY //
-      memBasFileGet = getProperty("memBasFileGet");
+      memGenerateBasFile = getProperty("memBasFileGet");
       memPackageResults = getProperty("memPackageResults");
       memMarkTime = getProperty("memMarkTime");
       memQcMetrics = getProperty("memQcMetrics");
@@ -174,7 +173,11 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
       memPindelFlag = getProperty("memPindelFlag");
       
       memBrassInput = getProperty("memBrassInput");
+      memBrassCoverPerThread = getProperty("memBrassCoverPerThread");
+      memBrassCoverMerge = getProperty("memBrassCoverMerge");
       memBrassGroup = getProperty("memBrassGroup");
+      memBrassIsize = getProperty("memBrassIsize");
+      memBrassNormCn = getProperty("memBrassNormCn");
       memBrassFilter = getProperty("memBrassFilter");
       memBrassSplit = getProperty("memBrassSplit");
       memBrassAssemblePerThread = getProperty("memBrassAssemblePerThread");
@@ -214,8 +217,7 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
       refExclude = getProperty("refExclude");
 
       //environment
-      installBase = getWorkflowBaseDir() + "/bin/opt";
-      //refBase = getWorkflowBaseDir() + "/data/cgp_reference";
+      installBase = "/opt/wtsi-cgp";
       refBase = getWorkflowBaseDir() + "/data/reference/cgp_reference";
       genomeFaGz = getWorkflowBaseDir() + "/data/reference/genome.fa.gz";
       
@@ -243,7 +245,7 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
       // @todo need to add code to generate BAS for BAM
       
       Job controlBasJob = basFileBaseJob(controlBam);
-      controlBasJob.setMaxMemory(memBasFileGet);
+      controlBasJob.setMaxMemory(memGenerateBasFile);
       downloadJobsList.add(controlBasJob);
       
       List<String> tumourBams = new ArrayList<String>();
@@ -257,7 +259,7 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
       for(int i=0; i<rawBams.size(); i++) {
         String tumourBam = rawBams.get(i);
         Job tumourBasJob = basFileBaseJob(tumourBam);
-        tumourBasJob.setMaxMemory(memBasFileGet);
+        tumourBasJob.setMaxMemory(memGenerateBasFile);
         tumourBasJobs.add(tumourBasJob);
         tumourBams.add(tumourBam);
         downloadJobsList.add(tumourBasJob);
@@ -483,14 +485,38 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
       brassInputJobs[i] = brassInputJob;
     }
     
+    int brassCoverNormalisedThreads = getMemNormalisedThread(memBrassCoverPerThread, coresAddressable);
+    int totalBrassCoverMem = Integer.valueOf(memBrassCoverPerThread) + (Integer.valueOf(memWorkflowOverhead) / brassCoverNormalisedThreads);
+    
+    Job brassCoverJob = brassBaseJob(tumourCount, tumourBam, controlBam, "BRASS", "cover", 1);
+    brassCoverJob.getCommand().addArgument("-l " + brassCoverNormalisedThreads);
+    brassCoverJob.getCommand().addArgument("-c " + brassCoverNormalisedThreads);
+    brassCoverJob.setMaxMemory(Integer.toString(totalBrassCoverMem));
+    brassCoverJob.setThreads(brassCoverNormalisedThreads);
+    brassCoverJob.addParent(brassInputJobs[0]);
+    brassCoverJob.addParent(brassInputJobs[1]);
+    
+    Job brassCoverMergeJob = brassBaseJob(tumourCount, tumourBam, controlBam, "BRASS", "merge", 1);
+    brassCoverMergeJob.setMaxMemory(memBrassCoverMerge);
+    brassCoverMergeJob.addParent(brassCoverJob);
+    
     Job brassGroupJob = brassBaseJob(tumourCount, tumourBam, controlBam, "BRASS", "group", 1);
     brassGroupJob.setMaxMemory(memBrassGroup);
-    brassGroupJob.addParent(brassInputJobs[0]);
-    brassGroupJob.addParent(brassInputJobs[1]);
+    brassGroupJob.addParent(brassCoverJob);
+    
+      Job brassIsizeJob = brassBaseJob(tumourCount, tumourBam, controlBam, "BRASS", "isize", 1);
+    brassIsizeJob.setMaxMemory(memBrassIsize);
+    brassIsizeJob.addParent(brassCoverMergeJob);
+    
+      Job brassNormCnJob = brassBaseJob(tumourCount, tumourBam, controlBam, "BRASS", "normcn", 1);
+    brassNormCnJob.setMaxMemory(memBrassNormCn);
+    brassNormCnJob.addParent(brassCoverMergeJob);
     
     Job brassFilterJob = brassBaseJob(tumourCount, tumourBam, controlBam, "BRASS", "filter", 1);
     brassFilterJob.setMaxMemory(memBrassFilter);
     brassFilterJob.addParent(brassGroupJob);
+    brassFilterJob.addParent(brassIsizeJob);
+    brassFilterJob.addParent(brassNormCnJob);
     brassFilterJob.addParent(ascatFinaliseJob); // NOTE: dependency on ASCAT!!
     
     Job brassSplitJob = brassBaseJob(tumourCount, tumourBam, controlBam, "BRASS", "split", 1);
@@ -502,7 +528,6 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
     int totalBrassAssMem = Integer.valueOf(memBrassAssemblePerThread) + (Integer.valueOf(memWorkflowOverhead) / brassAssNormalisedThreads);
     
     Job brassAssembleJob = brassBaseJob(tumourCount, tumourBam, controlBam, "BRASS", "assemble", 1);
-    brassAssembleJob.setMaxMemory(Integer.toString(totalBrassAssMem));
     brassAssembleJob.getCommand().addArgument("-l " + brassAssNormalisedThreads);
     brassAssembleJob.getCommand().addArgument("-c " + brassAssNormalisedThreads);
     brassAssembleJob.setMaxMemory(Integer.toString(totalBrassAssMem));
@@ -939,11 +964,16 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
   }
   
   private Job brassBaseJob(int tumourCount, String tumourBam, String controlBam, String alg, String process, int index) {
+    
+    String cnPath = OUTDIR + "/" + tumourCount + "/ascat/*.copynumber.caveman.csv";
+    String cnStats = OUTDIR + "/" + tumourCount + "/ascat/*.samplestatistics.csv";
+    
     Job thisJob = prepTimedJob(tumourCount, alg, process, index);
     thisJob.getCommand()
               .addArgument(getWorkflowBaseDir()+ "/bin/wrapper.sh")
               .addArgument(installBase)
               .addArgument("brass.pl")
+              .addArgument("-j 4 -k 4")
               .addArgument("-p " + process)
               .addArgument("-g " + genomeFaGz)
               .addArgument("-e " + refExclude)
@@ -958,14 +988,12 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
               .addArgument("-o " + OUTDIR + "/" + tumourCount + "/brass")
               .addArgument("-t " + tumourBam)
               .addArgument("-n " + controlBam)
+              .addArgument("-a " + cnPath)
+              .addArgument("-ss " + cnStats)
+              .addArgument("-vi " + refBase + "/brass/viral.1.1.genomic.fa")
+              .addArgument("-mi " + refBase + "/brass/all_ncbi_bacteria.20150703")
+              .addArgument("-b " + refBase + "/brass/hs37d5_500bp_windows.gc.bed.gz")
             ;
-    if(!process.equals("assemble")) {
-      thisJob.getCommand().addArgument("-i " + index);
-    }
-    if(process.equals("filter")) {
-      String cnPath = OUTDIR + "/" + tumourCount + "/ascat/*.copynumber.caveman.csv";
-      thisJob.getCommand().addArgument("-a " + cnPath);
-    }
     return thisJob;
   }
 }

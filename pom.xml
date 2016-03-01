@@ -20,7 +20,7 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-		<seqware-version>1.1.0</seqware-version>
+		<seqware-version>1.1.1</seqware-version>
 		<skipITs>true</skipITs>
 		<workflow-full-name>Workflow_Bundle_CgpSomaticCore_${workflow-version}_SeqWare_${seqware-version}</workflow-full-name>
 		<workflow-dir>${project.build.directory}/${workflow-full-name}/Workflow_Bundle_CgpSomaticCore/${workflow-version}</workflow-dir>
@@ -66,7 +66,7 @@
 		<dependency>
 			<groupId>io.seqware</groupId>
 			<artifactId>seqware-bin-linux-x86-64-jre-7.0.51</artifactId>
-			<version>1.0.0</version>
+			<version>1.1.1</version>
 		</dependency>
 		<dependency>
 			<groupId>com.github.seqware</groupId>
@@ -74,12 +74,6 @@
 			<version>${seqware-version}</version>
 			<classifier>full</classifier>
 			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>SeqWare-CGP-SomaticCore</groupId>
-			<artifactId>SeqWare-CGP-SomaticCore_opt</artifactId>
-			<version>1.3.1</version>
-			<type>tar.gz</type>
 		</dependency>
 	</dependencies>
 
@@ -127,6 +121,7 @@
         <configuration>
           <source>1.6</source>
           <target>1.6</target>
+          <showDeprecation>true</showDeprecation>
         </configuration>
       </plugin>
 
