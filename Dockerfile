@@ -89,19 +89,6 @@ RUN curl -sSL -o tmp.tar.gz --retry 10 https://github.com/ICGC-TCGA-PanCancer/PC
 
 ENV CGPVCF_UUID 5cc538ded838a4ba94feedff1b51ee3ebc4b65f4
 
-# build tabix using patch from cgpVcf release
-RUN curl -sSL -o tmp.zip --retry 10 https://github.com/samtools/tabix/archive/master.zip && \
-    unzip tmp.zip && \
-    cd /tmp/downloads/tabix-master && \
-    make && \
-    cp tabix $OPT/bin/. && \
-    cp bgzip $OPT/bin/. && \
-    cd perl && \
-    perl Makefile.PL INSTALL_BASE=$OPT && \
-    make && make test && make install && \
-    cd /tmp/downloads && \
-    rm -rf /tmp/downloads/tabix-master /tmp/downloads/tmp.zip
-
 # build vcftools using patch from cgpVcf release
 RUN curl -sSL -o tmp.tar.gz --retry 10 http://sourceforge.net/projects/vcftools/files/vcftools_0.1.12a.tar.gz/download && \
     mkdir /tmp/downloads/vcftools && \
