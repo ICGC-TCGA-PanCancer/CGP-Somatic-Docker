@@ -2,8 +2,8 @@
   <workflow name="${workflow-name}" version="${workflow-version}" seqware_version="${seqware-version}"
   basedir="${workflow_bundle_dir}/Workflow_Bundle_${workflow-name}/${workflow-version}">
     <description>${workflow-description}</description>
-    <workflow_class path="${workflow_bundle_dir}/Workflow_Bundle_${workflow-name}/${workflow-version}/classes/io/seqware/pancancer/CgpCnIndelSnvStrWorkflow.java"/>
-    <config path="${workflow_bundle_dir}/Workflow_Bundle_${workflow-name}/${workflow-version}/config/CgpCnIndelSnvStrWorkflow.ini"/>
+    <workflow_class path="${workflow_bundle_dir}/Workflow_Bundle_${workflow-name}/${workflow-version}/classes/io/seqware/pancancer/CgpSomaticCore.java"/>
+    <config path="${workflow_bundle_dir}/Workflow_Bundle_${workflow-name}/${workflow-version}/config/CgpSomaticCore.ini"/>
     <requirements compute="single" memory="20M" network="local"  workflow_engine="Pegasus,Oozie" workflow_type="java"/>
   </workflow>
 </bundle>
