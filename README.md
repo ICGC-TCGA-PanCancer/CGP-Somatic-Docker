@@ -120,7 +120,7 @@ NOTE: to download "real" data from a GNOS repository you need to provide a valid
 
 ## Running the Workflow
 
-Once you build this on a SeqWare VM the next thing you'll want to do is actually run some test data.  The workflow can operate in two modes.  First, in local test mode and, second, in online mode where large data is downloaded from GNOS.  The latter takes about 30 hours to run whereas the former takes about 1.5 on 8 cores.  Take a look at CgpCnIndelSnvStrWorkflow.ini and make decisions about the following variables:
+Once you build this on a SeqWare VM the next thing you'll want to do is actually run some test data.  The workflow can operate in two modes.  First, in local test mode and, second, in online mode where large data is downloaded from GNOS.  The latter takes about 30 hours to run whereas the former takes about 1.5 on 8 cores.  Take a look at CgpSomaticCore.ini and make decisions about the following variables:
 
     # number of cores to use, you want 4.5G/core or more
     coresAddressable=32
