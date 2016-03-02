@@ -28,6 +28,40 @@
 		<version.file>src/main/java/io/seqware/pancancer/Version.java</version.file>
 	</properties>
 
+	<profiles>
+		<profile>
+			<id>include-refdata-in-build</id>
+			<activation>
+				<property>
+					<name>refdata</name>
+					<value>true</value>
+				</property>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>exec-maven-plugin</artifactId>
+						<version>1.2.1</version>
+						<executions>
+							<execution>
+								<id>download_data</id>
+								<phase>package</phase>
+								<goals>
+									<goal>exec</goal>
+								</goals>
+								<configuration>
+									<executable>perl</executable>
+									<commandlineArgs>${basedir}/workflow/scripts/download_ref.pl ${basedir}/links</commandlineArgs>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
+
 	<dependencies>
 		<dependency>
 			<groupId>io.seqware</groupId>
@@ -387,7 +421,6 @@
 					<links>
 						<link>
 							<dst>${workflow-dir}/data</dst>
-							<src>${basedir}/links</src>
 						</link>
 					</links>
 				</configuration>
