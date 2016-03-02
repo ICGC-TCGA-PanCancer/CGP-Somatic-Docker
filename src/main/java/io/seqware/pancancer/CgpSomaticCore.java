@@ -65,7 +65,7 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
 
   // workflow variables
   private String  // reference variables
-                  species, assembly,
+                  species, assembly, refFrom,
                   // sequencing type/protocol
                   seqType, seqProtocol,
                   //GNOS identifiers
@@ -75,7 +75,7 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
                   // pindel variables
                   refExclude, pindelGermline,
                   //general variables
-                  installBase, refBase, genomeFaGz, testBase,
+                  installBase, refBase, genomeFa, testBase,
                   //contamination variables
                   contamDownSampOneIn
                   ;
@@ -203,6 +203,7 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
       // REFERENCE INFO //
       species = getProperty("species");
       assembly = getProperty("assembly");
+      refFrom = getProperty("refFrom");
       
       // Sequencing info
       seqType = getProperty("seqType");
@@ -218,8 +219,8 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
 
       //environment
       installBase = "/opt/wtsi-cgp";
-      refBase = getWorkflowBaseDir() + "/data/reference/cgp_reference";
-      genomeFaGz = getWorkflowBaseDir() + "/data/reference/genome.fa.gz";
+      refBase = OUTDIR + "/reference_files";
+      genomeFa = refBase + "genome.fa";
       
     } catch (Exception ex) {
       throw new RuntimeException(ex);
@@ -230,13 +231,21 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
   
   @Override
   public void buildWorkflow() {
-    
     Job startDownload = markTime("download", "start");
     startDownload.setMaxMemory(memMarkTime);
     
+    Job pullRef = pullRef();
+    pullRef.addParent(startDownload);
+    pullRef.setMaxMemory(memMarkTime);
+    
+    Job unpackRef = unpackRef();
+    unpackRef.addParent(pullRef);
+    unpackRef.setMaxMemory(memMarkTime);
+    
+    
     Job startWorkflow = markTime("workflow", "start");
     startWorkflow.setMaxMemory(memMarkTime);
-    startWorkflow.addParent(startDownload);
+    startWorkflow.addParent(unpackRef);
     
     try {
       List<Job> downloadJobsList = new ArrayList<Job>();
@@ -781,6 +790,8 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
     if (cleanup) {
       thisJob.getCommand().addArgument("rm -rf *; ");
     }
+    // cleans up the downloaded reference
+    thisJob.getCommand().addArgument("rm -rf " + OUTDIR + "/reference_files");
     return thisJob;
   }
   
@@ -806,7 +817,8 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
               .addArgument("-k " + ascatContamFile)
               .addArgument("-tb " + tumourBam)
               .addArgument("-nb " + controlBam)
-              .addArgument("-r " + genomeFaGz + ".fai");
+              .addArgument("-r " + genomeFa + ".fai")
+              .addArgument("-u " + refBase + "/caveman");
     
     if(!process.equals("mstep") && !process.equals("estep")) {
       thisJob.getCommand().addArgument("-i " + index);
@@ -891,7 +903,7 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
               .addArgument("ascat.pl")
               .addArgument("-p " + process)
               .addArgument("-i " + index)
-              .addArgument("-r " + genomeFaGz)
+              .addArgument("-r " + genomeFa)
               .addArgument("-s " + refBase + "/ascat/SnpLocus.tsv")
               .addArgument("-sp " + refBase + "/ascat/SnpPositions.tsv")
               .addArgument("-sg " + refBase + "/ascat/SnpGcCorrections.tsv")
@@ -916,17 +928,17 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
               .addArgument(installBase)
               .addArgument("pindel.pl")
               .addArgument("-p " + process)
-              .addArgument("-r " + genomeFaGz)
+              .addArgument("-r " + genomeFa)
               .addArgument("-e " + refExclude)
               .addArgument("-st " + seqType)
               .addArgument("-as " + assembly)
               .addArgument("-sp " + species)
               .addArgument("-s " + refBase + "/pindel/simpleRepeats.bed.gz")
               .addArgument("-f " + refBase + "/pindel/genomicRules.lst")
-              .addArgument("-g " + refBase + "/vagrent/e74/Human.GRCh37.codingexon_regions.indel.bed.gz")
+              .addArgument("-g " + refBase + "/pindel/human.GRCh37.indelCoding.bed.gz")
               .addArgument("-u " + refBase + "/pindel/pindel_np.gff3.gz")
               .addArgument("-sf " + refBase + "/pindel/softRules.lst")
-              .addArgument("-b " + refBase + "/shared/ucscHiDepth_0.01_mrg1000_no_exon_coreChrs.bed.gz")
+              .addArgument("-b " + refBase + "/brass/ucscHiDepth_0.01_mrg1000_no_exon_coreChrs.bed.gz")
               .addArgument("-o " + OUTDIR + "/" + tumourCount + "/pindel")
               .addArgument("-t " + tumourBam)
               .addArgument("-n " + controlBam)
@@ -963,6 +975,22 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
     return thisJob;
   }
   
+  private Job pullRef() {
+    String tmpRef = OUTDIR + "/" + "ref.tar.gz";
+    Job thisJob = prepTimedJob(0, "pullRef", "NA", 0);
+    thisJob.getCommand().addArgument("curl -sSL -o " + tmpRef + refFrom);
+    return thisJob;
+  }
+  
+  private Job unpackRef() {
+    String tmpRef = OUTDIR + "/" + "ref.tar.gz";
+    Job thisJob = prepTimedJob(0, "unpackRef", "NA", 0);
+    thisJob.getCommand().addArgument("tar -C " + OUTDIR + " -zxf " + tmpRef);
+    thisJob.getCommand().addArgument("; rm -rf " + tmpRef);
+    return thisJob;
+  }
+  
+  
   private Job brassBaseJob(int tumourCount, String tumourBam, String controlBam, String alg, String process, int index) {
     
     String cnPath = OUTDIR + "/" + tumourCount + "/ascat/*.copynumber.caveman.csv";
@@ -975,16 +1003,15 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
               .addArgument("brass.pl")
               .addArgument("-j 4 -k 4")
               .addArgument("-p " + process)
-              .addArgument("-g " + genomeFaGz)
+              .addArgument("-g " + genomeFa)
               .addArgument("-e " + refExclude)
               .addArgument("-pr " + seqType)
               .addArgument("-as " + assembly)
               .addArgument("-s " + species)
               .addArgument("-pl " + "ILLUMINA") // should be in BAM header
-              .addArgument("-d "  + refBase + "/shared/ucscHiDepth_0.01_mrg1000_no_exon_coreChrs.bed.gz")
-              .addArgument("-r "  + refBase + "/brass/brassRepeats.bed.gz")
+              .addArgument("-d "  + refBase + "/brass/ucscHiDepth_0.01_mrg1000_no_exon_coreChrs.bed.gz")
               .addArgument("-f "  + refBase + "/brass/brass_np.groups.gz")
-              .addArgument("-g_cache "  + refBase + "/vagrent/e74/Homo_sapiens.GRCh37.74.vagrent.cache.gz")
+              .addArgument("-g_cache "  + refBase + "/vagrent/e75/Homo_sapiens.GRCh37.75.vagrent.cache.gz")
               .addArgument("-o " + OUTDIR + "/" + tumourCount + "/brass")
               .addArgument("-t " + tumourBam)
               .addArgument("-n " + controlBam)
