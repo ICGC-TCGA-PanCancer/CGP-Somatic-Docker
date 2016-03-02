@@ -11,11 +11,9 @@ ENV OPT /opt/wtsi-cgp
 ENV PATH $OPT/bin:$PATH
 ENV PERL5LIB $OPT/lib/perl5:$PERL5LIB
 
-
 RUN apt-get -yqq update && \
-    apt-get -yqq install apt-utils tar git dialog net-tools libreadline6-dev build-essential \
-      autoconf software-properties-common python-software-properties \
-      wget curl zlib1g-dev libncurses5-dev \
+    apt-get -yqq install libreadline6-dev build-essential autoconf software-properties-common python-software-properties \
+      wget time curl zlib1g-dev libncurses5-dev \
       libgd2-xpm-dev libexpat1-dev python unzip libboost-dev libboost-iostreams-dev \
       libpstreams-dev libglib2.0-dev gfortran libcairo2-dev cpanminus bsdtar libwww-perl \
       openjdk-7-jdk && \
