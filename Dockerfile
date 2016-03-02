@@ -78,6 +78,17 @@ RUN curl -sSL -o tmp.tar.gz --retry 10 https://github.com/ICGC-TCGA-PanCancer/PC
     cd /tmp/downloads && \
     rm -rf /tmp/downloads/PCAP /tmp/downloads/tmp.tar.gz ~/.cpanm
 
+RUN curl -sSL https://github.com/samtools/tabix/archive/master.zip  | bsdtar -xvf - && \
+    cd /tmp/downloads/tabix-master && \
+    make && \
+    cp tabix $OPT/bin/. && \
+    cp bgzip $OPT/bin/. && \
+    cd perl && \
+    perl Makefile.PL INSTALL_BASE=$INST_PATH && \
+    make && make test && make install && \
+    cd /tmp/downloads && \
+    rm -rf /tmp/downloads/tabix-master
+
 # start of cgpVcf block
 # the commit UUID for the release of cgpVcf in use
 
