@@ -303,26 +303,26 @@ RUN   curl -sSL -o tmp.tar.gz --retry 10 https://github.com/wrpearson/fasta36/re
 #
 ### END of CGP INSTALL ###
 
-COPY ./src					/home/seqware/Seqware-CGP-SomaticCore/src
-COPY ./workflow				/home/seqware/Seqware-CGP-SomaticCore/workflow
-COPY ./scripts				/home/seqware/Seqware-CGP-SomaticCore/scripts
-COPY ./pom.xml				/home/seqware/Seqware-CGP-SomaticCore/pom.xml
-COPY ./workflow.properties	/home/seqware/Seqware-CGP-SomaticCore/workflow.properties
+COPY ./src					/home/seqware/CGP-Somatic-Docker/src
+COPY ./workflow				/home/seqware/CGP-Somatic-Docker/workflow
+COPY ./scripts				/home/seqware/CGP-Somatic-Docker/scripts
+COPY ./pom.xml				/home/seqware/CGP-Somatic-Docker/pom.xml
+COPY ./workflow.properties	/home/seqware/CGP-Somatic-Docker/workflow.properties
 
-RUN chown -R seqware /home/seqware/Seqware-CGP-SomaticCore
+RUN chown -R seqware /home/seqware/CGP-Somatic-Docker
 
 USER seqware
 
-WORKDIR /home/seqware/Seqware-CGP-SomaticCore
+WORKDIR /home/seqware/CGP-Somatic-Docker
 
 RUN mvn clean install
 
-RUN chmod a+x /home/seqware/Seqware-CGP-SomaticCore/scripts/sanger_startup.sh
+RUN chmod a+x /home/seqware/CGP-Somatic-Docker/scripts/sanger_startup.sh
 
 USER root
 RUN mkdir -p /refdata/data/reference
 RUN chmod a+rw -R /refdata/
-RUN cp /home/seqware/Seqware-CGP-SomaticCore/scripts/sanger_startup.sh /sanger_startup.sh
+RUN cp /home/seqware/CGP-Somatic-Docker/scripts/sanger_startup.sh /sanger_startup.sh
 USER seqware
 
 #ENTRYPOINT ["/sanger_startup.sh"]
