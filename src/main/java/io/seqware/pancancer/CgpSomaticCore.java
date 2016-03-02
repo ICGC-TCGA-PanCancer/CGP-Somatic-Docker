@@ -153,7 +153,7 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
       coresAddressable = Integer.valueOf(getProperty("coresAddressable"));
 
       // MEMORY //
-      memGenerateBasFile = getProperty("memBasFileGet");
+      memGenerateBasFile = getProperty("memGenerateBasFile");
       memPackageResults = getProperty("memPackageResults");
       memMarkTime = getProperty("memMarkTime");
       memQcMetrics = getProperty("memQcMetrics");
