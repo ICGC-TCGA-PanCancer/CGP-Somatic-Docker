@@ -255,6 +255,7 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
       
       Job controlBasJob = basFileBaseJob(controlBam);
       controlBasJob.setMaxMemory(memGenerateBasFile);
+      controlBasJob.addParent(unpackRef);
       downloadJobsList.add(controlBasJob);
       
       List<String> tumourBams = new ArrayList<String>();
@@ -262,13 +263,14 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
       
       List<String> rawBams = Arrays.asList(getProperty("tumourBams").split(":"));
       if(rawBams.size() == 0) {
-        throw new RuntimeException("Propertie tumourBam has no list of BAM files");
+        throw new RuntimeException("Propertie tumourBams has no list of BAM files");
       }
 
       for(int i=0; i<rawBams.size(); i++) {
         String tumourBam = rawBams.get(i);
         Job tumourBasJob = basFileBaseJob(tumourBam);
         tumourBasJob.setMaxMemory(memGenerateBasFile);
+        tumourBasJob.addParent(unpackRef);
         tumourBasJobs.add(tumourBasJob);
         tumourBams.add(tumourBam);
         downloadJobsList.add(tumourBasJob);
@@ -985,8 +987,8 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
   private Job unpackRef() {
     String tmpRef = OUTDIR + "/" + "ref.tar.gz";
     Job thisJob = prepTimedJob(0, "unpackRef", "NA", 0);
-    thisJob.getCommand().addArgument("tar -C " + OUTDIR + " -zxf " + tmpRef);
-    thisJob.getCommand().addArgument("; rm -rf " + tmpRef);
+    thisJob.getCommand().addArgument("tar -C " + OUTDIR + " -zxf " + tmpRef)
+                        .addArgument("; rm -rf " + tmpRef);
     return thisJob;
   }
   
