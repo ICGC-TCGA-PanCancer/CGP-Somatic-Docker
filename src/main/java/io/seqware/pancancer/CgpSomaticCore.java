@@ -217,7 +217,7 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
       //environment
       installBase = "/opt/wtsi-cgp";
       refBase = OUTDIR + "/reference_files";
-      genomeFa = refBase + "genome.fa";
+      genomeFa = refBase + "/genome.fa";
       
     } catch (Exception ex) {
       throw new RuntimeException(ex);
@@ -1028,12 +1028,14 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
               .addArgument("-o " + OUTDIR + "/" + tumourCount + "/brass")
               .addArgument("-t " + tumourBam)
               .addArgument("-n " + controlBam)
-              .addArgument("-a " + cnPath)
-              .addArgument("-ss " + cnStats)
               .addArgument("-vi " + refBase + "/brass/viral.1.1.genomic.fa")
               .addArgument("-mi " + refBase + "/brass/all_ncbi_bacteria.20150703")
               .addArgument("-b " + refBase + "/brass/hs37d5_500bp_windows.gc.bed.gz")
             ;
+    if(process.equals("filter")) {
+      thisJob.getCommand().addArgument("-a " + cnPath)
+                          .addArgument("-ss " + cnStats);
+    }
     return thisJob;
   }
 }
