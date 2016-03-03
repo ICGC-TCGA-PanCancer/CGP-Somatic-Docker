@@ -246,7 +246,7 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
     unpackRef.setMaxMemory(memMarkTime);
     
     Job unpackBbRef = unpackRef(tmpBbRef, "reference_files");
-    unpackBbRef.addParent(pullBbRef);
+    unpackBbRef.addParent(unpackRef);
     unpackBbRef.setMaxMemory(memMarkTime);
     
     
