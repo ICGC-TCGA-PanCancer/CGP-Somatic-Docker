@@ -65,7 +65,7 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
 
   // workflow variables
   private String  // reference variables
-                  species, assembly, refFrom,
+                  species, assembly, refFrom, bbFrom,
                   // sequencing type/protocol
                   seqType, seqProtocol,
                   //GNOS identifiers
@@ -200,6 +200,7 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
       species = getProperty("species");
       assembly = getProperty("assembly");
       refFrom = getProperty("refFrom");
+      bbFrom = getProperty("bbFrom");
       
       // Sequencing info
       seqType = getProperty("seqType");
@@ -230,13 +231,23 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
     Job startDownload = markTime("download", "start");
     startDownload.setMaxMemory(memMarkTime);
     
-    Job pullRef = pullRef();
+    String tmpRef = OUTDIR + "/" + "ref.tar.gz";
+    Job pullRef = pullRef(refFrom, tmpRef);
     pullRef.addParent(startDownload);
     pullRef.setMaxMemory(memMarkTime);
     
-    Job unpackRef = unpackRef();
+    String tmpBbRef = OUTDIR + "/" + "bb.tar.gz";
+    Job pullBbRef = pullRef(bbFrom, tmpBbRef);
+    pullBbRef.addParent(startDownload);
+    pullBbRef.setMaxMemory(memMarkTime);
+    
+    Job unpackRef = unpackRef(tmpRef, null);
     unpackRef.addParent(pullRef);
     unpackRef.setMaxMemory(memMarkTime);
+    
+    Job unpackBbRef = unpackRef(tmpBbRef, "reference_files");
+    unpackBbRef.addParent(unpackRef);
+    unpackBbRef.setMaxMemory(memMarkTime);
     
     
     Job startWorkflow = markTime("workflow", "start");
@@ -249,7 +260,7 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
       
       // @todo need to add code to generate BAS for BAM
       
-      Job controlBasJob = basFileBaseJob(controlBam);
+      Job controlBasJob = basFileBaseJob(0, controlBam, "control", 0);
       controlBasJob.setMaxMemory(memGenerateBasFile);
       controlBasJob.addParent(unpackRef);
       downloadJobsList.add(controlBasJob);
@@ -262,9 +273,10 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
         throw new RuntimeException("Propertie tumourBams has no list of BAM files");
       }
 
-      for(int i=0; i<rawBams.size(); i++) {
+      int tumBamCount = rawBams.size();
+      for(int i=0; i<tumBamCount; i++) {
         String tumourBam = rawBams.get(i);
-        Job tumourBasJob = basFileBaseJob(tumourBam);
+        Job tumourBasJob = basFileBaseJob(tumBamCount, tumourBam, "tumours", i+1);
         tumourBasJob.setMaxMemory(memGenerateBasFile);
         tumourBasJob.addParent(unpackRef);
         tumourBasJobs.add(tumourBasJob);
@@ -280,7 +292,7 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
       genotypePackJob.setMaxMemory("4000");
       genotypePackJob.addParent(genotypeJob);
 
-      Job contaminationJob = contaminationBaseJob(tumourBams.size(), controlBam, "control");
+      Job contaminationJob = contaminationBaseJob(tumBamCount, controlBam, "control");
       contaminationJob.setMaxMemory(memContam);
       addJobParents(contaminationJob, downloadJobsList);
       // packaging must have parent cavemanTbiCleanJob
@@ -288,7 +300,7 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
       // these are not paired but per individual sample
       List<Job> bbAlleleCountJobs = new ArrayList<Job>();
       for(int i=0; i<23; i++) { // not 1-22+X
-        for(int j=0; j<tumourBams.size(); j++) {
+        for(int j=0; j<tumBamCount; j++) {
           Job bbAlleleCountJob = bbAlleleCount(j, tumourBams.get(j), "tumour", i);
           bbAlleleCountJob.setMaxMemory(memAlleleCount);
           addJobParents(bbAlleleCountJob, downloadJobsList);
@@ -307,8 +319,8 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
       }
 
       // donor based workflow section
-      Job[] cavemanFlagJobs = new Job [tumourBams.size()];
-      for(int i=0; i<tumourBams.size(); i++) {
+      Job[] cavemanFlagJobs = new Job [tumBamCount];
+      for(int i=0; i<tumBamCount; i++) {
         Job cavemanFlagJob = buildPairWorkflow(downloadJobsList, controlBam, tumourBams.get(i), i);
         cavemanFlagJobs[i] = cavemanFlagJob;
       }
@@ -731,8 +743,8 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
     return usableThreads;
   }
   
-  private Job basFileBaseJob(String sampleBam) {
-    Job thisJob = getWorkflow().createBashJob("basFileGenerate");
+  private Job basFileBaseJob(int tumourCount, String sampleBam, String process, int index) {
+    Job thisJob = prepTimedJob(tumourCount, "basFileGenerate", process, index);
     thisJob.getCommand()
             .addArgument(getWorkflowBaseDir()+ "/bin/wrapper.sh")
             .addArgument(installBase)
@@ -973,18 +985,20 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
     return thisJob;
   }
   
-  private Job pullRef() {
-    String tmpRef = OUTDIR + "/" + "ref.tar.gz";
+  private Job pullRef(String refFrom, String localTarGzFile) {
     Job thisJob = prepTimedJob(0, "pullRef", "NA", 0);
-    thisJob.getCommand().addArgument("curl -sSL -o " + tmpRef + refFrom);
+    thisJob.getCommand().addArgument("curl -sSL -o " + localTarGzFile + " " + refFrom);
     return thisJob;
   }
   
-  private Job unpackRef() {
-    String tmpRef = OUTDIR + "/" + "ref.tar.gz";
+  private Job unpackRef(String localTarGzFile, String suffixPath) {
+    String changeTo = OUTDIR;
+    if(suffixPath != null) {
+      changeTo = OUTDIR + "/" + suffixPath;
+    }
     Job thisJob = prepTimedJob(0, "unpackRef", "NA", 0);
-    thisJob.getCommand().addArgument("tar -C " + OUTDIR + " -zxf " + tmpRef)
-                        .addArgument("; rm -rf " + tmpRef);
+    thisJob.getCommand().addArgument("tar -C " + changeTo + " -zxf " + localTarGzFile)
+                        .addArgument("; rm -rf " + localTarGzFile);
     return thisJob;
   }
   
