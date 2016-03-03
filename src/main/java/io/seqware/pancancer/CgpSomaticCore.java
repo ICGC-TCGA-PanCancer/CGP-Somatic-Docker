@@ -144,10 +144,6 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
       if(hasPropertyAndNotNull("cleanupBams")) {
         cleanupBams = Boolean.valueOf(getProperty("cleanupBams"));
       }
-         
-//      if(hasPropertyAndNotNull("downloadBamsFromS3")) {
-//        downloadBamsFromS3 = Boolean.valueOf(getProperty("downloadBamsFromS3"));
-//      }
       
       // used by steps that can use all available cores
       coresAddressable = Integer.valueOf(getProperty("coresAddressable"));
