@@ -85,16 +85,16 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
   // UUID
   private String uuid = UUID.randomUUID().toString().toLowerCase();
 
-  // if localFileMode, this is the path at which the workflow will find the XML files used for metadata in the upload of VCF
-//  private String localXMLMetadataPath = null;
-//  private String localBamFilePathPrefix = null;
+	// if localFileMode, this is the path at which the workflow will find the XML files used for metadata in the upload of VCF
+	//  private String localXMLMetadataPath = null;
+	//  private String localBamFilePathPrefix = null;
   
   // used for downloading from S3
-//  private boolean downloadBamsFromS3 = false;
-//  private String normalS3Url = "";
-//  private ArrayList<String> tumorS3Urls = null;
-//  private String S3DownloadKey = "";
-//  private String S3DownloadSecretKey = "";
+	//  private boolean downloadBamsFromS3 = false;
+	//  private String normalS3Url = "";
+	//  private ArrayList<String> tumorS3Urls = null;
+	//  private String S3DownloadKey = "";
+	//  private String S3DownloadSecretKey = "";
 
   private void init() {
     try {

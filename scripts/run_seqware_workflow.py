@@ -1,5 +1,65 @@
-#! /usr/bin/python
+#!/usr/bin/env python
 
+from __future__ import print_function
+
+import argparse
+import logging
+import os
+import subprocess
+
+
+def collect_args():
+    descr = 'SeqWare-based Variant Calling Workflow from Sanger'
+    parser = argparse.ArgumentParser(
+        description=descr
+    )
+    parser.add_argument("--tumor",
+                        type=str,
+                        required=True,
+                        help="tumor BAM input")
+    parser.add_argument("--normal",
+                        type=str,
+                        required=True,
+                        help="matched normal BAM input")
+    parser.add_argument("--reference-gz",
+                        type=str,
+                        required=True,
+                        help="gzipped reference genome fasta (GR37)")
+    parser.add_argument("--reference-fai",
+                        type=str,
+                        required=True,
+                        help="reference genome fasta index")
+    parser.add_argument("--reference-",
+                        type=str,
+                        required=True,
+                        help="")
+    return parser
+
+
+def link_references(args, dest="/home/seqware/Seqware-CGP-SomaticCore/target/Workflow_Bundle_CgpSomaticCore_1.0.8_SeqWare_1.1.0/Workflow_Bundle_CgpSomaticCore/1.0.8/data"):
+    pass
+
+
+def write_ini(args):
+    pass
+
+
+def execute(cmd):
+    logging.info("RUNNING: %s" % (cmd))
+    print("\nRUNNING...\n", cmd, "\n")
+    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE)
+    stdout, stderr = p.communicate()
+    if stderr is not None:
+        print(stderr)
+    if stdout is not None:
+        print(stdout)
+    return p.returncode
+
+
+def main():
+    parser = collect_args()
+    args = parser.parse_args()
 
 
 # TODO: Move this to a template file, maybe mustache?
@@ -199,3 +259,5 @@ memCavemanFlag=5000
 memCavemanTbiClean=4000
 """
 
+if __name__ == "__main__":
+    main()

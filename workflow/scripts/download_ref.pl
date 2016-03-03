@@ -13,10 +13,10 @@ download("$link_dir/reference", "http://s3.amazonaws.com/pan-cancer-data/pan-can
 #download("$link_dir/", "https://s3.amazonaws.com/pan-cancer-data/pan-cancer-reference/cgp_reference.tar.gz");
 #untar("$link_dir", "cgp_reference.tar.gz");
 download("$link_dir/reference", "https://s3.amazonaws.com/pan-cancer-data/pan-cancer-reference/cgp_reference.tar.gz");
-download("$link_dir/", "https://s3.amazonaws.com/pan-cancer-data/workflow-data/CgpSomaticCore/testdata.tar.gz");
 # need to unpack cgp_reference.tar.gz (unpack is a keyword)
 expand("$link_dir/reference/", "$link_dir/reference/cgp_reference.tar.gz");
-expand("$link_dir/", "$link_dir/testdata.tar.gz");
+#download("$link_dir/", "https://s3.amazonaws.com/pan-cancer-data/workflow-data/CgpSomaticCore/testdata.tar.gz");
+#expand("$link_dir/", "$link_dir/testdata.tar.gz");
 
 sub expand {
   my ($changeTo, $archive) = @_;
