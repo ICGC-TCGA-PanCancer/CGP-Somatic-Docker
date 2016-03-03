@@ -15,7 +15,7 @@ RUN apt-get -yqq update && \
     apt-get -yqq install libreadline6-dev build-essential autoconf software-properties-common python-software-properties \
       wget time curl zlib1g-dev libncurses5-dev \
       libgd2-xpm-dev libexpat1-dev python unzip libboost-dev libboost-iostreams-dev \
-      libpstreams-dev libglib2.0-dev gfortran libcairo2-dev cpanminus bsdtar libwww-perl \
+      libpstreams-dev libglib2.0-dev gfortran libcairo2-dev cpanminus libwww-perl \
       openjdk-7-jdk && \
     apt-get clean
 
@@ -78,7 +78,8 @@ RUN curl -sSL -o tmp.tar.gz --retry 10 https://github.com/ICGC-TCGA-PanCancer/PC
     cd /tmp/downloads && \
     rm -rf /tmp/downloads/PCAP /tmp/downloads/tmp.tar.gz ~/.cpanm
 
-RUN curl -sSL https://github.com/samtools/tabix/archive/master.zip  | bsdtar -xvf - && \
+RUN curl -sSL -o tmp.zip --retry 10 https://github.com/samtools/tabix/archive/master.zip && \
+    unzip -q tmp.zip && \
     cd /tmp/downloads/tabix-master && \
     make && \
     cp tabix $OPT/bin/. && \
@@ -87,7 +88,7 @@ RUN curl -sSL https://github.com/samtools/tabix/archive/master.zip  | bsdtar -xv
     perl Makefile.PL INSTALL_BASE=$INST_PATH && \
     make && make test && make install && \
     cd /tmp/downloads && \
-    rm -rf /tmp/downloads/tabix-master
+    rm -rf /tmp/downloads/tabix-master /tmp/downloads/tmp.zip
 
 # start of cgpVcf block
 # the commit UUID for the release of cgpVcf in use
