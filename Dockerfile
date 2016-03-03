@@ -318,6 +318,5 @@ RUN chown -R seqware /home/seqware/CGP-Somatic-Docker
 USER seqware
 
 WORKDIR /home/seqware/CGP-Somatic-Docker
-RUN mvn clean install
 
 #ENTRYPOINT ["/sanger_startup.sh"]
