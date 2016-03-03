@@ -310,20 +310,14 @@ COPY ./scripts				/home/seqware/CGP-Somatic-Docker/scripts
 COPY ./pom.xml				/home/seqware/CGP-Somatic-Docker/pom.xml
 COPY ./workflow.properties	/home/seqware/CGP-Somatic-Docker/workflow.properties
 
+RUN chmod a+x /home/seqware/CGP-Somatic-Docker/scripts/sanger_startup.sh
+RUN cp /home/seqware/CGP-Somatic-Docker/scripts/sanger_startup.sh /sanger_startup.sh
+
 RUN chown -R seqware /home/seqware/CGP-Somatic-Docker
 
 USER seqware
 
 WORKDIR /home/seqware/CGP-Somatic-Docker
-
 RUN mvn clean install
-
-RUN chmod a+x /home/seqware/CGP-Somatic-Docker/scripts/sanger_startup.sh
-
-USER root
-RUN mkdir -p /refdata/data/reference
-RUN chmod a+rw -R /refdata/
-RUN cp /home/seqware/CGP-Somatic-Docker/scripts/sanger_startup.sh /sanger_startup.sh
-USER seqware
 
 #ENTRYPOINT ["/sanger_startup.sh"]
