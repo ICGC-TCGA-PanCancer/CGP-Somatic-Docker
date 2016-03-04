@@ -17,6 +17,8 @@ else
   ini=$1
 fi
 
+mvn clean install
+
 /home/seqware/bin/seqware bundle launch \
   --dir $target_path \
   --ini $ini \
