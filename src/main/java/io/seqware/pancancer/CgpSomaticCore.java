@@ -248,6 +248,7 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
       
       Job genotypeJob = genoptypeBaseJob(tumourBams, controlBam);
       genotypeJob.setMaxMemory(memGenotype);
+      genotypeJob.addParent(startDownload);
 
       Job genotypePackJob = packageGenotype(tumourBams, controlBam);
       genotypePackJob.setMaxMemory("4000");
@@ -255,6 +256,7 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
 
       Job contaminationJob = contaminationBaseJob(tumBamCount, controlBam, "control");
       contaminationJob.setMaxMemory(memContam);
+      contaminationJob.addParent(startDownload);
       
       String tmpRef = OUTDIR + "/" + "ref.tar.gz";
       Job pullRef = pullRef(refFrom, tmpRef);
