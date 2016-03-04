@@ -514,16 +514,17 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
     brassCoverJob.getCommand().addArgument("-c " + brassCoverNormalisedThreads);
     brassCoverJob.setMaxMemory(Integer.toString(totalBrassCoverMem));
     brassCoverJob.setThreads(brassCoverNormalisedThreads);
-    brassCoverJob.addParent(brassInputJobs[0]);
-    brassCoverJob.addParent(brassInputJobs[1]);
+    addJobParents(brassCoverJob, downloadJobsList);
     
     Job brassCoverMergeJob = brassBaseJob(tumourCount, tumourBam, controlBam, "BRASS", "merge", 1);
     brassCoverMergeJob.setMaxMemory(memBrassCoverMerge);
     brassCoverMergeJob.addParent(brassCoverJob);
+    brassCoverMergeJob.addParent(brassInputJobs[0]);
+    brassCoverMergeJob.addParent(brassInputJobs[1]);
     
     Job brassGroupJob = brassBaseJob(tumourCount, tumourBam, controlBam, "BRASS", "group", 1);
     brassGroupJob.setMaxMemory(memBrassGroup);
-    brassGroupJob.addParent(brassCoverJob);
+    brassGroupJob.addParent(brassCoverMergeJob);
     
       Job brassIsizeJob = brassBaseJob(tumourCount, tumourBam, controlBam, "BRASS", "isize", 1);
     brassIsizeJob.setMaxMemory(memBrassIsize);

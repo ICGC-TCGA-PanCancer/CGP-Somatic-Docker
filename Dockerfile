@@ -202,7 +202,7 @@ RUN curl -sSL -o tmp.tar.gz --retry 10 https://github.com/cancerit/cgpCaVEManWra
     rm -rf /tmp/downloads/cgpCaVEManWrapper /tmp/downloads/tmp.tar.gz ~/.cpanm
 
 # VAGrENT
-RUN curl -sSL -o tmp.tar.gz --retry 10 https://github.com/cancerit/VAGrENT/archive/v2.1.2.tar.gz && \
+RUN curl -sSL -o tmp.tar.gz --retry 10 https://github.com/cancerit/VAGrENT/archive/v2.1.3.tar.gz && \
     mkdir /tmp/downloads/VAGrENT && \
     tar -C /tmp/downloads/VAGrENT --strip-components 1 -zxf tmp.tar.gz && \
     cd /tmp/downloads/VAGrENT && \

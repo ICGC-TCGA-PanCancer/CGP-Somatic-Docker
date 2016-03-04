@@ -23,6 +23,8 @@ mvn clean install
 
 target_path=`find /home/seqware/CGP-Somatic-Docker/target -type d -name 'Workflow_Bundle_CgpSomaticCore_*SeqWare_*'`
 
+ulimit -n 4096
+
 /home/seqware/bin/seqware bundle launch \
   --dir $target_path \
   --ini $ini \
