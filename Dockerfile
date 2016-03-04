@@ -314,6 +314,8 @@ RUN chown -R seqware /home/seqware/CGP-Somatic-Docker
 
 USER seqware
 
+RUN     echo "options(bitmapType='cairo')" > /home/seqware/.Rprofile
+
 WORKDIR /home/seqware/CGP-Somatic-Docker
 
 # default entry will run test data
