@@ -321,4 +321,4 @@ WORKDIR /home/seqware/CGP-Somatic-Docker
 RUN mvn clean install
 
 # default entry will run test data
-ENTRYPOINT ["/run_sanger.sh "]
+ENTRYPOINT /run_sanger.sh
