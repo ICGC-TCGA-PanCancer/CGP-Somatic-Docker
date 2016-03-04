@@ -202,7 +202,7 @@ RUN curl -sSL -o tmp.tar.gz --retry 10 https://github.com/cancerit/cgpCaVEManWra
     rm -rf /tmp/downloads/cgpCaVEManWrapper /tmp/downloads/tmp.tar.gz ~/.cpanm
 
 # VAGrENT
-RUN curl -sSL -o tmp.tar.gz --retry 10 https://github.com/cancerit/VAGrENT/archive/v2.1.2.tar.gz && \
+RUN curl -sSL -o tmp.tar.gz --retry 10 https://github.com/cancerit/VAGrENT/archive/v2.1.3.tar.gz && \
     mkdir /tmp/downloads/VAGrENT && \
     tar -C /tmp/downloads/VAGrENT --strip-components 1 -zxf tmp.tar.gz && \
     cd /tmp/downloads/VAGrENT && \
@@ -310,11 +310,17 @@ COPY ./scripts				/home/seqware/CGP-Somatic-Docker/scripts
 COPY ./pom.xml				/home/seqware/CGP-Somatic-Docker/pom.xml
 COPY ./workflow.properties	/home/seqware/CGP-Somatic-Docker/workflow.properties
 
+<<<<<<< HEAD
 RUN chmod a+x /home/seqware/CGP-Somatic-Docker/scripts/run_seqware_workflow.py
 
+=======
+>>>>>>> upstream/feature/dockerize
 RUN chown -R seqware /home/seqware/CGP-Somatic-Docker
 
 USER seqware
+RUN ulimit -n 4096
+
+RUN echo "options(bitmapType='cairo')" > /home/seqware/.Rprofile
 
 # designate directories that need to read-write to allow seqware to function
 VOLUME ["/datastore"]
@@ -323,4 +329,6 @@ VOLUME ["/home/seqware"]
 
 WORKDIR /home/seqware/CGP-Somatic-Docker
 
-#ENTRYPOINT ["/home/seqware/CGP-Somatic-Docker/scripts/run_seqware_workflow.py"]
+# ENTRYPOINT ["/home/seqware/CGP-Somatic-Docker/scripts/run_seqware_workflow.py"]
+# default entry will run test data
+ENTRYPOINT /home/seqware/CGP-Somatic-Docker/scripts/run_sanger.sh
