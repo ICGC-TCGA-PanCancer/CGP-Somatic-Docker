@@ -320,11 +320,11 @@ RUN ulimit -n 4096
 RUN echo "options(bitmapType='cairo')" > /home/seqware/.Rprofile
 
 # designate directories that need to read-write to allow seqware to function
-VOLUME ["/datastore"]
-VOLUME ["/tmp"]
-VOLUME ["/home/seqware"]
+VOLUME /datastore
+VOLUME /tmp
+VOLUME /home/seqware
 
 WORKDIR /home/seqware/CGP-Somatic-Docker
 
-# ENTRYPOINT ["/home/seqware/CGP-Somatic-Docker/scripts/run_seqware_workflow.py"]
+# ENTRYPOINT /home/seqware/CGP-Somatic-Docker/scripts/run_seqware_workflow.py
 ENTRYPOINT /home/seqware/CGP-Somatic-Docker/scripts/run_sanger.sh
