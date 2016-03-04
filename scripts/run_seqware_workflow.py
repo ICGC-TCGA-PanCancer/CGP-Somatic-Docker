@@ -6,6 +6,10 @@ import argparse
 import logging
 import os
 import subprocess
+import tarfile
+
+# set global variable for workflow version
+global workflow_version = "1.0.8"
 
 
 def collect_args():
@@ -21,27 +25,48 @@ def collect_args():
                         type=str,
                         required=True,
                         help="matched normal BAM input")
-    parser.add_argument("--reference-gz",
+    parser.add_argument("--reference-tarball",
                         type=str,
                         required=True,
-                        help="gzipped reference genome fasta (GR37)")
-    parser.add_argument("--reference-fai",
-                        type=str,
-                        required=True,
-                        help="reference genome fasta index")
-    parser.add_argument("--reference-",
-                        type=str,
-                        required=True,
-                        help="")
+                        help="reference file set for CGP-Somatic-Core workflow")
     return parser
 
 
-def link_references(args, dest="/home/seqware/Seqware-CGP-SomaticCore/target/Workflow_Bundle_CgpSomaticCore_1.0.8_SeqWare_1.1.0/Workflow_Bundle_CgpSomaticCore/1.0.8/data"):
-    pass
+def link_references(reference_tar_gz):
+    dest = "".join(
+        ["/home/seqware/Seqware-CGP-SomaticCore/target/Workflow_Bundle_CgpSomaticCore_",
+         workflow_version,
+         "_SeqWare_1.1.0/Workflow_Bundle_CgpSomaticCore/",
+         workflow_version,
+         "/data"])
+
+    extracted_refs = untar(os.path.abspath(reference_tar_gz))
+
+    if not os.path.isdir(dest):
+        os.makedirs(dest, exist_ok=True)
+
+    # symlink extracted reference files to dest and
+    # maintain dir stucture from tar archive
+    execute("ln -s {0} {1}".format(os.path.join(extracted_refs, "*"), dest))
 
 
 def write_ini(args):
     pass
+
+
+def untar(fname, dest):
+    if (fname.endswith("tar.gz")):
+        tar = tarfile.open(fname)
+        if not os.path.isdir(dest):
+            os.makedirs(dest, exist_ok=True)
+        tar.extractall(path=dest)
+        tar.close()
+        output_dir = os.path.join(
+            dest, re.sub("\.tar\.gz", "", os.path.basename(fname)))
+        print("Extracted in: {0}".format(output_dir))
+        return output_dir
+    else:
+        raise Exception("Not a tar.gz file: {0}".format(fname))
 
 
 def execute(cmd):
@@ -61,164 +86,80 @@ def main():
     parser = collect_args()
     args = parser.parse_args()
 
+    # PUT INPUT AND REF FILE IN THE RIGHT PLACE
+    link_references(args)
 
-# TODO: Move this to a template file, maybe mustache?
-base_ini = """# the output directory is a convention used in many workflows to specify a relative output path
+    # WRITE WORKFLOW INI
+    write_ini(args)
+
+    # RUN WORKFLOW
+    cmd_parts = ["seqware bundle launch --dir /home/seqware/Seqware-BWA-Workflow/target/Workflow_Bundle_BWA_",
+                 workflow_version,
+                 "_SeqWare_1.1.1 --engine whitestar --ini workflow.ini --no-metadata"]
+    cmd = "".join(cmd_parts)
+    execute(cmd)
+
+    # FIND OUTPUT
+    path = os.path.dirname(glob.glob("/datastore/oozie-")[0])
+    results_dir = os.path.join("/datastore/", path, "data")
+
+    # MOVE THESE TO THE RIGHT PLACE
+    # system("mv /datastore/$path/data/merged_output.bam* $cwd")
+    # system("mv /datastore/$path/data/merged_output.unmapped.bam* $cwd")
+
+
+# based on workflow/config/CgpSomaticCore.ini
+base_ini = """
+# the output directory is a convention used in many workflows to specify a relative output path
 output_dir=seqware-results
 # the output_prefix is a convention used to specify the root of the absolute output path or an S3 bucket name
 # you should pick a path that is available on all cluster nodes and can be written by your user
-output_prefix=./
+output_prefix=/datastore/
 # cleanup true will remove just the input BAMs if not uploading and the full output directory if uploading
 # false there will be no cleanup which is useful for debugging
 cleanup=false
 
-# START NEW ITEMS FOR 1.0.6
-gnos_retries=3
-gnos_timeout_min=20
-downloadBamsFromS3=false
-S3DownloadKey=slkdfjslkdj
-S3DownloadSecretKey=lkdjflskdjflskdj
-# comma separated
-tumorS3Urls=s3://bucket/path/7723a85b59ebce340fe43fc1df504b35.bam
-normalS3Url=s3://bucket/path/8f957ddae66343269cb9b854c02eee2f.bam
-# END NEW ITEMS FOR 1.0.6
-
-# these are just used for tracking
-donor_id=unknown
-project_code=unknown
-
-# memory for upload to SFTP/S3
-duckJobMem=16000
-
-# tracking instance types
-vm_instance_type=unknown
-vm_instance_cores=unknown
-vm_instance_mem_gb=unknown
-vm_location_code=unknown
-
 # cleanup
 cleanupBams=false
 
-# archive tarball
-saveUploadArchive=true
-uploadArchivePath=./seqware-results/upload_archive/
-
-# options for tarball to SFTP
-SFTPUploadArchive=true
-# can be overwrite or skip, see https://trac.cyberduck.io/wiki/help/en/howto/cli
-SFTPUploadArchiveMode=overwrite
-SFTPUploadArchiveUsername=boconnor
-SFTPUploadArchivePassword=klsdfskdjfskjd
-SFTPUploadArchiveServer=10.1.1.13
-SFTPUploadArchivePath=/upload/path/directory/
-
-# options for tarball to S3
-S3UploadArchive=true
-S3UploadArchiveMode=overwrite
-S3UploadArchiveBucketURL=s3://bucketname/uploads/
-S3UploadArchiveKey=slkdfjslkdj
-S3UploadArchiveSecretKey=lkdjflskdjflskdj
-
-# send the files not a tarball
-SFTPUploadFiles=true
-# can be overwrite or skip, see https://trac.cyberduck.io/wiki/help/en/howto/cli
-SFTPUploadMode=overwrite
-SFTPUploadUsername=boconnor
-SFTPUploadPassword=klsdfskdjfskjd
-SFTPUploadServer=10.1.1.13
-SFTPUploadPath=/upload/path/directory/
-
-S3UploadFiles=true
-S3UploadFileMode=overwrite
-S3UploadBucketURL=s3://bucketname/uploads/
-S3UploadKey=slkdfjslkdj
-S3UploadSecretKey=lkdjflskdjflskdj
-
-# synapse upload
-# I DO NOT recommend you use this, it has not been tested well
-SynapseUpload=true
-SynapseUploadSFTPUsername=boconnor
-SynapseUploadSFTPPassword=klsdfskdjfskjd
-SynapseUploadUsername=boconnor
-SynapseUploadPassword=klsdfskdjfskjd
-SynapseUploadURL=sftp://tcgaftps.nci.nih.gov/tcgapancan/pancan/variant_calling_pilot_64/OICR_Sanger_Core
-SynapseUploadParent=syn3155834
-
-# if set, these trigger an upload of the input bam file to a GNOS repository
-# I DO NOT recommend you use this, this hasn't been tested and is likely to have bugs/issues
-bamUploadServer=
-bamUploadPemFile=
-bamUploadStudyRefnameOverride=
-bamUploadAnalysisCenterOverride=
-bamUploadScriptJobMem=10000
-bamUploadScriptJobSlots=1
-
-# if set to true GNOS is still used for downloading metadata but the input bam file paths are assumed to be local file paths
-# specifically tumourBams is a colon-delimited list of full file paths and controlBam is a full file path
-localFileMode=false
-# if localFileMode is true then you need to give the path where the decider downloads all the XML
-localXMLMetadataPath=path_to_decider_download_dir_for_xml
-
-# another option for upload
-skip-validate=false
-
-# when localFileMode=true, if set this causes the bam file paths to be modified so they are <localBamFilePathPrefix>/<analysis_id>/<bam_file>, also affects the bai path implicitly. This is done so you can continue working with the decider.
-localBamFilePathPrefix=
-
 # basic setup
 coresAddressable=32
-memHostMbAvailable=240000
-tabixSrvUri=http://10.89.9.50/
+memHostMbAvailable=212000
 
-# Use public pulldown data bundled with workflow instead of full genome scale data from GNOS
-#testMode=true
-
-pemFile=/home/ubuntu/.gnos/gnos.pem
-gnosServer=https://gtrepo-ebi.annailabs.com
-## comment out upload server to block vcfUpload
-uploadServer=https://gtrepo-ebi.annailabs.com
-uploadPemFile=/home/ubuntu/.gnos/gnos.pem
-
-study-refname-override=icgc_pancancer_vcf_test
-#analysis-center-override=
-#center-override=
-#ref-center-override=
-#upload-test=true
-#upload-skip=true
+study-refname-override=
+analysis-center-override=
 
 assembly=GRCh37
 species=human
 seqType=WGS
 gender=L
 
-# PD4116a 30x vs PD4116b 30x (BRCA-UK::CGP_donor_1199138)
-tumourAliquotIds=f393bb07-270c-2c93-e040-11ac0d484533
-tumourAnalysisIds=ef26d046-e88a-4f21-a232-16ccb43637f2
-tumourBams=7723a85b59ebce340fe43fc1df504b35.bam
-controlAnalysisId=1b9215ab-3634-4108-9db7-7e63139ef7e9
-controlBam=8f957ddae66343269cb9b854c02eee2f.bam
+# ref files
+refFrom=
+bbFrom=
+
+# input files
+tumourAliquotIds=
+tumourAnalysisIds=
+tumourBams=
+
+controlAnalysisId=
+controlBam=
 
 refExclude=MT,GL%,hs37d5,NC_007605
 
-# GNOS
-memBasFileGet=4000
-memGnosDownload=14000
-memUpload=14000
-
 # GENERIC
 memWorkflowOverhead=3000
-memPackageResults=4000
 memMarkTime=4000
 memGenotype=4000
 memContam=4000
 memQcMetrics=4000
 memGetTbi=4000
+memGenerateBasFile=4000
+memPackageResults=4000
 
+# QC
 contamDownSampOneIn=25
-
-#PICNIC
-memPicnicCounts=4000
-memPicnicMerge=4000
 
 #BATTENBERG
 memUnpack=4000
@@ -238,7 +179,15 @@ memPindelFlag=8000
 
 # BRASS
 memBrassInput=6000
+#new
+memBrassCoverPerThread=2000
+# new
+memBrassCoverMerge=500
 memBrassGroup=4500
+# new group, isize and normcn can run in parallel
+memBrassIsize=2000
+# new group, isize and normcn can run in parallel
+memBrassNormCn=4000
 memBrassFilter=4500
 memBrassSplit=4000
 memBrassAssemblePerThread=4000
