@@ -318,7 +318,7 @@ RUN chown -R seqware /home/seqware/CGP-Somatic-Docker
 USER seqware
 
 WORKDIR /home/seqware/CGP-Somatic-Docker
-mvn clean install
+RUN mvn clean install
 
 # default entry will run test data
 ENTRYPOINT ["/run_sanger.sh "]
