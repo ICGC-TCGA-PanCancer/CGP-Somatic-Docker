@@ -1,20 +1,23 @@
 #! /bin/bash
 set -x
-# First argument should be path to INI file.
-# Example: bash run_sanger.sh `pwd`/test.ini
-# If not defined the default ini in target will be used
+# If /datastore/work.ini exists then it will be executed
+# this should be done by the docker mount -v option
+# if not found will default to the in-build version that will attempt to run the test data
+#  - If test data is not found it will attempt to download it
 
-target_path="/home/seqware/Seqware-CGP-SomaticCore/target/Workflow_Bundle_CgpSomaticCore_0.0.0_SeqWare_1.1.1"
-ini="/home/seqware/Seqware-CGP-SomaticCore/workflow/config/CgpSomaticCore.ini"
+target_path=`find /home/seqware/CGP-Somatic-Docker/target -type d -name 'Workflow_Bundle_CgpSomaticCore_*SeqWare_*'`
+ini='/home/seqware/CGP-Somatic-Docker/workflow/config/CgpSomaticCore.ini'
+user_ini='/datastore/work.ini'
 
-if [[ $# -eq 0 ]]; then
-  echo -e "\t !!! Using default ini file as no params provided !!!";
-elif [ "$#" -ne 1 ]; then
-  echo "More than 1 argument provided, usage is:"
-  echo -e "\tUSAGE: ./run_sanger.sh [<inifile>]"
-  exit 1;
+if [ -e $user_ini ]; then
+  echo "PREP: Found user defined ini file at $user_ini";
+  ini=$user_ini
 else
-  ini=$1
+  echo -e "PREP: No user defined ini file at $user_ini\n\tRunning test config: $ini";
+  if [ !-e '/datastore/HCC1143_ds' ]; then
+    echo "PREP: test data not found, downloading...";
+    curl -sSL https://s3-eu-west-1.amazonaws.com/wtsi-pancancer/testdata/HCC1143_ds.tar | tar -C /datastore -x
+  fi
 fi
 
 mvn clean install
