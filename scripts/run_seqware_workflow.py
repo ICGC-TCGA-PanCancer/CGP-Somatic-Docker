@@ -1,15 +1,19 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 from __future__ import print_function
 
 import argparse
+import glob
 import logging
 import os
+import re
 import subprocess
 import tarfile
 
 # set global variable for workflow version
-global workflow_version = "1.0.8"
+workflow_version = "1.0.8"
+global workflow_version
 
 
 def collect_args():
@@ -28,7 +32,7 @@ def collect_args():
     parser.add_argument("--reference-tarball",
                         type=str,
                         required=True,
-                        help="reference file set for CGP-Somatic-Core workflow")
+                        help="reference file archive for CGP-Somatic-Core workflow")
     return parser
 
 
@@ -93,10 +97,12 @@ def main():
     write_ini(args)
 
     # RUN WORKFLOW
-    cmd_parts = ["seqware bundle launch --dir /home/seqware/Seqware-BWA-Workflow/target/Workflow_Bundle_BWA_",
-                 workflow_version,
-                 "_SeqWare_1.1.1 --engine whitestar --ini workflow.ini --no-metadata"]
-    cmd = "".join(cmd_parts)
+    cmd_parts = ["seqware bundle launch",
+                 "--dir /home/seqware/Seqware-BWA-Workflow/target/Workflow_Bundle_BWA_{0}_SeqWare_1.1.1".format(workflow_version),
+                 "--engine whitestar-parallel",
+                 "--ini workflow.ini",
+                 "--no-metadata"]
+    cmd = " ".join(cmd_parts)
     execute(cmd)
 
     # FIND OUTPUT
