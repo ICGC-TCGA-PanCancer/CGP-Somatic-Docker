@@ -278,21 +278,21 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
       unpackBbRef.setMaxMemory(memMarkTime);
       
       
-      List<Job> basJobsList = new ArrayList<Job>();
+      List<Job> basBbAlleleCountJobsList = new ArrayList<Job>();
       
       // @todo need to add code to generate BAS for BAM
       
       Job controlBasJob = basFileBaseJob(0, controlBam, "control", 0);
       controlBasJob.setMaxMemory(memGenerateBasFile);
       controlBasJob.addParent(unpackRef);
-      basJobsList.add(controlBasJob);
+      basBbAlleleCountJobsList.add(controlBasJob);
       
       for(int i=0; i<tumBamCount; i++) {
         String tumourBam = rawBams.get(i);
         Job tumourBasJob = basFileBaseJob(tumBamCount, tumourBam, "tumours", i+1);
         tumourBasJob.setMaxMemory(memGenerateBasFile);
         tumourBasJob.addParent(unpackRef);
-        basJobsList.add(tumourBasJob);
+        basBbAlleleCountJobsList.add(tumourBasJob);
       }
 
       // packaging must have parent cavemanTbiCleanJob
@@ -305,11 +305,13 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
           bbAlleleCountJob.setMaxMemory(memAlleleCount);
           bbAlleleCountJob.addParent(unpackBbRef);
           bbAlleleCountJobs.add(bbAlleleCountJob);
+          basBbAlleleCountJobsList.add(bbAlleleCountJob);
         }
         Job bbAlleleCountJob = bbAlleleCount(1, controlBam, "control", i);
         bbAlleleCountJob.setMaxMemory(memAlleleCount);
         bbAlleleCountJob.addParent(unpackBbRef);
         bbAlleleCountJobs.add(bbAlleleCountJob);
+        basBbAlleleCountJobsList.add(bbAlleleCountJob);
       }
 
       Job bbAlleleMergeJob = bbAlleleMerge(controlBam);
@@ -321,7 +323,7 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
       // donor based workflow section
       Job[] cavemanFlagJobs = new Job [tumBamCount];
       for(int i=0; i<tumBamCount; i++) {
-        Job cavemanFlagJob = buildPairWorkflow(basJobsList, controlBam, tumourBams.get(i), i);
+        Job cavemanFlagJob = buildPairWorkflow(basBbAlleleCountJobsList, controlBam, tumourBams.get(i), i);
         cavemanFlagJobs[i] = cavemanFlagJob;
       }
 

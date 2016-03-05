@@ -313,7 +313,6 @@ COPY ./workflow.properties	/home/seqware/CGP-Somatic-Docker/workflow.properties
 RUN chown -R seqware /home/seqware/CGP-Somatic-Docker
 
 USER seqware
-RUN ulimit -n 4096
 
 RUN echo "options(bitmapType='cairo')" > /home/seqware/.Rprofile
 
