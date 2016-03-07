@@ -304,14 +304,16 @@ RUN   curl -sSL -o tmp.tar.gz --retry 10 https://github.com/wrpearson/fasta36/re
 #
 ### END of CGP INSTALL ###
 
-USER seqware
-WORKDIR /home/seqware/CGP-Somatic-Docker
-
 COPY ./src					/home/seqware/CGP-Somatic-Docker/src
 COPY ./workflow				/home/seqware/CGP-Somatic-Docker/workflow
 COPY ./scripts				/home/seqware/CGP-Somatic-Docker/scripts
 COPY ./pom.xml				/home/seqware/CGP-Somatic-Docker/pom.xml
 COPY ./workflow.properties	/home/seqware/CGP-Somatic-Docker/workflow.properties
+
+RUN chown -R seqware /home/seqware/
+
+USER seqware
+WORKDIR /home/seqware/CGP-Somatic-Docker
 
 RUN echo "options(bitmapType='cairo')" > /home/seqware/.Rprofile && \
     sed -i 's|OOZIE_RETRY_MAX=.*|OOZIE_RETRY_MAX=0|' /home/seqware/.seqware/settings && \
