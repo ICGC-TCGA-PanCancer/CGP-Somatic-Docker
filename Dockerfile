@@ -231,7 +231,7 @@ RUN curl -sSL http://ftp.ebi.ac.uk/pub/software/vertebrategenomics/exonerate/exo
     chmod ugo+x $OPT/bin/exonerate
 
 # perl mod Graph installed at top of file due to being required in Bio/Brass.pm
-RUN curl -sSL -o tmp.tar.gz --retry 10 https://github.com/cancerit/BRASS/archive/v4.0.14.tar.gz && \
+RUN curl -sSL -o tmp.tar.gz --retry 10 https://github.com/cancerit/BRASS/archive/v4.0.15.tar.gz && \
     mkdir /tmp/downloads/BRASS && \
     tar -C /tmp/downloads/BRASS --strip-components 1 -zxf tmp.tar.gz && \
     cd /tmp/downloads/BRASS && \
