@@ -235,7 +235,7 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
       
       List<String> rawBams = Arrays.asList(getProperty("tumourBams").split(":"));
       if(rawBams.size() == 0) {
-        throw new RuntimeException("Propertie tumourBams has no list of BAM files");
+        throw new RuntimeException("Property tumourBams has no list of BAM files");
       }
       List<String> tumourBams = new ArrayList<String>();
       int tumBamCount = rawBams.size();
@@ -323,7 +323,7 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
       // donor based workflow section
       Job[] cavemanFlagJobs = new Job [tumBamCount];
       for(int i=0; i<tumBamCount; i++) {
-        Job cavemanFlagJob = buildPairWorkflow(basBbAlleleCountJobsList, controlBam, tumourBams.get(i), i);
+        Job cavemanFlagJob = buildPairWorkflow(unpackRef, basBbAlleleCountJobsList, controlBam, tumourBams.get(i), i);
         cavemanFlagJobs[i] = cavemanFlagJob;
       }
 
@@ -379,7 +379,7 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
    * The generic buildWorkflow section will choose the pair to be processed and 
    * setup the control sample download
    */
-  private Job buildPairWorkflow(List dependencyJobsList, String controlBam, String tumourBam, int tumourCount) {
+  private Job buildPairWorkflow(Job refUnpackJob, List dependencyJobsList, String controlBam, String tumourBam, int tumourCount) {
     
     /**
      * ASCAT - Copynumber
@@ -427,7 +427,7 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
       else {
         caveCnPrepJob = caveCnPrep(tumourCount, "normal");
       }
-      addJobParents(caveCnPrepJob, dependencyJobsList);
+      caveCnPrepJob.addParent(refUnpackJob);
       caveCnPrepJob.addParent(ascatFinaliseJob); // ASCAT dependency!!!
       caveCnPrepJobs[i] = caveCnPrepJob;
     }
