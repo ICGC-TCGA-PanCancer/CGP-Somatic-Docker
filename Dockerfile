@@ -151,7 +151,7 @@ RUN curl -sSL -o tmp.tar.gz --retry 10 https://github.com/cancerit/cgpNgsQc/arch
     rm -rf /tmp/downloads/cgpNgsQc /tmp/downloads/tmp.tar.gz ~/.cpanm
 
 # ascatNgs
-RUN curl -sSL -o tmp.tar.gz --retry 10 https://github.com/cancerit/ascatNgs/archive/v1.6.0.tar.gz && \
+RUN curl -sSL -o tmp.tar.gz --retry 10 https://github.com/cancerit/ascatNgs/archive/v1.7.1.tar.gz && \
     mkdir /tmp/downloads/ascatNgs && \
     tar -C /tmp/downloads/ascatNgs --strip-components 1 -zxf tmp.tar.gz && \
     cd /tmp/downloads/ascatNgs/perl && \
@@ -231,7 +231,7 @@ RUN curl -sSL http://ftp.ebi.ac.uk/pub/software/vertebrategenomics/exonerate/exo
     chmod ugo+x $OPT/bin/exonerate
 
 # perl mod Graph installed at top of file due to being required in Bio/Brass.pm
-RUN curl -sSL -o tmp.tar.gz --retry 10 https://github.com/cancerit/BRASS/archive/v4.0.14.tar.gz && \
+RUN curl -sSL -o tmp.tar.gz --retry 10 https://github.com/cancerit/BRASS/archive/v4.0.15.tar.gz && \
     mkdir /tmp/downloads/BRASS && \
     tar -C /tmp/downloads/BRASS --strip-components 1 -zxf tmp.tar.gz && \
     cd /tmp/downloads/BRASS && \
@@ -312,19 +312,19 @@ COPY ./workflow.properties	/home/seqware/CGP-Somatic-Docker/workflow.properties
 RUN chmod a+x /home/seqware/CGP-Somatic-Docker/scripts/run_sanger.sh
 RUN chmod a+x /home/seqware/CGP-Somatic-Docker/scripts/run_seqware_workflow.py
 
-RUN chown -R seqware /home/seqware/CGP-Somatic-Docker
+RUN chown -R seqware /home/seqware/
 
 USER seqware
-RUN ulimit -n 4096
+WORKDIR /home/seqware/CGP-Somatic-Docker
 
-RUN echo "options(bitmapType='cairo')" > /home/seqware/.Rprofile
+RUN echo "options(bitmapType='cairo')" > /home/seqware/.Rprofile && \
+    sed -i 's|OOZIE_RETRY_MAX=.*|OOZIE_RETRY_MAX=0|' /home/seqware/.seqware/settings && \
+    echo 'WHITESTAR_MEMORY_LIMIT=160000' >> /home/seqware/.seqware/settings
 
 # designate directories that need to read-write to allow seqware to function
 VOLUME /datastore
 VOLUME /tmp
 VOLUME /home/seqware
-
-WORKDIR /home/seqware/CGP-Somatic-Docker
 
 # ENTRYPOINT /home/seqware/CGP-Somatic-Docker/scripts/run_seqware_workflow.py
 ENTRYPOINT /home/seqware/CGP-Somatic-Docker/scripts/run_sanger.sh

@@ -235,7 +235,7 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
       
       List<String> rawBams = Arrays.asList(getProperty("tumourBams").split(":"));
       if(rawBams.size() == 0) {
-        throw new RuntimeException("Propertie tumourBams has no list of BAM files");
+        throw new RuntimeException("Property tumourBams has no list of BAM files");
       }
       List<String> tumourBams = new ArrayList<String>();
       int tumBamCount = rawBams.size();
@@ -278,21 +278,21 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
       unpackBbRef.setMaxMemory(memMarkTime);
       
       
-      List<Job> basJobsList = new ArrayList<Job>();
+      List<Job> basBbAlleleCountJobsList = new ArrayList<Job>();
       
       // @todo need to add code to generate BAS for BAM
       
       Job controlBasJob = basFileBaseJob(0, controlBam, "control", 0);
       controlBasJob.setMaxMemory(memGenerateBasFile);
       controlBasJob.addParent(unpackRef);
-      basJobsList.add(controlBasJob);
+      basBbAlleleCountJobsList.add(controlBasJob);
       
       for(int i=0; i<tumBamCount; i++) {
         String tumourBam = rawBams.get(i);
         Job tumourBasJob = basFileBaseJob(tumBamCount, tumourBam, "tumours", i+1);
         tumourBasJob.setMaxMemory(memGenerateBasFile);
         tumourBasJob.addParent(unpackRef);
-        basJobsList.add(tumourBasJob);
+        basBbAlleleCountJobsList.add(tumourBasJob);
       }
 
       // packaging must have parent cavemanTbiCleanJob
@@ -303,13 +303,15 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
         for(int j=0; j<tumBamCount; j++) {
           Job bbAlleleCountJob = bbAlleleCount(j, tumourBams.get(j), "tumour", i);
           bbAlleleCountJob.setMaxMemory(memAlleleCount);
-          addJobParents(bbAlleleCountJob, basJobsList);
+          bbAlleleCountJob.addParent(unpackBbRef);
           bbAlleleCountJobs.add(bbAlleleCountJob);
+          basBbAlleleCountJobsList.add(bbAlleleCountJob);
         }
         Job bbAlleleCountJob = bbAlleleCount(1, controlBam, "control", i);
         bbAlleleCountJob.setMaxMemory(memAlleleCount);
-        addJobParents(bbAlleleCountJob, basJobsList);
+        bbAlleleCountJob.addParent(unpackBbRef);
         bbAlleleCountJobs.add(bbAlleleCountJob);
+        basBbAlleleCountJobsList.add(bbAlleleCountJob);
       }
 
       Job bbAlleleMergeJob = bbAlleleMerge(controlBam);
@@ -321,7 +323,7 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
       // donor based workflow section
       Job[] cavemanFlagJobs = new Job [tumBamCount];
       for(int i=0; i<tumBamCount; i++) {
-        Job cavemanFlagJob = buildPairWorkflow(basJobsList, controlBam, tumourBams.get(i), i);
+        Job cavemanFlagJob = buildPairWorkflow(unpackRef, basBbAlleleCountJobsList, controlBam, tumourBams.get(i), i);
         cavemanFlagJobs[i] = cavemanFlagJob;
       }
 
@@ -377,7 +379,7 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
    * The generic buildWorkflow section will choose the pair to be processed and 
    * setup the control sample download
    */
-  private Job buildPairWorkflow(List downloadJobsList, String controlBam, String tumourBam, int tumourCount) {
+  private Job buildPairWorkflow(Job refUnpackJob, List dependencyJobsList, String controlBam, String tumourBam, int tumourCount) {
     
     /**
      * ASCAT - Copynumber
@@ -390,7 +392,7 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
     for(int i=0; i<2; i++) {
       Job alleleCountJob = cgpAscatBaseJob(tumourCount, tumourBam, controlBam, "ASCAT", "allele_count", i+1);
       alleleCountJob.setMaxMemory(memAlleleCount);
-      addJobParents(alleleCountJob, downloadJobsList);
+      addJobParents(alleleCountJob, dependencyJobsList);
       alleleCountJobs[i] = alleleCountJob;
     }
 
@@ -425,7 +427,7 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
       else {
         caveCnPrepJob = caveCnPrep(tumourCount, "normal");
       }
-      addJobParents(caveCnPrepJob, downloadJobsList);
+      caveCnPrepJob.addParent(refUnpackJob);
       caveCnPrepJob.addParent(ascatFinaliseJob); // ASCAT dependency!!!
       caveCnPrepJobs[i] = caveCnPrepJob;
     }
@@ -448,7 +450,7 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
       Job inputParse = pindelBaseJob(tumourCount, tumourBam, controlBam, "cgpPindel", "input", i+1);
       // If you tell SGE you are using ,multiple cores it multiplies the requested memory for you
       inputParse.setMaxMemory( memPindelInput );
-      addJobParents(inputParse, downloadJobsList);
+      addJobParents(inputParse, dependencyJobsList);
       pindelInputJobs[i] = inputParse;
     }
     
@@ -500,19 +502,21 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
     for(int i=0; i<2; i++) {
       Job brassInputJob = brassBaseJob(tumourCount, tumourBam, controlBam, "BRASS", "input", i+1);
       brassInputJob.setMaxMemory(memBrassInput);
-      addJobParents(brassInputJob, downloadJobsList);
+      addJobParents(brassInputJob, dependencyJobsList);
       brassInputJobs[i] = brassInputJob;
     }
     
-    int brassCoverNormalisedThreads = getMemNormalisedThread(memBrassCoverPerThread, coresAddressable);
-    int totalBrassCoverMem = Integer.valueOf(memBrassCoverPerThread) + (Integer.valueOf(memWorkflowOverhead) / brassCoverNormalisedThreads);
+    int localCores = coresAddressable / 2;
+    if(localCores == 0) { localCores = 1; }
+    int totalBrassCoverMem = Integer.valueOf(memBrassCoverPerThread) + (Integer.valueOf(memWorkflowOverhead) / localCores);
     
     Job brassCoverJob = brassBaseJob(tumourCount, tumourBam, controlBam, "BRASS", "cover", 1);
-    brassCoverJob.getCommand().addArgument("-l " + brassCoverNormalisedThreads);
-    brassCoverJob.getCommand().addArgument("-c " + brassCoverNormalisedThreads);
+    brassCoverJob.getCommand().addArgument("-l " + localCores);
+    brassCoverJob.getCommand().addArgument("-c " + localCores);
     brassCoverJob.setMaxMemory(Integer.toString(totalBrassCoverMem));
-    brassCoverJob.setThreads(brassCoverNormalisedThreads);
-    addJobParents(brassCoverJob, downloadJobsList);
+    brassCoverJob.setThreads(localCores);
+    brassCoverJob.addParent(brassInputJobs[0]);
+    brassCoverJob.addParent(brassInputJobs[1]);
     
     Job brassCoverMergeJob = brassBaseJob(tumourCount, tumourBam, controlBam, "BRASS", "merge", 1);
     brassCoverMergeJob.setMaxMemory(memBrassCoverMerge);
@@ -625,7 +629,6 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
     
     Job cavemanFlagJob = cavemanBaseJob(tumourCount, tumourBam, controlBam, "CaVEMan", "flag", 1);
     cavemanFlagJob.setMaxMemory(memCavemanFlag);
-    addJobParents(cavemanFlagJob, downloadJobsList);
     cavemanFlagJob.addParent(pindelFlagJob); // PINDEL dependency
     cavemanFlagJob.addParent(cavemanAddIdsJob);
     cavemanFlagJob.addParent(contaminationJob);
