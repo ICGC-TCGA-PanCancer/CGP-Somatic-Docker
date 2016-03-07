@@ -151,7 +151,7 @@ RUN curl -sSL -o tmp.tar.gz --retry 10 https://github.com/cancerit/cgpNgsQc/arch
     rm -rf /tmp/downloads/cgpNgsQc /tmp/downloads/tmp.tar.gz ~/.cpanm
 
 # ascatNgs
-RUN curl -sSL -o tmp.tar.gz --retry 10 https://github.com/cancerit/ascatNgs/archive/v1.6.0.tar.gz && \
+RUN curl -sSL -o tmp.tar.gz --retry 10 https://github.com/cancerit/ascatNgs/archive/v1.7.1.tar.gz && \
     mkdir /tmp/downloads/ascatNgs && \
     tar -C /tmp/downloads/ascatNgs --strip-components 1 -zxf tmp.tar.gz && \
     cd /tmp/downloads/ascatNgs/perl && \
