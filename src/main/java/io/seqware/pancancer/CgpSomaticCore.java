@@ -500,8 +500,9 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
     
     Job brassInputJobs[] = new Job[2];
     for(int i=0; i<2; i++) {
-      Job brassInputJob = brassBaseJob(tumourCount, tumourBam, controlBam, "BRASS", "input", i+1);
-      brassInputJob.getCommand().addArgument("-i " + i+1);
+      int index = i+1;
+      Job brassInputJob = brassBaseJob(tumourCount, tumourBam, controlBam, "BRASS", "input", index);
+      brassInputJob.getCommand().addArgument("-i " + index);
       brassInputJob.setMaxMemory(memBrassInput);
       addJobParents(brassInputJob, dependencyJobsList);
       brassInputJobs[i] = brassInputJob;
