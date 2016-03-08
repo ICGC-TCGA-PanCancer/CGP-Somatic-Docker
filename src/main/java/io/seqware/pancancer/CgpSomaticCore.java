@@ -1037,7 +1037,7 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
               .addArgument("-mi " + refBase + "/brass/all_ncbi_bacteria.20150703")
               .addArgument("-b " + refBase + "/brass/hs37d5_500bp_windows.gc.bed.gz")
             ;
-    if(process.equals("normcn") || process.equals("filter") || process.equals("grass")) {
+    if(process.equals("normcn") || process.equals("filter") || process.equals("grass") || process.equals("tabix")) {
       thisJob.getCommand().addArgument("-a " + cnPath)
                           .addArgument("-ss " + cnStats);
     }
