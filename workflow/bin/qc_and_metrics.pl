@@ -193,17 +193,17 @@ sub _qc_contam {
 sub _qc_brass {
   my $to_process = shift;
   my %qc = ( 'caller' => 'BRASS' );
-  my ($stdout, $stderr, $exit) = capture { system(qq{wc -l $to_process/intermediates/*.groups.filtered.bedpe}); };
+  my ($stdout, $stderr, $exit) = capture { system([0,1], qq{grep -cv '^#' $to_process/intermediates/*.groups.filtered.bedpe}); };
   die "Error occurred while counting $to_process/intermediates/*.groups.filtered.bedpe" if ($stderr);
   chomp $stdout;
   $stdout =~ m/^([[:digit:]]+)/;
-  $qc{'groups'} = $1;
+  $qc{'total_groups'} = $1;
 
-  ($stdout, $stderr, $exit) = capture { system(qq{wc -l $to_process/*.annot.bedpe}); };
+  ($stdout, $stderr, $exit) = capture { system([0,1], qq{grep -cv '^#' $to_process/*.annot.bedpe}); };
   die "Error occurred while counting $to_process/*.annot.bedpe" if ($stderr);
   chomp $stdout;
   $stdout =~ m/^([[:digit:]]+)/;
-  $qc{'assembled'} = $1;
+  $qc{'filtered_groups'} = $1;
   return \%qc;
 }
 
