@@ -993,7 +993,13 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
   
   private Job pullRef(String refFrom, String localTarGzFile) {
     Job thisJob = prepTimedJob(0, "pullRef", "NA", 0);
-    thisJob.getCommand().addArgument("curl -sSL -o " + localTarGzFile + " " + refFrom);
+		if (refFrom.startsWith("/")) {
+			System.out.print("Found local reference archive: ");
+			System.out.println(refFrom);
+			thisJob.getCommand().addArgument("mv " + refFrom + " " + localTarGzFile);
+		} else {
+			thisJob.getCommand().addArgument("curl -sSL -o " + localTarGzFile + " " + refFrom);
+		}
     return thisJob;
   }
   
