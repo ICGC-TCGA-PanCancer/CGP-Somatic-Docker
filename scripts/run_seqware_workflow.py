@@ -18,7 +18,7 @@ import tarfile
 
 # set global variable for workflow version
 global workflow_version
-workflow_version = "1.0.8"
+workflow_version = "0.0.0"
 
 
 def collect_args():
