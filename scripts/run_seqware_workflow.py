@@ -2,6 +2,9 @@
 # -*- coding: utf-8 -*-
 """
 This script is intended to run within the docker container.
+
+Test data available to download from:
+https://s3-eu-west-1.amazonaws.com/wtsi-pancancer/testdata/HCC1143_ds.tar
 """
 from __future__ import print_function
 
@@ -14,8 +17,8 @@ import subprocess
 import tarfile
 
 # set global variable for workflow version
-workflow_version = "1.0.8"
 global workflow_version
+workflow_version = "1.0.8"
 
 
 def collect_args():
@@ -26,6 +29,7 @@ def collect_args():
     parser.add_argument("--tumor",
                         type=str,
                         required=True,
+                        nargs="+",
                         help="tumor BAM input")
     parser.add_argument("--normal",
                         type=str,
@@ -33,7 +37,7 @@ def collect_args():
                         help="matched normal BAM input")
     parser.add_argument("--output-dir",
                         type=str,
-                        required=True,
+                        default="/output/",
                         help="directory in which to store the outputs of the workflow.")
     parser.add_argument("--refFrom",
                         type=str,
@@ -48,38 +52,20 @@ def collect_args():
     return parser
 
 
-def link_references(reference_tar_gz):
-    dest = "".join(
-        ["/home/seqware/Seqware-CGP-SomaticCore/target/Workflow_Bundle_CgpSomaticCore_",
-         workflow_version,
-         "_SeqWare_1.1.1/Workflow_Bundle_CgpSomaticCore/",
-         workflow_version,
-         "/data/"])
-
-    extracted_refs = untar(os.path.abspath(reference_tar_gz))
-
-    if not os.path.isdir(dest):
-        execute("mkdir -p {0}".format(dest))
-
-    # symlink extracted reference files to dest and
-    # maintain dir stucture from tar archive
-    execute("ln -s {0} {1}".format(os.path.join(extracted_refs, "*"), dest))
-
-
 def write_ini(args, cwd):
     output_dir = os.path.abspath(args.output_dir).split("/")[-1]
     output_prefix = re.sub(output_dir, "", os.path.abspath(args.output_dir))
 
     if os.path.isfile(args.refFrom):
         refFrom = os.path.abspath(args.refFrom)
-    elif args.refFrom.startswith("http"):
+    elif re.match("^http", args.refFrom):
         refFrom = args.refFrom
     else:
         raise Exception("refFrom must be a local file or a valid URL")
 
     if os.path.isfile(args.bbFrom):
         bbFrom = os.path.abspath(args.bbFrom)
-    elif args.bbFrom.startswith("http"):
+    elif re.match("^http", args.bbFrom):
         bbFrom = args.bbFrom
     else:
         raise Exception("bbFrom must be a local file or a valid URL")
@@ -92,9 +78,9 @@ def write_ini(args, cwd):
                  # input files
                  "tumourAliquotIds={0}".format(""),
                  "tumourAnalysisIds={0}".format(""),
-                 "tumourBams={0}".format(""),
+                 "tumourBams={0}".format(":".join(args.tumor)),
                  "controlAnalysisId={0}".format(""),
-                 "controlBam={0}".format(""),
+                 "controlBam={0}".format(args.normal),
                  # output dir setup
                  "output_dir={0}".format(output_dir),
                  "output_prefix={0}".format(output_prefix),
@@ -204,9 +190,6 @@ def main():
     cwd = os.getcwd()
     print("Current Working Directory: {}".format(cwd))
 
-    # PUT INPUT AND REF FILE IN THE RIGHT PLACE
-    link_references(args)
-
     # WRITE WORKFLOW INI
     write_ini(args, cwd)
 
@@ -228,7 +211,7 @@ def main():
         execute("sudo mkdir -p {0}".format(args.output_dir))
 
     # MOVE OUTPUT FILES TO THE OUTPUT DIRECTORY
-    if os.path.isfile("{0}/merged_output.bam".format(results_dir)):
+    if os.path.isfile("{0}/.vcf".format(results_dir)):
         # Ensure we can write to the output_dir
         execute("sudo chown -R seqware {0}".format(args.output_dir))
         execute("mv {0}/* {1}".format(
