@@ -10,7 +10,6 @@ from __future__ import print_function
 
 import argparse
 import glob
-import logging
 import os
 import re
 import shlex
@@ -158,7 +157,6 @@ def write_ini(args, out_dir):
 
 
 def execute(cmd):
-    logging.info("RUNNING: %s" % (cmd))
     print("RUNNING...\n", cmd, "\n")
     process = subprocess.Popen(shlex.split(cmd),
                                shell=False,
