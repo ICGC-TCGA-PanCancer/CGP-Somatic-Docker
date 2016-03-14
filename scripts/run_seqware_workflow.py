@@ -170,16 +170,10 @@ def execute(cmd):
         sys.stdout.write(nextline)
         sys.stdout.flush()
 
-    if process.returncode == 0:
-        return process.returncode
-    else:
-        raise RuntimeError(
-            "\n".join(
-                ["",
-                 "[COMMAND]        {0}".format(cmd),
-                 "[STDERR]         {0}".format(process.communicate()[1]),
-                 "[STATUS CODE]    {0}".format(process.returncode)]
-            ))
+    stderr = process.communicate()[1]
+    if stderr is not None:
+        print(stderr)
+    return process.returncode
 
 
 def main():
