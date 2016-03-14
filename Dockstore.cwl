@@ -21,37 +21,37 @@ requirements:
     dockerPull: quay.io/TBD
 
 inputs:
-  - id: "#refdata_1"
+  - id: "#tumor"
     type:
-      type: array
-      items: File
+      type: File
     inputBinding:
       position: 1
-      prefix: "--file"
+      prefix: "--tumor"
+    secondaryFiles:
+      - .bai 
 
-  - id: "#refdata_2"
+  - id: "#normal"
     type:
-      type: array
-      items: File
+      type: File
     inputBinding:
-      position: 1
-      prefix: "--file"
+      position: 2
+      prefix: "--normal"
+    secondaryFiles:
+      - .bai 
 
-  - id: "#refdata_3"
+  - id: "#refFrom"
     type:
-      type: array
-      items: File
+      type: File
     inputBinding:
-      position: 1
-      prefix: "--file"
+      position: 3
+      prefix: "--refFrom"
 
-  - id: "#reads"
+  - id: "#bbFrom"
     type:
-      type: array
-      items: File
+      type: File
     inputBinding:
-      position: 1
-      prefix: "--file"
+      position: 4
+      prefix: "--bbFrom"
 
 outputs:
   - id: "#vcf"
@@ -60,4 +60,4 @@ outputs:
     outputBinding:
       glob: ["*.vcf"]
 
-baseCommand: ["perl", "/home/seqware/CGP-Somatic-Docker/scripts/run_workflow.sh"]
+baseCommand: ["python", "/home/seqware/CGP-Somatic-Docker/scripts/run_seqware_workflow.py"]

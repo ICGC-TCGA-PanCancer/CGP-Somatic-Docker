@@ -996,7 +996,7 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
 		if (refFrom.startsWith("/")) {
 			System.out.print("Found local reference archive: ");
 			System.out.println(refFrom);
-			thisJob.getCommand().addArgument("mv " + refFrom + " " + localTarGzFile);
+			thisJob.getCommand().addArgument("ln -s " + refFrom + " " + localTarGzFile);
 		} else {
 			thisJob.getCommand().addArgument("curl -sSL -o " + localTarGzFile + " " + refFrom);
 		}

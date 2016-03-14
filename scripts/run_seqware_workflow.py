@@ -13,12 +13,9 @@ import glob
 import logging
 import os
 import re
+import shlex
 import subprocess
-import tarfile
-
-# set global variable for workflow version
-global workflow_version
-workflow_version = "0.0.0"
+import sys
 
 
 def collect_args():
@@ -52,7 +49,7 @@ def collect_args():
     return parser
 
 
-def write_ini(args, cwd):
+def write_ini(args, out_dir):
     output_dir = os.path.abspath(args.output_dir).split("/")[-1]
     output_prefix = re.sub(output_dir, "", os.path.abspath(args.output_dir))
 
@@ -150,54 +147,56 @@ def write_ini(args, cwd):
                  "memCavemanTbiClean={0}".format("4000")]
 
     ini = "\n".join(ini_parts)
-    ini_file = os.path.join(cwd, "workflow.ini")
+    ini_file = os.path.join(out_dir, "workflow.ini")
     with open(ini_file, 'wb') as f:
         f.write(ini)
-
-
-def untar(fname, dest):
-    if (fname.endswith("tar.gz")):
-        tar = tarfile.open(fname)
-        if not os.path.isdir(dest):
-            os.makedirs(dest, exist_ok=True)
-        tar.extractall(path=dest)
-        tar.close()
-        output_dir = os.path.join(
-            dest, re.sub("\.tar\.gz", "", os.path.basename(fname)))
-        print("Extracted in: {0}".format(output_dir))
-        return output_dir
-    else:
-        raise Exception("Not a tar.gz file: {0}".format(fname))
 
 
 def execute(cmd):
     logging.info("RUNNING: %s" % (cmd))
     print("RUNNING...\n", cmd, "\n")
-    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
-                         stderr=subprocess.PIPE)
-    stdout, stderr = p.communicate()
-    if stderr is not None:
-        print(stderr)
-    if stdout is not None:
-        print(stdout)
-    return p.returncode
+    process = subprocess.Popen(shlex.split(cmd),
+                               shell=False,
+                               stdout=subprocess.PIPE,
+                               stderr=subprocess.STDOUT)
+
+    while True:
+        nextline = process.stdout.readline()
+        if nextline == '' and process.poll() is not None:
+            break
+        sys.stdout.write(nextline)
+        sys.stdout.flush()
+
+    stdout = process.communicate()[0]
+    rc = process.returncode
+
+    if (rc == 0):
+        return stdout
+    else:
+        raise subprocess.ProcessException(cmd, rc, stdout)
 
 
 def main():
     parser = collect_args()
     args = parser.parse_args()
 
-    cwd = os.getcwd()
-    print("Current Working Directory: {}".format(cwd))
+    workflow_version = "0.0.0"
+    seqware_basedir = "/home/seqware/CGP-Somatic-Docker"
 
     # WRITE WORKFLOW INI
-    write_ini(args, cwd)
+    write_ini(args, seqware_basedir)
+
+    seqware_workflow_bundle = os.path.join(
+        seqware_basedir,
+        "target/Workflow_Bundle_CgpSomaticCore_{0}_SeqWare_1.1.1".format(
+            workflow_version
+        ))
 
     # RUN WORKFLOW
     cmd_parts = ["seqware bundle launch",
-                 "--dir /home/seqware/Seqware-CGP-SomaticCore/target/Workflow_Bundle_CgpSomaticCore_{0}_SeqWare_1.1.1".format(workflow_version),
+                 "--dir {0}".format(seqware_workflow_bundle),
                  "--engine whitestar-parallel",
-                 "--ini workflow.ini",
+                 "--ini {0}".format(os.path.join(seqware_basedir, "workflow.ini")),
                  "--no-metadata"]
     cmd = " ".join(cmd_parts)
     execute(cmd)
