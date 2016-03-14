@@ -163,7 +163,7 @@ def execute(cmd):
     process = subprocess.Popen(shlex.split(cmd),
                                shell=False,
                                stdout=subprocess.PIPE,
-                               stderr=subprocess.STDOUT)
+                               stderr=subprocess.PIPE)
 
     while True:
         nextline = process.stdout.readline()
@@ -172,13 +172,16 @@ def execute(cmd):
         sys.stdout.write(nextline)
         sys.stdout.flush()
 
-    stdout = process.communicate()[0]
-    rc = process.returncode
-
-    if (rc == 0):
-        return stdout
+    if process.returncode == 0:
+        return process.returncode
     else:
-        raise subprocess.ProcessException(cmd, rc, stdout)
+        raise RuntimeError(
+            "\n".join(
+                ["",
+                 "[COMMAND]        {0}".format(cmd),
+                 "[STDERR]         {0}".format(process.communicate()[1]),
+                 "[STATUS CODE]    {0}".format(process.returncode)]
+            ))
 
 
 def main():
