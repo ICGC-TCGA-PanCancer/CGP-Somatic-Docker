@@ -46,6 +46,11 @@ def collect_args():
                         required=True,
                         help="battenberg reference file archive for CGP-Somatic-Core workflow. \
                         Available to download from: https://s3-eu-west-1.amazonaws.com/wtsi-pancancer/reference/GRCh37d5_battenberg.tar.gz")
+    parser.add_argument("--keep-all-seqware-output-files",
+                        dest='keep_all_seqware_output_files',
+                        default=False,
+                        action="store_true",
+                        help=argparse.SUPPRESS)
     return parser
 
 
@@ -196,25 +201,29 @@ def main():
     cmd_parts = ["seqware bundle launch",
                  "--dir {0}".format(seqware_workflow_bundle),
                  "--engine whitestar-parallel",
-                 "--ini {0}".format(os.path.join(seqware_basedir, "workflow.ini")),
+                 "--ini {0}".format(
+                     os.path.join(seqware_basedir, "workflow.ini")
+                 ),
                  "--no-metadata"]
     cmd = " ".join(cmd_parts)
     execute(cmd)
 
-    # FIND OUTPUT
-    path = glob.glob("/datastore/oozie-*")[0]
-    results_dir = os.path.join(path, "data")
+    if (args.keep_all_seqware_output_files):
+        # find seqware tmp output path; it contains generated scripts w/
+        # stdout stderr for each step
+        run_info_output_path = glob.glob("/datastore/oozie-*")[0]
 
-    if not os.path.isdir(args.output_dir):
-        # Need to use sudo since this is process is running as seqware
-        execute("sudo mkdir -p {0}".format(args.output_dir))
+        # make the output directory if it does not exist
+        if not os.path.isdir(args.output_dir):
+            # Need to use sudo since this is process is running as seqware
+            execute("sudo mkdir -p {0}".format(args.output_dir))
+            # Ensure we can write to the output_dir
+            execute("sudo chown -R seqware {0}".format(args.output_dir))
 
-    # MOVE OUTPUT FILES TO THE OUTPUT DIRECTORY
-    if os.path.isfile("{0}/.vcf".format(results_dir)):
-        # Ensure we can write to the output_dir
-        execute("sudo chown -R seqware {0}".format(args.output_dir))
+        # move all files to the output directory
         execute("mv {0}/* {1}".format(
-            results_dir, args.output_dir))
+            run_info_output_path, args.output_dir
+        ))
 
 
 if __name__ == "__main__":
