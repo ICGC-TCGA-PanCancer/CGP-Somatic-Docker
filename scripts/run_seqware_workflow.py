@@ -173,6 +173,10 @@ def execute(cmd):
     stderr = process.communicate()[1]
     if stderr is not None:
         print(stderr)
+    if process.returncode != 0:
+        print("[WARNING] command: {0} exited with code: {1}".format(
+            cmd, process.returncode
+        ))
     return process.returncode
 
 
