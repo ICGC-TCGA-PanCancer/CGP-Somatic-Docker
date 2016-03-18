@@ -1,15 +1,27 @@
 {
-	"refdata_1":
+	"tumor":
 	{
-		"class":"http://s3.amazonaws.com/pan-cancer-data/pan-cancer-reference/genome.fa.gz"
+    "path":"",
+		"class":"File"
 	},
-	"refdata_2":
+	"normal":
 	{
-		"class":"http://s3.amazonaws.com/pan-cancer-data/pan-cancer-reference/genome.fa.gz.fai"
+    "path":"",
+		"class":"File"
 	},
-	"refdata_3":
+	"refFrom":
 	{
-		"class":"https://s3.amazonaws.com/pan-cancer-data/pan-cancer-reference/cgp_reference.tar.gz"
+    "path":"",
+		"class":"File"
 	}
-
+	"bbFrom":
+	{
+    "path":"",
+		"class":"File"
+	}
+	"outputDir":
+	{
+    "value":"",
+		"class":"string"
+	}
 }
