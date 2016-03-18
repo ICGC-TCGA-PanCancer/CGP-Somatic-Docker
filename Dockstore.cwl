@@ -1,12 +1,14 @@
 #!/usr/bin/env cwl-runner
 
 class: CommandLineTool
+id: "Seqware-Sanger-Somatic-Workflow"
+label: "Seqware-Sanger-Somatic-Workflow"
 
 description: |
    Sanger placeholder text.
 
 dct:creator:
-  "@id": "http://sanger.ac.uk/...
+  "@id": "http://sanger.ac.uk/..."
   foaf:name: "Keiran Raine"
   foaf:mbox: "mailto:keiranmraine@gmail.com"
 
@@ -22,8 +24,7 @@ requirements:
 
 inputs:
   - id: "#tumor"
-    type:
-      type: File
+    type: File
     inputBinding:
       position: 1
       prefix: "--tumor"
@@ -31,8 +32,7 @@ inputs:
       - .bai 
 
   - id: "#normal"
-    type:
-      type: File
+    type: File
     inputBinding:
       position: 2
       prefix: "--normal"
@@ -40,18 +40,22 @@ inputs:
       - .bai 
 
   - id: "#refFrom"
-    type:
-      type: File
+    type: File
     inputBinding:
       position: 3
       prefix: "--refFrom"
 
   - id: "#bbFrom"
-    type:
-      type: File
+    type: File
     inputBinding:
       position: 4
       prefix: "--bbFrom"
+
+  - id: "#outputDir"
+    type: string
+    inputBinding:
+      position: 5
+      prefix: "--output-dir"
 
 outputs:
   - id: "#somatic_snv_mnv_vcf"
