@@ -58,50 +58,18 @@ inputs:
       prefix: "--output-dir"
 
 outputs:
-  - id: "#somatic_snv_mnv_vcf"
-    type: File
-    outputBinding:
-      glob: "*.somatic.snv_mnv.vcf.gz"
-  - id: "#somatic_snv_mnv_vcf_tbi"
-    type: File
-    outputBinding:
-      glob: "*.somatic.snv_mnv.vcf.gz.tbi"
   - id: "#somatic_snv_mnv_tar_gz"
     type: File
     outputBinding:
       glob: "*.somatic.snv_mnv.tar.gz"
-  - id: "#somatic_cnv_vcf"
-    type: File
-    outputBinding:
-      glob: "*.somatic.cnv.vcf.gz"
-  - id: "#somatic_cnv_vcf_tbi"
-    type: File
-    outputBinding:
-      glob: "*.somatic.cnv.vcf.gz.tbi"
   - id: "#somatic_cnv_tar_gz"
     type: File
     outputBinding:
       glob: "*.somatic.cnv.tar.gz"
-  - id: "#somatic_sv_vcf"
-    type: File
-    outputBinding:
-      glob: "*.somatic.sv.vcf.gz"
-  - id: "#somatic_sv_vcf_tbi"
-    type: File
-    outputBinding:
-      glob: "*.somatic.sv.vcf.gz.tbi"
   - id: "#somatic_sv_tar_gz"
     type: File
     outputBinding:
       glob: "*.somatic.sv.tar.gz"
-  - id: "#somatic_indel_vcf"
-    type: File
-    outputBinding:
-      glob: "*.somatic.indel.vcf.gz"
-  - id: "#somatic_indel_vcf_tbi"
-    type: File
-    outputBinding:
-      glob: "*.somatic.indel.vcf.gz.tbi"
   - id: "#somatic_indel_tar_gz"
     type: File
     outputBinding:

@@ -34,7 +34,20 @@ def collect_args():
     parser.add_argument("--output-dir",
                         type=str,
                         default="/output/",
-                        help="directory in which to store the outputs of the workflow.")
+                        help="directory in which to store the outputs of the \
+                        workflow.")
+    parser.add_argument("--output-file-basename",
+                        dest="output_file_basename",
+                        type=str,
+                        help="all primary output files with be named following \
+                        the convention: \
+                        <output_file_basename>.somatic.<output_type>.tar.gz \
+                        where output type is one of: [snv_mnv, cnv, sv, indel, \
+                        imputeCounts, genotype, verifyBamId]. \
+                        Otherwise sample files will be named automatically \
+                        following the pattern: \
+                        <SM>.<workflowName>.<dateString>.somatic.<output_type>.tar.gz \
+                        where SM is extracted from the @RG line in the BAM header.")
     parser.add_argument("--refFrom",
                         type=str,
                         required=True,
@@ -45,7 +58,7 @@ def collect_args():
                         required=True,
                         help="battenberg reference file archive for CGP-Somatic-Core workflow. \
                         Available to download from: https://s3-eu-west-1.amazonaws.com/wtsi-pancancer/reference/GRCh37d5_battenberg.tar.gz")
-    parser.add_argument("--keep-all-seqware-output-files",
+    parser.add_argument("--keep-all-seqware-intermediate-output-files",
                         dest='keep_all_seqware_output_files',
                         default=False,
                         action="store_true",
@@ -186,6 +199,7 @@ def main():
 
     workflow_version = "0.0.0"
     seqware_basedir = "/home/seqware/CGP-Somatic-Docker"
+    output_dir = os.path.abspath(args.output_dir)
 
     # WRITE WORKFLOW INI
     write_ini(args, seqware_basedir)
@@ -207,6 +221,22 @@ def main():
     cmd = " ".join(cmd_parts)
     execute(cmd)
 
+    if args.output_file_basename is not None:
+        # find all primary output file archives
+        output_files = glob.glob(os.path.join(output_dir, "*.tar.gz"))
+
+        for f in output_files:
+            new_f = [args.output_file_basename]
+            f_base = os.path.basename(f).split(".")
+            # extract out ["somatic", <output_type>, "tar", "gz"] and append to
+            # new file basename
+            new_f += f_base[-4:]
+
+            # rename file
+            execute("mv {0} {1}".format(
+                f, os.path.join(output_dir, ".".join(new_f))
+            ))
+
     if (args.keep_all_seqware_output_files):
         # find seqware tmp output path; it contains generated scripts w/
         # stdout stderr for each step
@@ -215,13 +245,13 @@ def main():
         # make the output directory if it does not exist
         if not os.path.isdir(args.output_dir):
             # Need to use sudo since this is process is running as seqware
-            execute("sudo mkdir -p {0}".format(args.output_dir))
+            execute("sudo mkdir -p {0}".format(output_dir))
             # Ensure we can write to the output_dir
-            execute("sudo chown -R seqware {0}".format(args.output_dir))
+            execute("sudo chown -R seqware {0}".format(output_dir))
 
         # move all files to the output directory
-        execute("mv {0}/* {1}".format(
-            run_info_output_path, args.output_dir
+        execute("mv {0}/* {1}/".format(
+            run_info_output_path, output_dir
         ))
 
 
