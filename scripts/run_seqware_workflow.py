@@ -230,7 +230,7 @@ def main():
 
     if args.output_file_basename is not None:
         # find all primary output file archives
-        output_files = glob.glob(os.path.join(output_dir, "*.tar.gz"))
+        output_files = glob.glob(os.path.join(output_dir, "*.somatic.*.tar.gz"))
 
         for f in output_files:
             new_f = [args.output_file_basename]
