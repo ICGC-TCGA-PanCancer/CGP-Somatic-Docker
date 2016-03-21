@@ -199,7 +199,14 @@ def main():
 
     workflow_version = "0.0.0"
     seqware_basedir = "/home/seqware/CGP-Somatic-Docker"
+
     output_dir = os.path.abspath(args.output_dir)
+    if not os.path.isdir(output_dir):
+        # Make the output directory if it does not exist
+        # Need to use sudo since this is process is running as seqware
+        execute("sudo mkdir -p {0}".format(output_dir))
+    # Ensure we can write to the output_dir
+    execute("sudo chown -R seqware {0}".format(output_dir))
 
     # WRITE WORKFLOW INI
     write_ini(args, seqware_basedir)
@@ -241,13 +248,6 @@ def main():
         # find seqware tmp output path; it contains generated scripts w/
         # stdout stderr for each step
         run_info_output_path = glob.glob("/datastore/oozie-*")[0]
-
-        # make the output directory if it does not exist
-        if not os.path.isdir(args.output_dir):
-            # Need to use sudo since this is process is running as seqware
-            execute("sudo mkdir -p {0}".format(output_dir))
-            # Ensure we can write to the output_dir
-            execute("sudo chown -R seqware {0}".format(output_dir))
 
         # move all files to the output directory
         execute("mv {0}/* {1}/".format(
