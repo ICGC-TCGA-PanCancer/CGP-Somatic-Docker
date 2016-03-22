@@ -1,201 +1,259 @@
-#! /usr/bin/python
-
-
-
-# TODO: Move this to a template file, maybe mustache?
-base_ini = """# the output directory is a convention used in many workflows to specify a relative output path
-output_dir=seqware-results
-# the output_prefix is a convention used to specify the root of the absolute output path or an S3 bucket name
-# you should pick a path that is available on all cluster nodes and can be written by your user
-output_prefix=./
-# cleanup true will remove just the input BAMs if not uploading and the full output directory if uploading
-# false there will be no cleanup which is useful for debugging
-cleanup=false
-
-# START NEW ITEMS FOR 1.0.6
-gnos_retries=3
-gnos_timeout_min=20
-downloadBamsFromS3=false
-S3DownloadKey=slkdfjslkdj
-S3DownloadSecretKey=lkdjflskdjflskdj
-# comma separated
-tumorS3Urls=s3://bucket/path/7723a85b59ebce340fe43fc1df504b35.bam
-normalS3Url=s3://bucket/path/8f957ddae66343269cb9b854c02eee2f.bam
-# END NEW ITEMS FOR 1.0.6
-
-# these are just used for tracking
-donor_id=unknown
-project_code=unknown
-
-# memory for upload to SFTP/S3
-duckJobMem=16000
-
-# tracking instance types
-vm_instance_type=unknown
-vm_instance_cores=unknown
-vm_instance_mem_gb=unknown
-vm_location_code=unknown
-
-# cleanup
-cleanupBams=false
-
-# archive tarball
-saveUploadArchive=true
-uploadArchivePath=./seqware-results/upload_archive/
-
-# options for tarball to SFTP
-SFTPUploadArchive=true
-# can be overwrite or skip, see https://trac.cyberduck.io/wiki/help/en/howto/cli
-SFTPUploadArchiveMode=overwrite
-SFTPUploadArchiveUsername=boconnor
-SFTPUploadArchivePassword=klsdfskdjfskjd
-SFTPUploadArchiveServer=10.1.1.13
-SFTPUploadArchivePath=/upload/path/directory/
-
-# options for tarball to S3
-S3UploadArchive=true
-S3UploadArchiveMode=overwrite
-S3UploadArchiveBucketURL=s3://bucketname/uploads/
-S3UploadArchiveKey=slkdfjslkdj
-S3UploadArchiveSecretKey=lkdjflskdjflskdj
-
-# send the files not a tarball
-SFTPUploadFiles=true
-# can be overwrite or skip, see https://trac.cyberduck.io/wiki/help/en/howto/cli
-SFTPUploadMode=overwrite
-SFTPUploadUsername=boconnor
-SFTPUploadPassword=klsdfskdjfskjd
-SFTPUploadServer=10.1.1.13
-SFTPUploadPath=/upload/path/directory/
-
-S3UploadFiles=true
-S3UploadFileMode=overwrite
-S3UploadBucketURL=s3://bucketname/uploads/
-S3UploadKey=slkdfjslkdj
-S3UploadSecretKey=lkdjflskdjflskdj
-
-# synapse upload
-# I DO NOT recommend you use this, it has not been tested well
-SynapseUpload=true
-SynapseUploadSFTPUsername=boconnor
-SynapseUploadSFTPPassword=klsdfskdjfskjd
-SynapseUploadUsername=boconnor
-SynapseUploadPassword=klsdfskdjfskjd
-SynapseUploadURL=sftp://tcgaftps.nci.nih.gov/tcgapancan/pancan/variant_calling_pilot_64/OICR_Sanger_Core
-SynapseUploadParent=syn3155834
-
-# if set, these trigger an upload of the input bam file to a GNOS repository
-# I DO NOT recommend you use this, this hasn't been tested and is likely to have bugs/issues
-bamUploadServer=
-bamUploadPemFile=
-bamUploadStudyRefnameOverride=
-bamUploadAnalysisCenterOverride=
-bamUploadScriptJobMem=10000
-bamUploadScriptJobSlots=1
-
-# if set to true GNOS is still used for downloading metadata but the input bam file paths are assumed to be local file paths
-# specifically tumourBams is a colon-delimited list of full file paths and controlBam is a full file path
-localFileMode=false
-# if localFileMode is true then you need to give the path where the decider downloads all the XML
-localXMLMetadataPath=path_to_decider_download_dir_for_xml
-
-# another option for upload
-skip-validate=false
-
-# when localFileMode=true, if set this causes the bam file paths to be modified so they are <localBamFilePathPrefix>/<analysis_id>/<bam_file>, also affects the bai path implicitly. This is done so you can continue working with the decider.
-localBamFilePathPrefix=
-
-# basic setup
-coresAddressable=32
-memHostMbAvailable=240000
-tabixSrvUri=http://10.89.9.50/
-
-# Use public pulldown data bundled with workflow instead of full genome scale data from GNOS
-#testMode=true
-
-pemFile=/home/ubuntu/.gnos/gnos.pem
-gnosServer=https://gtrepo-ebi.annailabs.com
-## comment out upload server to block vcfUpload
-uploadServer=https://gtrepo-ebi.annailabs.com
-uploadPemFile=/home/ubuntu/.gnos/gnos.pem
-
-study-refname-override=icgc_pancancer_vcf_test
-#analysis-center-override=
-#center-override=
-#ref-center-override=
-#upload-test=true
-#upload-skip=true
-
-assembly=GRCh37
-species=human
-seqType=WGS
-gender=L
-
-# PD4116a 30x vs PD4116b 30x (BRCA-UK::CGP_donor_1199138)
-tumourAliquotIds=f393bb07-270c-2c93-e040-11ac0d484533
-tumourAnalysisIds=ef26d046-e88a-4f21-a232-16ccb43637f2
-tumourBams=7723a85b59ebce340fe43fc1df504b35.bam
-controlAnalysisId=1b9215ab-3634-4108-9db7-7e63139ef7e9
-controlBam=8f957ddae66343269cb9b854c02eee2f.bam
-
-refExclude=MT,GL%,hs37d5,NC_007605
-
-# GNOS
-memBasFileGet=4000
-memGnosDownload=14000
-memUpload=14000
-
-# GENERIC
-memWorkflowOverhead=3000
-memPackageResults=4000
-memMarkTime=4000
-memGenotype=4000
-memContam=4000
-memQcMetrics=4000
-memGetTbi=4000
-
-contamDownSampOneIn=25
-
-#PICNIC
-memPicnicCounts=4000
-memPicnicMerge=4000
-
-#BATTENBERG
-memUnpack=4000
-memBbMerge=4000
-
-# ASCAT
-memAlleleCount=4000
-memAscat=8000
-memAscatFinalise=4000
-
-# PINDEL
-memPindelInput=7000
-memPindelPerThread=8000
-memPindelVcf=8000
-memPindelMerge=6000
-memPindelFlag=8000
-
-# BRASS
-memBrassInput=6000
-memBrassGroup=4500
-memBrassFilter=4500
-memBrassSplit=4000
-memBrassAssemblePerThread=4000
-memBrassGrass=4000
-memBrassTabix=4000
-
-# CAVEMAN
-memCaveCnPrep=4000
-memCavemanSetup=4000
-memCavemanSplit=4000
-memCavemanSplitConcat=4000
-memCavemanMstepPerThread=3000
-memCavemanMerge=4000
-memCavemanEstepPerThread=3000
-memCavemanMergeResults=4000
-memCavemanAddIds=4000
-memCavemanFlag=5000
-memCavemanTbiClean=4000
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 """
+This script is intended to run within the docker container.
 
+Test data available to download from:
+https://s3-eu-west-1.amazonaws.com/wtsi-pancancer/testdata/HCC1143_ds.tar
+"""
+from __future__ import print_function
+
+import argparse
+import glob
+import os
+import re
+import shlex
+import subprocess
+import sys
+
+
+def collect_args():
+    descr = 'SeqWare-based Variant Calling Workflow from Sanger'
+    parser = argparse.ArgumentParser(
+        description=descr
+    )
+    parser.add_argument("--tumor",
+                        type=str,
+                        required=True,
+                        nargs="+",
+                        help="tumor BAM input")
+    parser.add_argument("--normal",
+                        type=str,
+                        required=True,
+                        help="matched normal BAM input")
+    parser.add_argument("--output-dir",
+                        type=str,
+                        default="/output/",
+                        help="directory in which to store the outputs of the \
+                        workflow.")
+    parser.add_argument("--output-file-basename",
+                        dest="output_file_basename",
+                        type=str,
+                        help="all primary output files with be named following \
+                        the convention: \
+                        <output_file_basename>.somatic.<output_type>.tar.gz \
+                        where output type is one of: [snv_mnv, cnv, sv, indel, \
+                        imputeCounts, genotype, verifyBamId]. \
+                        Otherwise sample files will be named automatically \
+                        following the pattern: \
+                        <SM>.<workflowName>.<dateString>.somatic.<output_type>.tar.gz \
+                        where SM is extracted from the @RG line in the BAM header.")
+    parser.add_argument("--refFrom",
+                        type=str,
+                        required=True,
+                        help="reference file archive for CGP-Somatic-Core workflow. \
+                        Available to download from: https://s3-eu-west-1.amazonaws.com/wtsi-pancancer/reference/GRCh37d5_CGP_refBundle.tar.gz ")
+    parser.add_argument("--bbFrom",
+                        type=str,
+                        required=True,
+                        help="battenberg reference file archive for CGP-Somatic-Core workflow. \
+                        Available to download from: https://s3-eu-west-1.amazonaws.com/wtsi-pancancer/reference/GRCh37d5_battenberg.tar.gz")
+    parser.add_argument("--keep-all-seqware-intermediate-output-files",
+                        dest='keep_all_seqware_output_files',
+                        default=False,
+                        action="store_true",
+                        help=argparse.SUPPRESS)
+    return parser
+
+
+def write_ini(args, out_dir):
+    output_dir = os.path.abspath(args.output_dir).split("/")[-1]
+    output_prefix = re.sub(output_dir, "", os.path.abspath(args.output_dir))
+
+    if os.path.isfile(args.refFrom):
+        refFrom = os.path.abspath(args.refFrom)
+    elif re.match("^http", args.refFrom):
+        refFrom = args.refFrom
+    else:
+        raise Exception("refFrom must be a local file or a valid URL")
+
+    if os.path.isfile(args.bbFrom):
+        bbFrom = os.path.abspath(args.bbFrom)
+    elif re.match("^http", args.bbFrom):
+        bbFrom = args.bbFrom
+    else:
+        raise Exception("bbFrom must be a local file or a valid URL")
+
+    # based on workflow/config/CgpSomaticCore.ini
+    # set up like this to make it easy to parameterize addtional settings
+    # in the future
+    ini_parts = ["refFrom={0}".format(refFrom),
+                 "bbFrom={0}".format(bbFrom),
+                 # input files
+                 "tumourAliquotIds={0}".format(""),
+                 "tumourAnalysisIds={0}".format(""),
+                 "tumourBams={0}".format(":".join(args.tumor)),
+                 "controlAnalysisId={0}".format(""),
+                 "controlBam={0}".format(args.normal),
+                 # output dir setup
+                 "output_dir={0}".format(output_dir),
+                 "output_prefix={0}".format(output_prefix),
+                 # clean up
+                 "cleanup={0}".format("false"),
+                 "cleanupBams={0}".format("false"),
+                 # basic setup
+                 "coresAddressable={0}".format("24"),
+                 "memHostMbAvailable={0}".format("108000"),
+                 "study-refname-override={0}".format(""),
+                 "analysis-center-override={0}".format(""),
+                 "assembly={0}".format("GRCh37"),
+                 "species={0}".format("human"),
+                 "seqType={0}".format("WGS"),
+                 "gender={0}".format("L"),
+                 "refExclude={0}".format("MT,GL%,hs37d5,NC_007605"),
+                 # GENERIC
+                 "memWorkflowOverhead={0}".format("3000"),
+                 "memMarkTime={0}".format("4000"),
+                 "memGenotype={0}".format("4000"),
+                 "memContam={0}".format("4000"),
+                 "memQcMetrics={0}".format("4000"),
+                 "memGetTbi={0}".format("4000"),
+                 "memGenerateBasFile={0}".format("4000"),
+                 "memPackageResults={0}".format("4000"),
+                 # QC
+                 "contamDownSampOneIn={0}".format("25"),
+                 # BATTENBERG
+                 "memUnpack={0}".format("4000"),
+                 "memBbMerge={0}".format("4000"),
+                 # ASCAT
+                 "memAlleleCount={0}".format("4000"),
+                 "memAscat={0}".format("8000"),
+                 "memAscatFinalise={0}".format("4000"),
+                 # PINDEL
+                 "memPindelInput={0}".format("7000"),
+                 "memPindelPerThread={0}".format("8000"),
+                 "memPindelVcf={0}".format("8000"),
+                 "memPindelMerge={0}".format("6000"),
+                 "memPindelFlag={0}".format("8000"),
+                 # BRASS
+                 "memBrassInput={0}".format("6000"),
+                 # new
+                 "memBrassCoverPerThread={0}".format("2000"),
+                 # new
+                 "memBrassCoverMerge={0}".format("500"),
+                 "memBrassGroup={0}".format("4500"),
+                 # new group, isize and normcn can run in parallel
+                 "memBrassIsize={0}".format("2000"),
+                 "memBrassNormCn={0}".format("4000"),
+                 "memBrassFilter={0}".format("4500"),
+                 "memBrassSplit={0}".format("4000"),
+                 "memBrassAssemblePerThread={0}".format("4000"),
+                 "memBrassGrass={0}".format("4000"),
+                 "memBrassTabix={0}".format("4000"),
+                 # CAVEMAN
+                 "memCaveCnPrep={0}".format("4000"),
+                 "memCavemanSetup={0}".format("4000"),
+                 "memCavemanSplit={0}".format("4000"),
+                 "memCavemanSplitConcat={0}".format("4000"),
+                 "memCavemanMstepPerThread={0}".format("3000"),
+                 "memCavemanMerge={0}".format("4000"),
+                 "memCavemanEstepPerThread={0}".format("3000"),
+                 "memCavemanMergeResults={0}".format("4000"),
+                 "memCavemanAddIds={0}".format("4000"),
+                 "memCavemanFlag={0}".format("5000"),
+                 "memCavemanTbiClean={0}".format("4000")]
+
+    ini = "\n".join(ini_parts)
+    ini_file = os.path.join(out_dir, "workflow.ini")
+    with open(ini_file, 'wb') as f:
+        f.write(ini)
+
+
+def execute(cmd):
+    print("RUNNING...\n", cmd, "\n")
+    process = subprocess.Popen(shlex.split(cmd),
+                               shell=False,
+                               stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE)
+
+    while True:
+        nextline = process.stdout.readline()
+        if nextline == '' and process.poll() is not None:
+            break
+        sys.stdout.write(nextline)
+        sys.stdout.flush()
+
+    stderr = process.communicate()[1]
+    if stderr is not None:
+        print(stderr)
+    if process.returncode != 0:
+        print("[WARNING] command: {0} exited with code: {1}".format(
+            cmd, process.returncode
+        ))
+    return process.returncode
+
+
+def main():
+    parser = collect_args()
+    args = parser.parse_args()
+
+    workflow_version = "0.0.0"
+    seqware_basedir = "/home/seqware/CGP-Somatic-Docker"
+
+    output_dir = os.path.abspath(args.output_dir)
+    if not os.path.isdir(output_dir):
+        # Make the output directory if it does not exist
+        # Need to use sudo since this is process is running as seqware
+        execute("sudo mkdir -p {0}".format(output_dir))
+    # Ensure we can write to the output_dir
+    execute("sudo chown -R seqware {0}".format(output_dir))
+
+    # WRITE WORKFLOW INI
+    write_ini(args, seqware_basedir)
+
+    seqware_workflow_bundle = os.path.join(
+        seqware_basedir,
+        "target/Workflow_Bundle_CgpSomaticCore_{0}_SeqWare_1.1.1".format(
+            workflow_version
+        ))
+
+    # RUN WORKFLOW
+    cmd_parts = ["seqware bundle launch",
+                 "--dir {0}".format(seqware_workflow_bundle),
+                 "--engine whitestar-parallel",
+                 "--ini {0}".format(
+                     os.path.join(seqware_basedir, "workflow.ini")
+                 ),
+                 "--no-metadata"]
+    cmd = " ".join(cmd_parts)
+    execute(cmd)
+
+    if args.output_file_basename is not None:
+        # find all primary output file archives
+        output_files = glob.glob(os.path.join(output_dir, "*.somatic.*.tar.gz"))
+
+        for f in output_files:
+            new_f = [args.output_file_basename]
+            f_base = os.path.basename(f).split(".")
+            # extract out ["somatic", <output_type>, "tar", "gz"] and append to
+            # new file basename
+            new_f += f_base[-4:]
+
+            # rename file
+            execute("mv {0} {1}".format(
+                f, os.path.join(output_dir, ".".join(new_f))
+            ))
+
+    if (args.keep_all_seqware_output_files):
+        # find seqware tmp output path; it contains generated scripts w/
+        # stdout stderr for each step
+        run_info_output_path = glob.glob("/datastore/oozie-*")[0]
+
+        # move all files to the output directory
+        execute("mv {0}/* {1}/".format(
+            run_info_output_path, output_dir
+        ))
+
+
+if __name__ == "__main__":
+    main()

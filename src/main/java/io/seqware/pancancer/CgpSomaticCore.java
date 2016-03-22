@@ -86,15 +86,15 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
   private String uuid = UUID.randomUUID().toString().toLowerCase();
 
   // if localFileMode, this is the path at which the workflow will find the XML files used for metadata in the upload of VCF
-//  private String localXMLMetadataPath = null;
-//  private String localBamFilePathPrefix = null;
+  //  private String localXMLMetadataPath = null;
+  //  private String localBamFilePathPrefix = null;
   
   // used for downloading from S3
-//  private boolean downloadBamsFromS3 = false;
-//  private String normalS3Url = "";
-//  private ArrayList<String> tumorS3Urls = null;
-//  private String S3DownloadKey = "";
-//  private String S3DownloadSecretKey = "";
+  //  private boolean downloadBamsFromS3 = false;
+  //  private String normalS3Url = "";
+  //  private ArrayList<String> tumorS3Urls = null;
+  //  private String S3DownloadKey = "";
+  //  private String S3DownloadSecretKey = "";
 
   private void init() {
     try {
@@ -993,7 +993,13 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
   
   private Job pullRef(String refFrom, String localTarGzFile) {
     Job thisJob = prepTimedJob(0, "pullRef", "NA", 0);
-    thisJob.getCommand().addArgument("curl -sSL -o " + localTarGzFile + " " + refFrom);
+    if (refFrom.startsWith("/")) {
+      System.out.print("Found local reference archive: ");
+      System.out.println(refFrom);
+      thisJob.getCommand().addArgument("ln -s " + refFrom + " " + localTarGzFile);
+    } else {
+      thisJob.getCommand().addArgument("curl -sSL -o " + localTarGzFile + " " + refFrom);
+    }
     return thisJob;
   }
   

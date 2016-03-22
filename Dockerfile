@@ -6,7 +6,7 @@ LABEL SANGER_VERSION $SANGER_VERSION
 USER root
 
 ### START of CGP INSTALL ###
-#
+
 ENV OPT /opt/wtsi-cgp
 ENV PATH $OPT/bin:$PATH
 ENV PERL5LIB $OPT/lib/perl5:$PERL5LIB
@@ -301,16 +301,22 @@ RUN   curl -sSL -o tmp.tar.gz --retry 10 https://github.com/wrpearson/fasta36/re
       cp /tmp/downloads/fasta/bin/ssearch36 $OPT/bin/. && \
       rm -rf /tmp/downloads/fasta
 
-#
 ### END of CGP INSTALL ###
 
-COPY ./src					/home/seqware/CGP-Somatic-Docker/src
+COPY ./src					  /home/seqware/CGP-Somatic-Docker/src
 COPY ./workflow				/home/seqware/CGP-Somatic-Docker/workflow
 COPY ./scripts				/home/seqware/CGP-Somatic-Docker/scripts
 COPY ./pom.xml				/home/seqware/CGP-Somatic-Docker/pom.xml
 COPY ./workflow.properties	/home/seqware/CGP-Somatic-Docker/workflow.properties
 
+RUN chmod a+x /home/seqware/CGP-Somatic-Docker/scripts/run_sanger.sh
+RUN chmod a+x /home/seqware/CGP-Somatic-Docker/scripts/run_seqware_workflow.py
+
+RUN mkdir /output/
+
 RUN chown -R seqware /home/seqware/
+RUN chown -R seqware /datastore/
+RUN chown -R seqware /output/
 
 USER seqware
 WORKDIR /home/seqware/CGP-Somatic-Docker
@@ -319,5 +325,10 @@ RUN echo "options(bitmapType='cairo')" > /home/seqware/.Rprofile && \
     sed -i 's|OOZIE_RETRY_MAX=.*|OOZIE_RETRY_MAX=0|' /home/seqware/.seqware/settings && \
     echo 'WHITESTAR_MEMORY_LIMIT=160000' >> /home/seqware/.seqware/settings
 
-# default entry will run test data
-ENTRYPOINT /home/seqware/CGP-Somatic-Docker/scripts/run_sanger.sh
+RUN mvn -B clean install
+
+VOLUME /output
+VOLUME /datastore
+VOLUME /home/seqware
+
+CMD /bin/bash

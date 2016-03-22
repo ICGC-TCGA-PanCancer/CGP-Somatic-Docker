@@ -1,0 +1,27 @@
+{
+  "tumor":
+  {
+    "path":"",
+    "class":"File"
+  },
+  "normal":
+  {
+    "path":"",
+    "class":"File"
+  },
+  "refFrom":
+  {
+    "path":"",
+    "class":"File"
+  }
+  "bbFrom":
+  {
+    "path":"",
+    "class":"File"
+  }
+  "outputDir":
+  {
+    "value":"",
+    "class":"string"
+  }
+}
