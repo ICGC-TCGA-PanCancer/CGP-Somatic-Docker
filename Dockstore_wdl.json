@@ -1,7 +1,7 @@
 {
   "Seqware_Sanger_Somatic_Workflow.Seqware_Sanger_Somatic_Workflow.normal": "File",
-  "Seqware_Sanger_Somatic_Workflow.Seqware_Sanger_Somatic_Workflow.bbFrom": "File",
   "Seqware_Sanger_Somatic_Workflow.Seqware_Sanger_Somatic_Workflow.tumor": "File",
-  "Seqware_Sanger_Somatic_Workflow.Seqware_Sanger_Somatic_Workflow.outputDir": "String",
-  "Seqware_Sanger_Somatic_Workflow.Seqware_Sanger_Somatic_Workflow.refFrom": "File"
+  "Seqware_Sanger_Somatic_Workflow.Seqware_Sanger_Somatic_Workflow.refFrom": "File",
+  "Seqware_Sanger_Somatic_Workflow.Seqware_Sanger_Somatic_Workflow.bbFrom": "File",
+  "Seqware_Sanger_Somatic_Workflow.Seqware_Sanger_Somatic_Workflow.outputDir": "String"
 }

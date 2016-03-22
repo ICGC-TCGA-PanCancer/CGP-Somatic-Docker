@@ -1,27 +1,27 @@
 {
-	"tumor":
-	{
+  "tumor":
+  {
     "path":"",
-		"class":"File"
-	},
-	"normal":
-	{
+    "class":"File"
+  },
+  "normal":
+  {
     "path":"",
-		"class":"File"
-	},
-	"refFrom":
-	{
+    "class":"File"
+  },
+  "refFrom":
+  {
     "path":"",
-		"class":"File"
-	}
-	"bbFrom":
-	{
+    "class":"File"
+  }
+  "bbFrom":
+  {
     "path":"",
-		"class":"File"
-	}
-	"outputDir":
-	{
+    "class":"File"
+  }
+  "outputDir":
+  {
     "value":"",
-		"class":"string"
-	}
+    "class":"string"
+  }
 }
