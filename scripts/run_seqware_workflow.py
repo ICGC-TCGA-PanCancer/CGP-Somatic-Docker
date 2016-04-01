@@ -66,18 +66,18 @@ def collect_args():
     return parser
 
 
-def write_ini(args, out_dir):
+def write_ini(args, ini_outdir):
     output_dir = os.path.abspath(args.output_dir).split("/")[-1]
     output_prefix = re.sub(output_dir, "", os.path.abspath(args.output_dir))
 
-    if os.path.isfile(args.refFrom):
+    if os.path.isfile(os.path.abspath(args.refFrom)):
         refFrom = os.path.abspath(args.refFrom)
     elif re.match("^http", args.refFrom):
         refFrom = args.refFrom
     else:
         raise Exception("refFrom must be a local file or a valid URL")
 
-    if os.path.isfile(args.bbFrom):
+    if os.path.isfile(os.path.abspath(args.bbFrom)):
         bbFrom = os.path.abspath(args.bbFrom)
     elif re.match("^http", args.bbFrom):
         bbFrom = args.bbFrom
@@ -164,10 +164,10 @@ def write_ini(args, out_dir):
                  "memCavemanTbiClean={0}".format("4000")]
 
     ini = "\n".join(ini_parts)
-    ini_file = os.path.join(out_dir, "workflow.ini")
-    with open(ini_file, 'wb') as f:
+    ini_filepath = os.path.join(ini_outdir, "workflow.ini")
+    with open(ini_filepath, 'wb') as f:
         f.write(ini)
-
+    return ini_filepath
 
 def execute(cmd):
     print("RUNNING...\n", cmd, "\n")
@@ -198,39 +198,37 @@ def main():
     args = parser.parse_args()
 
     workflow_version = "0.0.0"
-    seqware_basedir = "/home/seqware/CGP-Somatic-Docker"
+    workflow_bundle = "Workflow_Bundle_CgpSomaticCore"
+    seqware_bundle_dir = "".join(
+        ["/home/seqware/CGP-Somatic-Docker/target/",
+         workflow_bundle,
+         "_",
+         workflow_version,
+         "_SeqWare_1.1.1/"]
+    )
 
     output_dir = os.path.abspath(args.output_dir)
     if not os.path.isdir(output_dir):
         # Make the output directory if it does not exist
-        # Need to use sudo since this is process is running as seqware
-        execute("sudo mkdir -p {0}".format(output_dir))
-    # Ensure we can write to the output_dir
-    execute("sudo chown -R seqware {0}".format(output_dir))
+        execute("mkdir -p {0}".format(output_dir))
 
     # WRITE WORKFLOW INI
-    write_ini(args, seqware_basedir)
-
-    seqware_workflow_bundle = os.path.join(
-        seqware_basedir,
-        "target/Workflow_Bundle_CgpSomaticCore_{0}_SeqWare_1.1.1".format(
-            workflow_version
-        ))
+    ini_file = write_ini(args, output_dir)
 
     # RUN WORKFLOW
     cmd_parts = ["seqware bundle launch",
-                 "--dir {0}".format(seqware_workflow_bundle),
+                 "--dir {0}".format(seqware_bundle_dir),
                  "--engine whitestar-parallel",
-                 "--ini {0}".format(
-                     os.path.join(seqware_basedir, "workflow.ini")
-                 ),
+                 "--ini {0}".format(ini_file),
                  "--no-metadata"]
     cmd = " ".join(cmd_parts)
     execute(cmd)
 
     if args.output_file_basename is not None:
         # find all primary output file archives
-        output_files = glob.glob(os.path.join(output_dir, "*.somatic.*.tar.gz"))
+        output_files = glob.glob(
+            os.path.join(output_dir, "*.somatic.*.tar.gz")
+        )
 
         for f in output_files:
             new_f = [args.output_file_basename]

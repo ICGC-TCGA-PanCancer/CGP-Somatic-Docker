@@ -312,13 +312,8 @@ COPY ./workflow.properties	/home/seqware/CGP-Somatic-Docker/workflow.properties
 RUN chmod a+x /home/seqware/CGP-Somatic-Docker/scripts/run_sanger.sh
 RUN chmod a+x /home/seqware/CGP-Somatic-Docker/scripts/run_seqware_workflow.py
 
-RUN mkdir /output/
 
-RUN chown -R seqware /home/seqware/
-RUN chown -R seqware /datastore/
-RUN chown -R seqware /output/
-
-USER seqware
+ENV SEQWARE_ROOT="root"
 WORKDIR /home/seqware/CGP-Somatic-Docker
 
 RUN echo "options(bitmapType='cairo')" > /home/seqware/.Rprofile && \
