@@ -19,7 +19,7 @@ else
   fi
 fi
 
-mvn clean install
+#mvn clean install
 
 target_path=`find /home/seqware/CGP-Somatic-Docker/target -type d -name 'Workflow_Bundle_CgpSomaticCore_*SeqWare_*'`
 

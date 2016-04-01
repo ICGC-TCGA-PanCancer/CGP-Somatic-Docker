@@ -319,5 +319,8 @@ RUN echo "options(bitmapType='cairo')" > /home/seqware/.Rprofile && \
     sed -i 's|OOZIE_RETRY_MAX=.*|OOZIE_RETRY_MAX=0|' /home/seqware/.seqware/settings && \
     echo 'WHITESTAR_MEMORY_LIMIT=160000' >> /home/seqware/.seqware/settings
 
+# build the workflow which will prevent problems in the future if artifactory at OICR goes down
+RUN mvn -B clean install
+
 # default entry will run test data
 ENTRYPOINT /home/seqware/CGP-Somatic-Docker/scripts/run_sanger.sh
