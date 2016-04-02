@@ -1,12 +1,14 @@
 #!/usr/bin/env cwl-runner
 
 class: CommandLineTool
+id: "Seqware-Sanger-Somatic-Workflow"
+label: "Seqware-Sanger-Somatic-Workflow"
 
 description: |
    Sanger placeholder text.
 
 dct:creator:
-  "@id": "http://sanger.ac.uk/...
+  "@id": "http://sanger.ac.uk/..."
   foaf:name: "Keiran Raine"
   foaf:mbox: "mailto:keiranmraine@gmail.com"
 
@@ -18,46 +20,71 @@ requirements:
       dockerPull: commonworkflowlanguage/nodejs-engine
     engineCommand: cwlNodeEngine.js
   - class: DockerRequirement
-    dockerPull: quay.io/pancancer/pcawg-sanger-cgp-workflow:2.0.0
+    dockerPull: quay.io/TBD
 
 inputs:
-  - id: "#refdata_1"
-    type:
-      type: array
-      items: File
+  - id: "#tumor"
+    type: File
     inputBinding:
       position: 1
-      prefix: "--file"
+      prefix: "--tumor"
+    secondaryFiles:
+      - .bai 
 
-  - id: "#refdata_2"
-    type:
-      type: array
-      items: File
+  - id: "#normal"
+    type: File
     inputBinding:
-      position: 1
-      prefix: "--file"
+      position: 2
+      prefix: "--normal"
+    secondaryFiles:
+      - .bai 
 
-  - id: "#refdata_3"
-    type:
-      type: array
-      items: File
+  - id: "#refFrom"
+    type: File
     inputBinding:
-      position: 1
-      prefix: "--file"
+      position: 3
+      prefix: "--refFrom"
 
-  - id: "#reads"
-    type:
-      type: array
-      items: File
+  - id: "#bbFrom"
+    type: File
     inputBinding:
-      position: 1
-      prefix: "--file"
+      position: 4
+      prefix: "--bbFrom"
+
+  - id: "#outputDir"
+    type: string
+    inputBinding:
+      position: 5
+      prefix: "--output-dir"
 
 outputs:
-  - id: "#vcf"
-    type: array
-    items: File
+  - id: "#somatic_snv_mnv_tar_gz"
+    type: File
     outputBinding:
-      glob: ["*.vcf"]
+      glob: "*.somatic.snv_mnv.tar.gz"
+  - id: "#somatic_cnv_tar_gz"
+    type: File
+    outputBinding:
+      glob: "*.somatic.cnv.tar.gz"
+  - id: "#somatic_sv_tar_gz"
+    type: File
+    outputBinding:
+      glob: "*.somatic.sv.tar.gz"
+  - id: "#somatic_indel_tar_gz"
+    type: File
+    outputBinding:
+      glob: "*.somatic.indel.tar.gz"
+  - id: "#somatic_imputeCounts_tar_gz"
+    type: File
+    outputBinding:
+      glob: "*.somatic.imputeCounts.tar.gz"
+  - id: "#somatic_genotype_tar_gz"
+    type: File
+    outputBinding:
+      glob: "*.somatic.genotype.tar.gz"
+  - id: "#somatic_verifyBamId_tar_gz"
+    type: File
+    outputBinding:
+      glob: "*.somatic.verifyBamId.tar.gz"
 
-baseCommand: ["perl", "/home/seqware/CGP-Somatic-Docker/scripts/run_workflow.sh"]
+baseCommand: ["python", "/home/seqware/CGP-Somatic-Docker/scripts/run_seqware_workflow.py"]
