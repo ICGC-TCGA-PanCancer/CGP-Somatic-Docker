@@ -20,7 +20,7 @@ requirements:
       dockerPull: commonworkflowlanguage/nodejs-engine
     engineCommand: cwlNodeEngine.js
   - class: DockerRequirement
-    dockerPull: quay.io/TBD
+    dockerPull: quay.io/pancancer/pcawg-sanger-cgp-workflow
 
 inputs:
   - id: "#tumor"
