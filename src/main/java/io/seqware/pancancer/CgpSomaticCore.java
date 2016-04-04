@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
+import java.io.File;
 import net.sourceforge.seqware.pipeline.workflowV2.AbstractWorkflowDataModel;
 import net.sourceforge.seqware.pipeline.workflowV2.model.Job;
 import net.sourceforge.seqware.pipeline.workflowV2.model.SqwFile;
@@ -751,12 +752,13 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
   
   private Job basFileBaseJob(int tumourCount, String sampleBam, String process, int index) {
     Job thisJob = prepTimedJob(tumourCount, "basFileGenerate", process, index);
+    File f = new File(sampleBam);
     thisJob.getCommand()
             .addArgument(getWorkflowBaseDir()+ "/bin/wrapper.sh")
             .addArgument(installBase)
             .addArgument("bam_stats")
             .addArgument("-i " + sampleBam)
-            .addArgument("-o " + OUTDIR + "/" + sampleBam + ".bas")
+            .addArgument("-o " + OUTDIR + "/" + f.getName() + ".bas")
             ;
     return thisJob;
   }
