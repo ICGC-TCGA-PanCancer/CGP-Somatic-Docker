@@ -20,7 +20,7 @@ requirements:
       dockerPull: commonworkflowlanguage/nodejs-engine
     engineCommand: cwlNodeEngine.js
   - class: DockerRequirement
-    dockerPull: quay.io/pancancer/pcawg-sanger-cgp-workflow:dockerize
+    dockerPull: quay.io/pancancer/pcawg-sanger-cgp-workflow:2.0.0
 
 inputs:
   - id: "#tumor"
