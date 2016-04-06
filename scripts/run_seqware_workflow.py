@@ -57,7 +57,8 @@ def collect_args():
                         type=str,
                         required=True,
                         help="battenberg reference file archive for CGP-Somatic-Core workflow. \
-                        Available to download from: https://s3-eu-west-1.amazonaws.com/wtsi-pancancer/reference/GRCh37d5_battenberg.tar.gz")
+                        Available to download from: \
+                        https://s3-eu-west-1.amazonaws.com/wtsi-pancancer/reference/GRCh37d5_battenberg.tar.gz")
     parser.add_argument("--keep-all-seqware-intermediate-output-files",
                         dest='keep_all_seqware_output_files',
                         default=False,
@@ -70,6 +71,7 @@ def write_ini(args, ini_outdir):
     output_dir = os.path.abspath(args.output_dir).split("/")[-1]
     output_prefix = re.sub(output_dir, "", os.path.abspath(args.output_dir))
 
+    # check refFrom
     if os.path.isfile(os.path.abspath(args.refFrom)):
         refFrom = os.path.abspath(args.refFrom)
     elif re.match("^http", args.refFrom):
@@ -77,6 +79,7 @@ def write_ini(args, ini_outdir):
     else:
         raise Exception("refFrom must be a local file or a valid URL")
 
+    # check bbFrom
     if os.path.isfile(os.path.abspath(args.bbFrom)):
         bbFrom = os.path.abspath(args.bbFrom)
     elif re.match("^http", args.bbFrom):
@@ -168,6 +171,7 @@ def write_ini(args, ini_outdir):
     with open(ini_filepath, 'wb') as f:
         f.write(ini)
     return ini_filepath
+
 
 def execute(cmd):
     print("RUNNING...\n", cmd, "\n")

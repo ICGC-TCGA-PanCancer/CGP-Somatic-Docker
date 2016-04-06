@@ -110,7 +110,7 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
       }
       if (!"".equals(outPrefix)) {
         if (outPrefix.endsWith("/")) {
-          OUTDIR = outPrefix+outDir;
+          OUTDIR = outPrefix + outDir;
         } else {
           OUTDIR = outPrefix + "/" + outDir;
         }
@@ -238,18 +238,31 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
       if(rawBams.size() == 0) {
         throw new RuntimeException("Property tumourBams has no list of BAM files");
       }
+      List<Job> prepTumourBamJobs = new ArrayList<Job>();
       List<String> tumourBams = new ArrayList<String>();
       int tumBamCount = rawBams.size();
       for(int i=0; i<tumBamCount; i++) {
-        String tumourBam = rawBams.get(i);
+        File tumourBamFile = new File(rawBams.get(i));
+        String tumourBam = OUTDIR + "/" + tumourBamFile.getName();
         tumourBams.add(tumourBam);
+        Job prepTumourBamJob = prepBam(rawBams.get(i), "tumour", i+1);
+        prepTumourBamJob.addParent(startDownload);
+        prepTumourBamJob.setMaxMemory(memMarkTime);
+        prepTumourBamJobs.add(prepTumourBamJob);
       }
       
-      String controlBam = getProperty("controlBam");
-      
+      File controlBamFile = new File(getProperty("controlBam"));
+      String controlBam = OUTDIR + "/" + controlBamFile.getName();
+      Job prepControlBamJob = prepBam(getProperty("controlBam"), "control", 0);
+      prepControlBamJob.addParent(startDownload);
+      prepControlBamJob.setMaxMemory(memMarkTime);
+
       Job genotypeJob = genoptypeBaseJob(tumourBams, controlBam);
       genotypeJob.setMaxMemory(memGenotype);
-      genotypeJob.addParent(startDownload);
+      genotypeJob.addParent(prepControlBamJob);
+      for(Job j : prepTumourBamJobs) {
+        genotypeJob.addParent(j);
+      }
 
       Job genotypePackJob = packageGenotype(tumourBams, controlBam);
       genotypePackJob.setMaxMemory("4000");
@@ -257,7 +270,10 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
 
       Job contaminationJob = contaminationBaseJob(tumBamCount, controlBam, "control");
       contaminationJob.setMaxMemory(memContam);
-      contaminationJob.addParent(startDownload);
+      contaminationJob.addParent(prepControlBamJob);
+      for(Job j : prepTumourBamJobs) {
+        contaminationJob.addParent(j);
+      }
       
       String tmpRef = OUTDIR + "/" + "ref.tar.gz";
       Job pullRef = pullRef(refFrom, tmpRef);
@@ -277,15 +293,13 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
       unpackBbRef.addParent(pullBbRef);
       unpackBbRef.addParent(unpackRef);
       unpackBbRef.setMaxMemory(memMarkTime);
-      
-      
+
       List<Job> basBbAlleleCountJobsList = new ArrayList<Job>();
-      
-      // @todo need to add code to generate BAS for BAM
-      
+
       Job controlBasJob = basFileBaseJob(0, controlBam, "control", 0);
       controlBasJob.setMaxMemory(memGenerateBasFile);
       controlBasJob.addParent(unpackRef);
+      controlBasJob.addParent(prepControlBamJob);
       basBbAlleleCountJobsList.add(controlBasJob);
       
       for(int i=0; i<tumBamCount; i++) {
@@ -293,11 +307,11 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
         Job tumourBasJob = basFileBaseJob(tumBamCount, tumourBam, "tumours", i+1);
         tumourBasJob.setMaxMemory(memGenerateBasFile);
         tumourBasJob.addParent(unpackRef);
+        tumourBasJob.addParent(prepTumourBamJobs.get(i));
         basBbAlleleCountJobsList.add(tumourBasJob);
       }
 
       // packaging must have parent cavemanTbiCleanJob
-
       // these are not paired but per individual sample
       List<Job> bbAlleleCountJobs = new ArrayList<Job>();
       for(int i=0; i<23; i++) { // not 1-22+X
@@ -305,12 +319,14 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
           Job bbAlleleCountJob = bbAlleleCount(j, tumourBams.get(j), "tumour", i);
           bbAlleleCountJob.setMaxMemory(memAlleleCount);
           bbAlleleCountJob.addParent(unpackBbRef);
+          bbAlleleCountJob.addParent(prepTumourBamJobs.get(j));
           bbAlleleCountJobs.add(bbAlleleCountJob);
           basBbAlleleCountJobsList.add(bbAlleleCountJob);
         }
         Job bbAlleleCountJob = bbAlleleCount(1, controlBam, "control", i);
         bbAlleleCountJob.setMaxMemory(memAlleleCount);
         bbAlleleCountJob.addParent(unpackBbRef);
+        bbAlleleCountJob.addParent(prepControlBamJob);
         bbAlleleCountJobs.add(bbAlleleCountJob);
         basBbAlleleCountJobsList.add(bbAlleleCountJob);
       }
@@ -1016,7 +1032,12 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
     return thisJob;
   }
   
-  
+  private Job prepBam(String inBam, String process, int index) {
+    Job thisJob = prepTimedJob(0, "prepBam", process, index);
+    thisJob.getCommand().addArgument("ln -s " + inBam + "* " + OUTDIR + "/");
+    return thisJob;
+  }
+
   private Job brassBaseJob(int tumourCount, String tumourBam, String controlBam, String alg, String process, int index) {
     
     String cnPath = OUTDIR + "/" + tumourCount + "/ascat/*.copynumber.caveman.csv";
