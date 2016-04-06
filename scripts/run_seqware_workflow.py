@@ -67,9 +67,10 @@ def collect_args():
     return parser
 
 
-def write_ini(args, ini_outdir):
-    output_dir = os.path.abspath(args.output_dir).split("/")[-1]
-    output_prefix = re.sub(output_dir, "", os.path.abspath(args.output_dir))
+def write_ini(args):
+    outdir = os.path.abspath(args.output_dir)
+    output_dir = outdir.split("/")[-1]
+    output_prefix = re.sub(output_dir, "", outdir)
 
     # check refFrom
     if os.path.isfile(os.path.abspath(args.refFrom)):
@@ -167,7 +168,7 @@ def write_ini(args, ini_outdir):
                  "memCavemanTbiClean={0}".format("4000")]
 
     ini = "\n".join(ini_parts)
-    ini_filepath = os.path.join(ini_outdir, "workflow.ini")
+    ini_filepath = os.path.join(outdir, "workflow.ini")
     with open(ini_filepath, 'wb') as f:
         f.write(ini)
     return ini_filepath
@@ -175,8 +176,8 @@ def write_ini(args, ini_outdir):
 
 def execute(cmd):
     print("RUNNING...\n", cmd, "\n")
-    process = subprocess.Popen(shlex.split(cmd),
-                               shell=False,
+    process = subprocess.Popen(cmd,
+                               shell=True,
                                stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE)
 
@@ -217,7 +218,7 @@ def main():
         execute("mkdir -p {0}".format(output_dir))
 
     # WRITE WORKFLOW INI
-    ini_file = write_ini(args, output_dir)
+    ini_file = write_ini(args)
 
     # RUN WORKFLOW
     cmd_parts = ["seqware bundle launch",
