@@ -84,7 +84,7 @@ sub process {
   $tt->process($template, $values, "$output_dir/$tumourAliquotIds/config.ini") || die $tt->error;
 
   # make a submission script
-  my $command = "cd $output_dir/$tumourAliquotIds; date +\%s > timing; seqware_1.1.0-alpha.5 bundle launch --dir /glusterfs/netapp/homes1/BOCONNOR/provisioned-bundles/Workflow_Bundle_SangerPancancerCgpCnIndelSnvStr_1.0.0_SeqWare_1.1.0-alpha.5 --ini config.ini; date +\%s >> timing";
+  my $command = "cd $output_dir/$tumourAliquotIds; date +\%s > timing; seqware_1.1.0-alpha.5 bundle launch --dir /glusterfs/netapp/homes1/BOCONNOR/provisioned-bundles/Workflow_Bundle_CgpSomaticCore_1.0.0_SeqWare_1.1.0-alpha.5 --ini config.ini; date +\%s >> timing";
 
   # add to master list of scripts
   return($command);

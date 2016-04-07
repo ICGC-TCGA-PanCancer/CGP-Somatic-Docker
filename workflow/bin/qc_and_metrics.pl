@@ -113,12 +113,10 @@ sub rum_metrics {
     $run_met{'pairs'}{$aliqout_id}{'snv_mnv'} = _run_met( $count, $timings, 'CaVEMan' );
     $run_met{'pairs'}{$aliqout_id}{'indel'} = _run_met( $count, $timings, 'cgpPindel' );
     $run_met{'pairs'}{$aliqout_id}{'cnv'} = _run_met( $count, $timings, 'ASCAT' );
-    $run_met{'pairs'}{$aliqout_id}{'binCounts'} = _run_met( $count, $timings, 'binCounts' );
     $run_met{'pairs'}{$aliqout_id}{'bbAllele'} = _run_met( $count, $timings, 'bbAllele' );
     $count++;
   }
   $run_met{'workflow'}{'Wall_s'} = _workflow_met($timings);
-  $run_met{'download'}{'Wall_s'} = _download_met($timings);
   return \%run_met;
 }
 
@@ -130,22 +128,6 @@ sub _workflow_met {
   my ($started) = $stdout =~ m/^([[:digit:]]+)/;
 
   ($stdout, $stderr, $exit) = capture { system(qq{cat $folder/workflow_end}); };
-  die "Error occurred while capturing content of $folder/end" if ($stderr);
-  chomp $stdout;
-  my ($ended) = $stdout =~ m/^([[:digit:]]+)/;
-
-  my $elapsed = $ended - $started;
-  return $elapsed;
-}
-
-sub _download_met {
-  my $folder = shift;
-  my ($stdout, $stderr, $exit) = capture { system(qq{cat $folder/download_start}); };
-  die "Error occurred while capturing content of $folder/start" if ($stderr);
-  chomp $stdout;
-  my ($started) = $stdout =~ m/^([[:digit:]]+)/;
-
-  ($stdout, $stderr, $exit) = capture { system(qq{cat $folder/download_end}); };
   die "Error occurred while capturing content of $folder/end" if ($stderr);
   chomp $stdout;
   my ($ended) = $stdout =~ m/^([[:digit:]]+)/;
@@ -211,17 +193,17 @@ sub _qc_contam {
 sub _qc_brass {
   my $to_process = shift;
   my %qc = ( 'caller' => 'BRASS' );
-  my ($stdout, $stderr, $exit) = capture { system(qq{wc -l $to_process/*.groups.filtered.bedpe}); };
-  die "Error occurred while counting $to_process/*.groups.filtered.bedpe" if ($stderr);
+  my ($stdout, $stderr, $exit) = capture { system([0,1], qq{grep -cv '^#' $to_process/intermediates/*.groups.filtered.bedpe}); };
+  die "Error occurred while counting $to_process/intermediates/*.groups.filtered.bedpe" if ($stderr);
   chomp $stdout;
   $stdout =~ m/^([[:digit:]]+)/;
-  $qc{'groups'} = $1;
+  $qc{'total_groups'} = $1;
 
-  ($stdout, $stderr, $exit) = capture { system(qq{wc -l $to_process/*.annot.bedpe}); };
+  ($stdout, $stderr, $exit) = capture { system([0,1], qq{grep -cv '^#' $to_process/*.annot.bedpe}); };
   die "Error occurred while counting $to_process/*.annot.bedpe" if ($stderr);
   chomp $stdout;
   $stdout =~ m/^([[:digit:]]+)/;
-  $qc{'assembled'} = $1;
+  $qc{'filtered_groups'} = $1;
   return \%qc;
 }
 

@@ -1,3 +1,8 @@
+# in-progress
+
+ * Snapshot of [SeqWare-CGP-SomaticCore](https://github.com/ICGC-TCGA-PanCancer/SeqWare-CGP-SomaticCore) at v.1.0.8.
+ * Separated out to allow removal of upload/download options specific to pancancer processing.
+
 # 1.0.8
 
 * SeqWare-CGP-SomaticCore artefact updated to 1.3.1 to handle readgroup count >115 when combining tumour and normal in SNV caller.
