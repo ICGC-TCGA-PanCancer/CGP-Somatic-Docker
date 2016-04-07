@@ -33,7 +33,7 @@ def collect_args():
                         help="matched normal BAM input")
     parser.add_argument("--output-dir",
                         type=str,
-                        default="/var/lib/cwl/",
+                        default="/var/spool/cwl/",
                         help="directory in which to store the outputs of the \
                         workflow.")
     parser.add_argument("--output-file-basename",
