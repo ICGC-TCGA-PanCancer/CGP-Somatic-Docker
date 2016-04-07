@@ -9,34 +9,26 @@
 
   <groupId>io.seqware</groupId>
   <!-- MAKE SURE YOU UPDATE THE workflow.properties FILE TOO -->
-  <artifactId>SangerPancancerCgpCnIndelSnvStr</artifactId>
+  <artifactId>CgpSomaticCore</artifactId>
   <!-- MAKE SURE YOU UPDATE THE workflow.properties FILE TOO -->
-  <version>1.0.8</version>
+  <version>0.0.0</version>
   <packaging>jar</packaging>
   <!-- MAKE SURE YOU UPDATE THE workflow.properties FILE TOO -->
-  <name>SangerPancancerCgpCnIndelSnvStr</name>
+  <name>CgpSomaticCore</name>
   <url>http://maven.apache.org</url>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-		<seqware-version>1.1.0</seqware-version>
+		<seqware-version>1.1.1</seqware-version>
 		<skipITs>true</skipITs>
-		<workflow-full-name>Workflow_Bundle_SangerPancancerCgpCnIndelSnvStr_${workflow-version}_SeqWare_${seqware-version}</workflow-full-name>
-		<workflow-dir>${project.build.directory}/${workflow-full-name}/Workflow_Bundle_SangerPancancerCgpCnIndelSnvStr/${workflow-version}</workflow-dir>
+		<workflow-full-name>Workflow_Bundle_CgpSomaticCore_${workflow-version}_SeqWare_${seqware-version}</workflow-full-name>
+		<workflow-dir>${project.build.directory}/${workflow-full-name}/Workflow_Bundle_CgpSomaticCore/${workflow-version}</workflow-dir>
 		<version.template.file>src/main/java/io/seqware/pancancer/Version.java.template</version.template.file>
 		<version.file>src/main/java/io/seqware/pancancer/Version.java</version.file>
-		<gt-download-upload-wrapper.version>2.0.10</gt-download-upload-wrapper.version>
-		<vcf-uploader.version>2.0.4</vcf-uploader.version>
 	</properties>
 
 	<dependencies>
-		<dependency>
-		    <groupId>vcf-uploader</groupId>
-		    <artifactId>vcf-uploader</artifactId>
-		    <version>${vcf-uploader.version}</version>
-		    <type>zip</type>
-		</dependency>
 		<dependency>
 			<groupId>io.seqware</groupId>
 			<artifactId>seqware-bin-linux-x86-64-jre-7.0.51</artifactId>
@@ -48,18 +40,6 @@
 			<version>${seqware-version}</version>
 			<classifier>full</classifier>
 			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>SeqWare-CGP-SomaticCore</groupId>
-			<artifactId>SeqWare-CGP-SomaticCore_opt</artifactId>
-			<version>1.3.1</version>
-			<type>tar.gz</type>
-		</dependency>
-		<dependency>
-			<groupId>gt-download-upload-wrapper</groupId>
-			<artifactId>gt-download-upload-wrapper</artifactId>
-			<version>${gt-download-upload-wrapper.version}</version>
-			<type>zip</type>
 		</dependency>
 	</dependencies>
 
@@ -107,6 +87,7 @@
         <configuration>
           <source>1.6</source>
           <target>1.6</target>
+          <showDeprecation>true</showDeprecation>
         </configuration>
       </plugin>
 
@@ -210,49 +191,6 @@
 							</resources>
 						</configuration>
 					</execution>
-					<!-- This execution will copy the gt-download-upload wrapper from the unpacked dependency to the correct path in the output directory. -->
-					<execution>
-						<id>copy-gt-download-upload-wrapper-files</id>
-						<phase>process-resources</phase>
-						<goals>
-							<goal>copy-resources</goal>
-						</goals>
-						<configuration>
-							<outputDirectory>${workflow-dir}/lib/GNOS</outputDirectory>
-							<resources>
-								<resource>
-									<directory>${workflow-dir}/bin/gt-download-upload-wrapper-${gt-download-upload-wrapper.version}/lib/GNOS</directory>
-									<includes>
-										<include>*.pm</include>
-									</includes>
-									<filtering>true</filtering>
-								</resource>
-							</resources>
-						</configuration>
-					</execution>
-					<!-- This execution will copy the vcf-uploader scripts from the unpacked dependency to the correct path in the output directory. -->
-					<execution>
-						<id>copy-vcf-uploader-files</id>
-						<phase>process-resources</phase>
-						<goals>
-							<goal>copy-resources</goal>
-						</goals>
-						<configuration>
-							<outputDirectory>${workflow-dir}/bin</outputDirectory>
-							<resources>
-								<resource>
-									<directory>${workflow-dir}/bin/vcf-uploader-${vcf-uploader.version}</directory>
-									<includes>
-										<include>*.pl</include>
-										<include>*.py</include>
-										<include>*.sh</include>
-										<include>synapse_upload_vcf</include>
-									</includes>
-									<filtering>true</filtering>
-								</resource>
-							</resources>
-						</configuration>
-					</execution>
 					<execution>
 						<id>copy-classes</id>
 						<!-- here the phase you need -->
@@ -280,28 +218,6 @@
 				<artifactId>maven-dependency-plugin</artifactId>
 				<version>2.10</version>
 				<executions>
-					<execution>
-						<id>unpack-gt-download-upload-wrapper-scripts</id>
-						<phase>process-sources</phase>
-						<goals>
-							<goal>unpack-dependencies</goal>
-						</goals>
-						<configuration>
-							<includeArtifactIds>gt-download-upload-wrapper</includeArtifactIds>
-							<outputDirectory>${workflow-dir}/bin</outputDirectory>
-						</configuration>
-					</execution>
-					<execution>
-						<id>unpack-vcf-uploader</id>
-						<phase>process-sources</phase>
-						<goals>
-							<goal>unpack-dependencies</goal>
-						</goals>
-						<configuration>
-							<includeArtifactIds>vcf-uploader</includeArtifactIds>
-							<outputDirectory>${workflow-dir}/bin</outputDirectory>
-						</configuration>
-					</execution>
 					<execution>
 						<id>copy</id>
 						<phase>prepare-package</phase>
@@ -365,17 +281,6 @@
 							<commandlineArgs>-jar ${workflow-dir}/lib/seqware-distribution-${seqware-version}-full.jar --plugin net.sourceforge.seqware.pipeline.plugins.BundleManager -- -t -b ${project.build.directory}/${workflow-full-name}/ </commandlineArgs>
 						</configuration>
 					</execution>
-					<execution>
-						<id>download_data</id>
-						<phase>package</phase>
-						<goals>
-							<goal>exec</goal>
-						</goals>
-						<configuration>
-							<executable>perl</executable>
-							<commandlineArgs>${basedir}/workflow/scripts/download_ref.pl ${basedir}/links</commandlineArgs>
-						</configuration>
-					</execution>
 				</executions>
 			</plugin>
 			<plugin>
@@ -392,34 +297,6 @@
 							<followSymlinks>false</followSymlinks>
 						</fileset>
 					</filesets>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>com.pyx4j</groupId>
-				<artifactId>maven-junction-plugin</artifactId>
-				<version>1.0.3</version>
-				<executions>
-					<execution>
-						<phase>package</phase>
-						<goals>
-							<goal>link</goal>
-						</goals>
-					</execution>
-					<execution>
-						<id>unlink</id>
-						<phase>clean</phase>
-						<goals>
-							<goal>unlink</goal>
-						</goals>
-					</execution>
-				</executions>
-				<configuration>
-					<links>
-						<link>
-							<dst>${workflow-dir}/data</dst>
-							<src>${basedir}/links</src>
-						</link>
-					</links>
 				</configuration>
 			</plugin>
 		</plugins>
