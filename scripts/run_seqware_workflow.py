@@ -57,7 +57,8 @@ def collect_args():
                         type=str,
                         required=True,
                         help="battenberg reference file archive for CGP-Somatic-Core workflow. \
-                        Available to download from: https://s3-eu-west-1.amazonaws.com/wtsi-pancancer/reference/GRCh37d5_battenberg.tar.gz")
+                        Available to download from: \
+                        https://s3-eu-west-1.amazonaws.com/wtsi-pancancer/reference/GRCh37d5_battenberg.tar.gz")
     parser.add_argument("--keep-all-seqware-intermediate-output-files",
                         dest='keep_all_seqware_output_files',
                         default=False,
@@ -66,10 +67,12 @@ def collect_args():
     return parser
 
 
-def write_ini(args, ini_outdir):
-    output_dir = os.path.abspath(args.output_dir).split("/")[-1]
-    output_prefix = re.sub(output_dir, "", os.path.abspath(args.output_dir))
+def write_ini(args):
+    outdir = os.path.abspath(args.output_dir)
+    output_dir = outdir.split("/")[-1]
+    output_prefix = re.sub(output_dir, "", outdir)
 
+    # check refFrom
     if os.path.isfile(os.path.abspath(args.refFrom)):
         refFrom = os.path.abspath(args.refFrom)
     elif re.match("^http", args.refFrom):
@@ -77,6 +80,7 @@ def write_ini(args, ini_outdir):
     else:
         raise Exception("refFrom must be a local file or a valid URL")
 
+    # check bbFrom
     if os.path.isfile(os.path.abspath(args.bbFrom)):
         bbFrom = os.path.abspath(args.bbFrom)
     elif re.match("^http", args.bbFrom):
@@ -164,15 +168,16 @@ def write_ini(args, ini_outdir):
                  "memCavemanTbiClean={0}".format("4000")]
 
     ini = "\n".join(ini_parts)
-    ini_filepath = os.path.join(ini_outdir, "workflow.ini")
+    ini_filepath = os.path.join(outdir, "workflow.ini")
     with open(ini_filepath, 'wb') as f:
         f.write(ini)
     return ini_filepath
 
+
 def execute(cmd):
     print("RUNNING...\n", cmd, "\n")
-    process = subprocess.Popen(shlex.split(cmd),
-                               shell=False,
+    process = subprocess.Popen(cmd,
+                               shell=True,
                                stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE)
 
@@ -213,7 +218,7 @@ def main():
         execute("mkdir -p {0}".format(output_dir))
 
     # WRITE WORKFLOW INI
-    ini_file = write_ini(args, output_dir)
+    ini_file = write_ini(args)
 
     # RUN WORKFLOW
     cmd_parts = ["seqware bundle launch",
