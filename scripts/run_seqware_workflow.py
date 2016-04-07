@@ -257,7 +257,7 @@ def main():
             ))
 
             # hack
-            execute("cp "+f+" ./")
+            #execute("cp "+f+" ./")
 
     if (args.keep_all_seqware_output_files):
         # find seqware tmp output path; it contains generated scripts w/
