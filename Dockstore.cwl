@@ -51,12 +51,6 @@ inputs:
       position: 4
       prefix: "--bbFrom"
 
-  - id: "#outputDir"
-    type: string
-    inputBinding:
-      position: 5
-      prefix: "--output-dir"
-
 outputs:
   - id: "#somatic_snv_mnv_tar_gz"
     type: File
