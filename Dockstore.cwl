@@ -5,7 +5,21 @@ id: "Seqware-Sanger-Somatic-Workflow"
 label: "Seqware-Sanger-Somatic-Workflow"
 
 description: |
-   Sanger placeholder text.
+    The Sanger's Cancer Genome Project core somatic calling workflow from 
+    the ICGC PanCancer Analysis of Whole Genomes (PCAWG) project.
+    For more information see the PCAWG project [page](https://dcc.icgc.org/pcawg) and our GitHub
+    [page](https://github.com/ICGC-TCGA-PanCancer) for our code including the source for
+    [this workflow](https://github.com/ICGC-TCGA-PanCancer/CGP-Somatic-Docker).
+    ```
+    Usage:
+    # fetch CWL
+    $> dockstore cwl --entry quay.io/pancancer/pcawg-sanger-cgp-workflow:2.0.0 > Dockstore.cwl
+    # make a runtime JSON template and edit it
+    $> dockstore convert cwl2json --cwl Dockstore.cwl > Dockstore.json
+    # run it locally with the Dockstore CLI
+    $> dockstore launch --entry quay.io/pancancer/pcawg-sanger-cgp-workflow:2.0.0 \
+        --json Dockstore.json
+    ```
 
 dct:creator:
   "@id": "http://sanger.ac.uk/..."
