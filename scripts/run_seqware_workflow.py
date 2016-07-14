@@ -189,13 +189,15 @@ def execute(cmd):
         sys.stdout.flush()
 
     stderr = process.communicate()[1]
-    if stderr is not None:
-        print(stderr)
     if process.returncode != 0:
-        print("[WARNING] command: {0} exited with code: {1}".format(
-            cmd, process.returncode
-        ))
-    return process.returncode
+        print(
+            "[ERROR] command:", cmd, "exited with code:", process.returncode,
+            file=sys.stderr
+        )
+        print(stderr, file=sys.stderr)
+        raise
+    else:
+        return process.returncode
 
 
 def main():

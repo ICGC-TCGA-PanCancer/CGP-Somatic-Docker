@@ -295,7 +295,7 @@ biocLite("copynumber", ask=FALSE)' > tmp.R && \
     rm tmp.R
 
 # Add ssearch36 BRASS dep
-RUN   curl -sSL -o tmp.tar.gz --retry 10 https://github.com/wrpearson/fasta36/releases/download/v36.3.8/fasta-36.3.8-linux64.tar.gz && \
+RUN   curl -sSL -o tmp.tar.gz --retry 10 https://github.com/wrpearson/fasta36/releases/download/v36.3.8d_13Apr16/fasta-36.3.8d-linux64.tar.gz && \
       mkdir  /tmp/downloads/fasta && \
       tar -C /tmp/downloads/fasta --strip-components 2 -zxf tmp.tar.gz && \
       cp /tmp/downloads/fasta/bin/ssearch36 $OPT/bin/. && \
