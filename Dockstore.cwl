@@ -1,98 +1,82 @@
 #!/usr/bin/env cwl-runner
 
 class: CommandLineTool
-id: "Seqware-Sanger-Somatic-Workflow"
-label: "Seqware-Sanger-Somatic-Workflow"
-
-description: |
-    The Sanger's Cancer Genome Project core somatic calling workflow from 
-    the ICGC PanCancer Analysis of Whole Genomes (PCAWG) project.
-    For more information see the PCAWG project [page](https://dcc.icgc.org/pcawg) and our GitHub
-    [page](https://github.com/ICGC-TCGA-PanCancer) for our code including the source for
-    [this workflow](https://github.com/ICGC-TCGA-PanCancer/CGP-Somatic-Docker).
-    ```
-    Usage:
-    # fetch CWL
-    $> dockstore cwl --entry quay.io/pancancer/pcawg-sanger-cgp-workflow:2.0.0 > Dockstore.cwl
-    # make a runtime JSON template and edit it
-    $> dockstore convert cwl2json --cwl Dockstore.cwl > Dockstore.json
-    # run it locally with the Dockstore CLI
-    $> dockstore launch --entry quay.io/pancancer/pcawg-sanger-cgp-workflow:2.0.0 \
-        --json Dockstore.json
-    ```
-
+id: Seqware-Sanger-Somatic-Workflow
+label: Seqware-Sanger-Somatic-Workflow
 dct:creator:
-  "@id": "http://sanger.ac.uk/..."
-  foaf:name: "Keiran Raine"
-  foaf:mbox: "mailto:keiranmraine@gmail.com"
-
+  '@id': http://sanger.ac.uk/...
+  foaf:name: Keiran Raine
+  foaf:mbox: mailto:keiranmraine@gmail.com
 requirements:
-  - class: ExpressionEngineRequirement
-    id: "#node-engine"
-    requirements:
-    - class: DockerRequirement
-      dockerPull: commonworkflowlanguage/nodejs-engine
-    engineCommand: cwlNodeEngine.js
-  - class: DockerRequirement
-    dockerPull: quay.io/pancancer/pcawg-sanger-cgp-workflow:2.0.0
+- class: DockerRequirement
+  dockerPull: quay.io/pancancer/pcawg-sanger-cgp-workflow:feature_cwl1
+
+cwlVersion: v1.0
 
 inputs:
-  - id: "#tumor"
+  tumor:
     type: File
     inputBinding:
       position: 1
-      prefix: "--tumor"
+      prefix: --tumor
     secondaryFiles:
-      - .bai 
+    - .bai
 
-  - id: "#normal"
-    type: File
-    inputBinding:
-      position: 2
-      prefix: "--normal"
-    secondaryFiles:
-      - .bai 
-
-  - id: "#refFrom"
+  refFrom:
     type: File
     inputBinding:
       position: 3
-      prefix: "--refFrom"
-
-  - id: "#bbFrom"
+      prefix: --refFrom
+  bbFrom:
     type: File
     inputBinding:
       position: 4
-      prefix: "--bbFrom"
+      prefix: --bbFrom
+  normal:
+    type: File
+    inputBinding:
+      position: 2
+      prefix: --normal
+    secondaryFiles:
+    - .bai
 
 outputs:
-  - id: "#somatic_snv_mnv_tar_gz"
+  somatic_sv_tar_gz:
     type: File
     outputBinding:
-      glob: "*.somatic.snv_mnv.tar.gz"
-  - id: "#somatic_cnv_tar_gz"
+      glob: '*.somatic.sv.tar.gz'
+  somatic_snv_mnv_tar_gz:
     type: File
     outputBinding:
-      glob: "*.somatic.cnv.tar.gz"
-  - id: "#somatic_sv_tar_gz"
+      glob: '*.somatic.snv_mnv.tar.gz'
+  somatic_verifyBamId_tar_gz:
     type: File
     outputBinding:
-      glob: "*.somatic.sv.tar.gz"
-  - id: "#somatic_indel_tar_gz"
+      glob: '*.somatic.verifyBamId.tar.gz'
+  somatic_indel_tar_gz:
     type: File
     outputBinding:
-      glob: "*.somatic.indel.tar.gz"
-  - id: "#somatic_imputeCounts_tar_gz"
+      glob: '*.somatic.indel.tar.gz'
+  somatic_genotype_tar_gz:
     type: File
     outputBinding:
-      glob: "*.somatic.imputeCounts.tar.gz"
-  - id: "#somatic_genotype_tar_gz"
+      glob: '*.somatic.genotype.tar.gz'
+  somatic_cnv_tar_gz:
     type: File
     outputBinding:
-      glob: "*.somatic.genotype.tar.gz"
-  - id: "#somatic_verifyBamId_tar_gz"
+      glob: '*.somatic.cnv.tar.gz'
+  somatic_imputeCounts_tar_gz:
     type: File
     outputBinding:
-      glob: "*.somatic.verifyBamId.tar.gz"
+      glob: '*.somatic.imputeCounts.tar.gz'
+baseCommand: [python, /home/seqware/CGP-Somatic-Docker/scripts/run_seqware_workflow.py]
+doc: "The Sanger's Cancer Genome Project core somatic calling workflow from \nthe\
+  \ ICGC PanCancer Analysis of Whole Genomes (PCAWG) project.\nFor more information\
+  \ see the PCAWG project [page](https://dcc.icgc.org/pcawg) and our GitHub\n[page](https://github.com/ICGC-TCGA-PanCancer)\
+  \ for our code including the source for\n[this workflow](https://github.com/ICGC-TCGA-PanCancer/CGP-Somatic-Docker).\n\
+  ```\nUsage:\n# fetch CWL\n$> dockstore cwl --entry quay.io/pancancer/pcawg-sanger-cgp-workflow:2.0.0\
+  \ > Dockstore.cwl\n# make a runtime JSON template and edit it\n$> dockstore convert\
+  \ cwl2json --cwl Dockstore.cwl > Dockstore.json\n# run it locally with the Dockstore\
+  \ CLI\n$> dockstore launch --entry quay.io/pancancer/pcawg-sanger-cgp-workflow:2.0.0\
+  \ \\\n    --json Dockstore.json\n```\n"
 
-baseCommand: ["python", "/home/seqware/CGP-Somatic-Docker/scripts/run_seqware_workflow.py"]

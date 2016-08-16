@@ -221,6 +221,12 @@ def main():
     ini_file = write_ini(args)
 
     # RUN WORKFLOW
+    # workaround for docker permissions 
+    execute("sudo mkdir -p /var/spool/cwl/.seqware && sudo chown -R seqware /var/spool/cwl/");
+    execute("sudo cp /home/seqware/.seqware/settings /var/spool/cwl/.seqware");
+    execute("sudo chmod a+wrx /var/spool/cwl/.seqware/settings");
+    execute("perl -pi -e 's/wrench.res/seqwaremaven/g' /home/seqware/bin/seqware");
+
     cmd_parts = ["seqware bundle launch",
                  "--dir {0}".format(seqware_bundle_dir),
                  "--engine whitestar-parallel",
