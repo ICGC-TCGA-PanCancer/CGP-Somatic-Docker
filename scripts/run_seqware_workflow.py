@@ -226,7 +226,7 @@ def main():
     execute("sudo cp /home/seqware/.seqware/settings /var/spool/cwl/.seqware");
     execute("sudo chmod a+wrx /var/spool/cwl/.seqware/settings");
     execute("perl -pi -e 's/wrench.res/seqwaremaven/g' /home/seqware/bin/seqware");
-    execute("echo \"options(bitmapType='cairo')\" > test");
+    execute("echo \"options(bitmapType='cairo')\" > /var/spool/cwl/.Rprofile");
 
     cmd_parts = ["seqware bundle launch",
                  "--dir {0}".format(seqware_bundle_dir),
