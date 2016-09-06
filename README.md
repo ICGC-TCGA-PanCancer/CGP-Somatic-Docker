@@ -37,6 +37,8 @@ Successful testing was completed with the following command (note that the input
 
 Warning: Execution can take a substantial amount of disk space and upwards of 24 hours for execution.
 
+Also note that the tabix server requirement is no longer needed (reference data is built into the workflow). 
+
 ## Running with Docker directly
 
 ## Environment Requirements
