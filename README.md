@@ -35,10 +35,7 @@ Successful testing was completed with the following command (note that the input
 
     dockstore tool launch --entry Dockstore.cwl --local-entry --json test1.json
 
-
-
-
-
+Warning: Execution can take a substantial amount of disk space and upwards of 24 hours for execution.
 
 ## Running with Docker directly
 
