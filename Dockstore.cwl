@@ -78,5 +78,5 @@ doc: "The Sanger's Cancer Genome Project core somatic calling workflow from \nth
   \ > Dockstore.cwl\n# make a runtime JSON template and edit it\n$> dockstore convert\
   \ cwl2json --cwl Dockstore.cwl > Dockstore.json\n# run it locally with the Dockstore\
   \ CLI\n$> dockstore launch --entry quay.io/pancancer/pcawg-sanger-cgp-workflow:2.0.0\
-  \ \\\n    --json Dockstore.json\n```\n"
+  \ \\\n    --json test1.json\n```\n"
 

@@ -11,6 +11,37 @@ Email Brian if you have questions.
 * Keiran Raine <kr2@sanger.ac.uk>
 * Brian O'Connor <boconnor@oicr.on.ca>
 
+## Running with the Dockstore command line
+
+[![Build Status](https://travis-ci.org/ICGC-TCGA-PanCancer/SeqWare-CGP-SomaticCore.svg?branch=master)](https://travis-ci.org/ICGC-TCGA-PanCancer/SeqWare-CGP-SomaticCore)
+ [![Docker Repository on Quay](https://quay.io/repository/collaboratory/dockstore-tool-bwa-samse/status "Docker Repository on Quay")](https://quay.io/repository/collaboratory/dockstore-tool-bwa-samse)
+
+This tool has been validated as a CWL v1.0 CommandLineTool. 
+
+
+Versions that we tested with are the following 
+```
+avro (1.8.1)
+cwl-runner (1.0)
+cwl-upgrader (0.1.1)
+cwltool (1.0.20160712154127)
+schema-salad (1.14.20160708181155)
+setuptools (25.1.6)
+```
+
+Future work will include testing as a CWL draft-3 tool for backwards compatibility. 
+
+Successful testing was completed with the following command (note that the input must be downloaded from https://s3-eu-west-1.amazonaws.com/wtsi-pancancer/testdata/HCC1143_ds.tar and placed in the corresponding path in test1.json , additionally the output location must exist and be writeable by the executing user). 
+
+    dockstore tool launch --entry Dockstore.cwl --local-entry --json test1.json
+
+
+
+
+
+
+## Running with Docker directly
+
 ## Environment Requirements
 
 This workflow assumes you are working on a docker image of pancancer/seqware_whitestar_pancancer:1.1.2.
@@ -52,6 +83,7 @@ The following are the packages needed for Ubuntu 12.04:
 These packages are needed for execution, **even when pulling from Artifactory**:
 
     sudo apt-get install r-base r-base-core r-cran-rcolorbrewer 
+
 
 All of the above on one line to make it easy to cut and paste into a terminal:
 
