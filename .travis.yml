@@ -15,7 +15,6 @@ jdk:
   - oraclejdk8
 
 before_install:
-  - docker build -t quay.io/collaboratory/dockstore-tool-samtools-index .
   - pip2.7 install --user setuptools==24.0.3
 
 install: 
