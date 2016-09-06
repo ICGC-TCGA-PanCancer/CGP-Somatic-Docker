@@ -13,8 +13,8 @@ Email Brian if you have questions.
 
 ## Running with the Dockstore command line
 
-[![Build Status](https://travis-ci.org/ICGC-TCGA-PanCancer/SeqWare-CGP-SomaticCore.svg?branch=master)](https://travis-ci.org/ICGC-TCGA-PanCancer/SeqWare-CGP-SomaticCore)
- [![Docker Repository on Quay](https://quay.io/repository/collaboratory/dockstore-tool-bwa-samse/status "Docker Repository on Quay")](https://quay.io/repository/collaboratory/dockstore-tool-bwa-samse)
+[![Build Status](https://travis-ci.org/ICGC-TCGA-PanCancer/CGP-Somatic-Docker.svg?branch=feature%2Fcwl1)](https://travis-ci.org/ICGC-TCGA-PanCancer/CGP-Somatic-Docker)
+ [![Docker Repository on Quay](https://quay.io/repository/pancancer/pcawg-sanger-cgp-workflow/status "Docker Repository on Quay")](https://quay.io/repository/pancancer/pcawg-sanger-cgp-workflow)
 
 This tool has been validated as a CWL v1.0 CommandLineTool. 
 
