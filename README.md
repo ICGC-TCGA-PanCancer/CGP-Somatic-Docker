@@ -1,5 +1,3 @@
-# This is a work in progress, some of the information below has yet to be updated for the simplified Docker process.
-
 # CGP-Somatic Docker
 
 A dockerised version of the Seqware workflow derived from Sanger's Cancer Genome Project core somatic calling pipeline. This is a cleaned up vertion as used in the ICGC/TCGA PanCancer project. See http://pancancer.info for more information. This workflow has been designed to work with [SeqWare 1.1.1](http://seqware.io) VMs setup by [Bindle 2.0](https://github.com/CloudBindle/Bindle).
@@ -36,10 +34,13 @@ Successful testing was completed with the following command (note that the input
     dockstore tool launch --entry Dockstore.cwl --local-entry --json test1.json
 
 Warning: Execution can take a substantial amount of disk space and upwards of 24 hours for execution.
+Note that `test2.json` also works but will take a more substantial amount of time to execute (on the order of 6 days on a 8-core, 58GB of RAM host). 
 
 Also note that the tabix server requirement is no longer needed (reference data is built into the workflow). 
 
 ## Running with Docker directly
+
+This is a work in progress, some of the information below has yet to be updated for the simplified Docker process.
 
 ## Environment Requirements
 
