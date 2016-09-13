@@ -1,6 +1,6 @@
 # CGP-Somatic Docker
 
-A dockerised version of the Seqware workflow derived from Sanger's Cancer Genome Project core somatic calling pipeline. This is a cleaned up vertion as used in the ICGC/TCGA PanCancer project. See http://pancancer.info for more information. This workflow has been designed to work with [SeqWare 1.1.1](http://seqware.io) VMs setup by [Bindle 2.0](https://github.com/CloudBindle/Bindle).
+A dockerised version of the Seqware workflow derived from Sanger's Cancer Genome Project core somatic calling pipeline. This is a cleaned up version as used in the ICGC/TCGA PanCancer project. See http://pancancer.info for more information. This workflow has been designed to work with [SeqWare 1.1.1](http://seqware.io) VMs setup by [Bindle 2.0](https://github.com/CloudBindle/Bindle).
 
 ## Authors
 
