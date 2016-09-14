@@ -7,6 +7,14 @@ dct:creator:
   '@id': http://sanger.ac.uk/...
   foaf:name: Keiran Raine
   foaf:mbox: mailto:keiranmraine@gmail.com
+dct:contributor:
+  foaf:name: "Brian O'Connor"
+  foaf:mbox: "broconno@ucsc.edu"
+
+dct:contributor:
+  foaf:name: "Denis Yuen"
+  foaf:mbox: "denis.yuen@oicr.on.ca"
+
 requirements:
 - class: DockerRequirement
   dockerPull: quay.io/pancancer/pcawg-sanger-cgp-workflow:2.0.0-cwl1

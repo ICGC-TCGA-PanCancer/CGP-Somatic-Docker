@@ -8,6 +8,7 @@ Email Brian if you have questions.
 
 * Keiran Raine <kr2@sanger.ac.uk>
 * Brian O'Connor <boconnor@oicr.on.ca>
+* Denis Yuen <denis.yuen@oicr.on.ca>
 
 ## Running with the Dockstore command line
 
