@@ -9,7 +9,7 @@ dct:creator:
   foaf:mbox: mailto:keiranmraine@gmail.com
 requirements:
 - class: DockerRequirement
-  dockerPull: quay.io/pancancer/pcawg-sanger-cgp-workflow:feature_cwl1
+  dockerPull: quay.io/pancancer/pcawg-sanger-cgp-workflow:2.0.0-cwl1
 
 cwlVersion: v1.0
 
@@ -73,10 +73,5 @@ baseCommand: [python, /home/seqware/CGP-Somatic-Docker/scripts/run_seqware_workf
 doc: "The Sanger's Cancer Genome Project core somatic calling workflow from \nthe\
   \ ICGC PanCancer Analysis of Whole Genomes (PCAWG) project.\nFor more information\
   \ see the PCAWG project [page](https://dcc.icgc.org/pcawg) and our GitHub\n[page](https://github.com/ICGC-TCGA-PanCancer)\
-  \ for our code including the source for\n[this workflow](https://github.com/ICGC-TCGA-PanCancer/CGP-Somatic-Docker).\n\
-  ```\nUsage:\n# fetch CWL\n$> dockstore cwl --entry quay.io/pancancer/pcawg-sanger-cgp-workflow:2.0.0\
-  \ > Dockstore.cwl\n# make a runtime JSON template and edit it\n$> dockstore convert\
-  \ cwl2json --cwl Dockstore.cwl > Dockstore.json\n# run it locally with the Dockstore\
-  \ CLI\n$> dockstore launch --entry quay.io/pancancer/pcawg-sanger-cgp-workflow:2.0.0\
-  \ \\\n    --json test1.json\n```\n"
+  \ for our code including the source for\n[this workflow](https://github.com/ICGC-TCGA-PanCancer/CGP-Somatic-Docker)."
 
