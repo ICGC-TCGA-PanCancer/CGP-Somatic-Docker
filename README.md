@@ -1,8 +1,6 @@
-# This is a work in progress, some of the information below has yet to be updated for the simplified Docker process.
-
 # CGP-Somatic Docker
 
-A dockerised version of the Seqware workflow derived from Sanger's Cancer Genome Project core somatic calling pipeline. This is a cleaned up vertion as used in the ICGC/TCGA PanCancer project. See http://pancancer.info for more information. This workflow has been designed to work with [SeqWare 1.1.1](http://seqware.io) VMs setup by [Bindle 2.0](https://github.com/CloudBindle/Bindle).
+A dockerised version of the Seqware workflow derived from Sanger's Cancer Genome Project core somatic calling pipeline. This is a cleaned up version as used in the ICGC/TCGA PanCancer project. See http://pancancer.info for more information. This workflow has been designed to work with [SeqWare 1.1.1](http://seqware.io) VMs setup by [Bindle 2.0](https://github.com/CloudBindle/Bindle).
 
 ## Authors
 
@@ -10,6 +8,39 @@ Email Brian if you have questions.
 
 * Keiran Raine <kr2@sanger.ac.uk>
 * Brian O'Connor <boconnor@oicr.on.ca>
+
+## Running with the Dockstore command line
+
+[![Build Status](https://travis-ci.org/ICGC-TCGA-PanCancer/CGP-Somatic-Docker.svg?branch=feature%2Fcwl1)](https://travis-ci.org/ICGC-TCGA-PanCancer/CGP-Somatic-Docker)
+ [![Docker Repository on Quay](https://quay.io/repository/pancancer/pcawg-sanger-cgp-workflow/status "Docker Repository on Quay")](https://quay.io/repository/pancancer/pcawg-sanger-cgp-workflow)
+
+This tool has been validated as a CWL v1.0 CommandLineTool. 
+
+
+Versions that we tested with are the following 
+```
+avro (1.8.1)
+cwl-runner (1.0)
+cwl-upgrader (0.1.1)
+cwltool (1.0.20160712154127)
+schema-salad (1.14.20160708181155)
+setuptools (25.1.6)
+```
+
+Future work will include testing as a CWL draft-3 tool for backwards compatibility. 
+
+Successful testing was completed with the following command (note that the input must be downloaded from https://s3-eu-west-1.amazonaws.com/wtsi-pancancer/testdata/HCC1143_ds.tar and placed in the corresponding path in test1.json , additionally the output location must exist and be writeable by the executing user). 
+
+    dockstore tool launch --entry Dockstore.cwl --local-entry --json test1.json
+
+Warning: Execution can take a substantial amount of disk space and upwards of 24 hours for execution.
+Note that `test2.json` also works but will take a more substantial amount of time to execute (on the order of 6 days on a 8-core, 58GB of RAM host). 
+
+Also note that the tabix server requirement is no longer needed (reference data is built into the workflow). 
+
+## Running with Docker directly
+
+This is a work in progress, some of the information below has yet to be updated for the simplified Docker process.
 
 ## Environment Requirements
 
@@ -52,6 +83,7 @@ The following are the packages needed for Ubuntu 12.04:
 These packages are needed for execution, **even when pulling from Artifactory**:
 
     sudo apt-get install r-base r-base-core r-cran-rcolorbrewer 
+
 
 All of the above on one line to make it easy to cut and paste into a terminal:
 
