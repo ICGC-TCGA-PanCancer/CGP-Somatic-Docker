@@ -8,12 +8,12 @@ dct:creator:
   foaf:name: Keiran Raine
   foaf:mbox: mailto:keiranmraine@gmail.com
 dct:contributor:
-  foaf:name: "Brian O'Connor"
-  foaf:mbox: "broconno@ucsc.edu"
+  foaf:name: Brian O'Connor
+  foaf:mbox: mailto:broconno@ucsc.edu
 
 dct:contributor:
-  foaf:name: "Denis Yuen"
-  foaf:mbox: "denis.yuen@oicr.on.ca"
+  foaf:name: Denis Yuen
+  foaf:mbox: mailto:denis.yuen@oicr.on.ca
 
 requirements:
 - class: DockerRequirement
