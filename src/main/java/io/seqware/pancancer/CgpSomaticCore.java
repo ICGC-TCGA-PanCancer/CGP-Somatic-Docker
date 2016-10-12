@@ -774,8 +774,7 @@ public class CgpSomaticCore extends AbstractWorkflowDataModel {
             .addArgument(installBase)
             .addArgument("bam_stats")
             .addArgument("-i " + sampleBam)
-            .addArgument("-o " + OUTDIR + "/" + f.getName() + ".bas")
-            ;
+	    .addArgument("-o " + sampleBam + ".bas");
     return thisJob;
   }
   
