@@ -1,16 +1,18 @@
 task Seqware_Sanger_Somatic_Workflow {
-    File tumor
-    File normal
+    File tumorBam
+    File tumorBai
+    File normalBam
+    File normalBai
     File refFrom
     File bbFrom
-    String outputDir
+    String outputDir = "."
 
     command {
         python /home/seqware/CGP-Somatic-Docker/scripts/run_seqware_workflow.py \
-        --tumor ${tumor} \
-        --normal ${normal} \
+        --tumor ${tumorBam} \
+        --normal ${normalBam} \
         --refFrom ${refFrom} \
-        --bbFrom ${bbFrom}
+        --bbFrom ${bbFrom} \
         --output-dir ${outputDir}
     }
 
@@ -25,7 +27,7 @@ task Seqware_Sanger_Somatic_Workflow {
     }
 
     runtime {
-        docker: 'quay.io/TBD'
+        docker: 'quay.io/pancancer/pcawg-sanger-cgp-workflow:2.0.0-cwl1'
     }
 }
 

@@ -18,40 +18,5 @@
   {
     "path":"https://s3-eu-west-1.amazonaws.com/wtsi-pancancer/reference/GRCh37d5_battenberg.tar.gz",
     "class":"File"
-  },
-  "somatic_snv_mnv_tar_gz":
-  {
-    "path":"/mnt/output/somatic_snv_mnv_tar_gz",
-    "class":"File"
-  },
-  "somatic_cnv_tar_gz":
-  {
-    "path":"/mnt/output/somatic_cnv_tar_gz",
-    "class":"File"
-  },
-  "somatic_sv_tar_gz":
-  {
-    "path":"/mnt/output/somatic_sv_tar_gz",
-    "class":"File"
-  },
-  "somatic_indel_tar_gz":
-  {
-    "path":"/mnt/output/somatic_indel_tar_gz",
-    "class":"File"
-  },
-  "somatic_imputeCounts_tar_gz":
-  {
-    "path":"/mnt/output/somatic_imputeCounts_tar_gz",
-    "class":"File"
-  },
-  "somatic_genotype_tar_gz":
-  {
-    "path":"/mnt/output/somatic_genotype_tar_gz",
-    "class":"File"
-  },
-  "somatic_verifyBamId_tar_gz":
-  {
-    "path":"/mnt/output/somatic_verifyBamId_tar_gz",
-    "class":"File"
   }
 }

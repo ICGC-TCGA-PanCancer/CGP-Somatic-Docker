@@ -1,7 +1,8 @@
 {
-  "Seqware_Sanger_Somatic_Workflow.Seqware_Sanger_Somatic_Workflow.normal": "File",
-  "Seqware_Sanger_Somatic_Workflow.Seqware_Sanger_Somatic_Workflow.tumor": "File",
-  "Seqware_Sanger_Somatic_Workflow.Seqware_Sanger_Somatic_Workflow.refFrom": "File",
-  "Seqware_Sanger_Somatic_Workflow.Seqware_Sanger_Somatic_Workflow.bbFrom": "File",
-  "Seqware_Sanger_Somatic_Workflow.Seqware_Sanger_Somatic_Workflow.outputDir": "String"
+  "Seqware_Sanger_Somatic_Workflow.Seqware_Sanger_Somatic_Workflow.normalBam": "File",
+  "Seqware_Sanger_Somatic_Workflow.Seqware_Sanger_Somatic_Workflow.normalBai": "File",
+  "Seqware_Sanger_Somatic_Workflow.Seqware_Sanger_Somatic_Workflow.tumorBam": "File",
+  "Seqware_Sanger_Somatic_Workflow.Seqware_Sanger_Somatic_Workflow.tumorBai": "File",
+  "Seqware_Sanger_Somatic_Workflow.Seqware_Sanger_Somatic_Workflow.refFrom": "https://s3-eu-west-1.amazonaws.com/wtsi-pancancer/reference/GRCh37d5_CGP_refBundle.tar.gz",
+  "Seqware_Sanger_Somatic_Workflow.Seqware_Sanger_Somatic_Workflow.bbFrom": "https://s3-eu-west-1.amazonaws.com/wtsi-pancancer/reference/GRCh37d5_battenberg.tar.gz"
 }

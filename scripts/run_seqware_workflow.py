@@ -221,12 +221,12 @@ def main():
     ini_file = write_ini(args)
 
     # RUN WORKFLOW
-    # workaround for docker permissions 
-    execute("sudo mkdir -p /var/spool/cwl/.seqware && sudo chown -R seqware /var/spool/cwl/");
-    execute("sudo cp /home/seqware/.seqware/settings /var/spool/cwl/.seqware");
-    execute("sudo chmod a+wrx /var/spool/cwl/.seqware/settings");
-    execute("perl -pi -e 's/wrench.res/seqwaremaven/g' /home/seqware/bin/seqware");
-    execute("echo \"options(bitmapType='cairo')\" > /var/spool/cwl/.Rprofile");
+    # workaround for docker permissions for cwltool
+    execute("sudo mkdir -p /var/spool/cwl/.seqware && sudo chown -R seqware /var/spool/cwl/")
+    execute("sudo cp /home/seqware/.seqware/settings /var/spool/cwl/.seqware")
+    execute("sudo chmod a+wrx /var/spool/cwl/.seqware/settings")
+    execute("perl -pi -e 's/wrench.res/seqwaremaven/g' /home/seqware/bin/seqware")
+    execute("echo \"options(bitmapType='cairo')\" > /var/spool/cwl/.Rprofile")
 
     cmd_parts = ["seqware bundle launch",
                  "--dir {0}".format(seqware_bundle_dir),
@@ -236,15 +236,6 @@ def main():
     cmd = " ".join(cmd_parts)
     execute(cmd)
 
-    #hack
-#    execute("touch "+output_dir+"/foo.somatic.snv_mnv.tar.gz")
-#    execute("touch "+output_dir+"/foo.somatic.cnv.tar.gz")
-#    execute("touch "+output_dir+"/foo.somatic.sv.tar.gz")
-#    execute("touch "+output_dir+"/foo.somatic.indel.tar.gz")
-#    execute("touch "+output_dir+"/foo.somatic.imputeCounts.tar.gz")
-#    execute("touch "+output_dir+"/foo.somatic.genotype.tar.gz")
-#    execute("touch "+output_dir+"/foo.somatic.verifyBamId.tar.gz")
-#
     if args.output_file_basename is not None:
         # find all primary output file archives
         output_files = glob.glob(
@@ -262,9 +253,6 @@ def main():
             execute("mv {0} {1}".format(
                 f, os.path.join(output_dir, ".".join(new_f))
             ))
-
-            # hack
-            #execute("cp "+f+" ./")
 
     if (args.keep_all_seqware_output_files):
         # find seqware tmp output path; it contains generated scripts w/
