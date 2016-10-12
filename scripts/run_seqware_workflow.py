@@ -12,7 +12,6 @@ import argparse
 import glob
 import os
 import re
-import shlex
 import subprocess
 import sys
 
@@ -195,9 +194,16 @@ def execute(cmd):
             file=sys.stderr
         )
         print(stderr, file=sys.stderr)
-        raise
+        raise RuntimeError
     else:
-        return process.returncode
+        if stderr is not None:
+            print("----------------------------------------------------------",
+                  file=sys.stderr)
+            print("stderr for '", cmd, "' was:", file=sys.stderr)
+            print("----------------------------------------------------------",
+                  file=sys.stderr)
+            print(stderr, file=sys.stderr)
+    return process.returncode
 
 
 def main():
