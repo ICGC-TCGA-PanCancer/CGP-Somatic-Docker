@@ -160,7 +160,7 @@ RUN curl -sSL -o tmp.tar.gz --retry 10 https://github.com/cancerit/ascatNgs/arch
     rm -rf /tmp/downloads/ascatNgs /tmp/downloads/tmp.tar.gz ~/.cpanm
 
 # cgpPindel
-RUN curl -sSL -o tmp.tar.gz --retry 10 https://github.com/cancerit/cgpPindel/archive/v1.5.5.tar.gz && \
+RUN curl -sSL -o tmp.tar.gz --retry 10 https://github.com/cancerit/cgpPindel/archive/v1.5.7.tar.gz && \
     mkdir /tmp/downloads/cgpPindel && \
     tar -C /tmp/downloads/cgpPindel --strip-components 1 -zxf tmp.tar.gz && \
     cd /tmp/downloads/cgpPindel && \
