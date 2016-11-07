@@ -22,7 +22,7 @@ RUN apt-get -yqq update && \
 RUN mkdir -p /tmp/downloads $OPT/bin $OPT/etc $OPT/lib $OPT/share
 WORKDIR /tmp/downloads
 
-RUN cpanm --mirror http://cpan.metacpan.org -l $OPT File::ShareDir File::ShareDir::Install Bio::Root::Version Const::Fast Graph && \
+RUN cpanm --mirror https://cpan.metacpan.org -l $OPT File::ShareDir File::ShareDir::Install CJFIELDS/BioPerl-1.6.924.tar.gz Const::Fast Graph && \
      rm -rf ~/.cpanm
 
 RUN export SOURCE_JKENT_BIN=https://github.com/ENCODE-DCC/kentUtils/raw/master/bin/linux.x86_64 && \
@@ -160,7 +160,7 @@ RUN curl -sSL -o tmp.tar.gz --retry 10 https://github.com/cancerit/ascatNgs/arch
     rm -rf /tmp/downloads/ascatNgs /tmp/downloads/tmp.tar.gz ~/.cpanm
 
 # cgpPindel
-RUN curl -sSL -o tmp.tar.gz --retry 10 https://github.com/cancerit/cgpPindel/archive/v1.5.5.tar.gz && \
+RUN curl -sSL -o tmp.tar.gz --retry 10 https://github.com/cancerit/cgpPindel/archive/v1.5.7.tar.gz && \
     mkdir /tmp/downloads/cgpPindel && \
     tar -C /tmp/downloads/cgpPindel --strip-components 1 -zxf tmp.tar.gz && \
     cd /tmp/downloads/cgpPindel && \

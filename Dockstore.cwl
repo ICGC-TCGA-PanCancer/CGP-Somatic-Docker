@@ -17,7 +17,7 @@ dct:contributor:
 
 requirements:
 - class: DockerRequirement
-  dockerPull: quay.io/pancancer/pcawg-sanger-cgp-workflow:2.0.0-cwl1
+  dockerPull: quay.io/pancancer/pcawg-sanger-cgp-workflow:2.0.2
 
 cwlVersion: v1.0
 
