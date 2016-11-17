@@ -230,9 +230,10 @@ def main():
 
     # RUN WORKFLOW
     # workaround for docker permissions for cwltool
-    execute("sudo mkdir -p /var/spool/cwl/.seqware && sudo chown -R seqware /var/spool/cwl/")
-    execute("sudo cp /home/seqware/.seqware/settings /var/spool/cwl/.seqware")
-    execute("sudo chmod a+wrx /var/spool/cwl/.seqware/settings")
+    execute("gosu root mkdir -p /var/spool/cwl/.seqware")
+    execute("gosu root chown -R seqware /var/spool/cwl/")
+    execute("gosu root cp /home/seqware/.seqware/settings /var/spool/cwl/.seqware")
+    execute("gosu root chmod a+wrx /var/spool/cwl/.seqware/settings")
     execute("perl -pi -e 's/wrench.res/seqwaremaven/g' /home/seqware/bin/seqware")
     execute("echo \"options(bitmapType='cairo')\" > /var/spool/cwl/.Rprofile")
 
