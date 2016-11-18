@@ -1,12 +1,12 @@
 {
   "tumor":
   {
-    "path":"/media/large_volume/CGP-Somatic-Docker-input/HCC1143_ds/HCC1143_ds/HCC1143.bam",
+    "path":"https://dcc.icgc.org/api/v1/download?fn=/PCAWG/reference_data/wtsi-pancancer/testdata/HCC1143_ds/HCC1143.bam",
     "class":"File"
   },
   "normal":
   {
-    "path":"/media/large_volume/CGP-Somatic-Docker-input/HCC1143_ds/HCC1143_ds/HCC1143_BL.bam",
+    "path":"https://dcc.icgc.org/api/v1/download?fn=/PCAWG/reference_data/wtsi-pancancer/testdata/HCC1143_ds/HCC1143_BL.bam",
     "class":"File"
   },
   "refFrom":
