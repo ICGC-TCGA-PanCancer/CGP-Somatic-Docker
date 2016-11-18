@@ -225,9 +225,6 @@ def main():
         # Make the output directory if it does not exist
         execute("mkdir -p {0}".format(output_dir))
 
-    # WRITE WORKFLOW INI
-    ini_file = write_ini(args)
-
     # RUN WORKFLOW
     # workaround for docker permissions for cwltool
     execute("gosu root mkdir -p /var/spool/cwl/.seqware")
@@ -236,6 +233,9 @@ def main():
     execute("gosu root chmod a+wrx /var/spool/cwl/.seqware/settings")
     execute("perl -pi -e 's/wrench.res/seqwaremaven/g' /home/seqware/bin/seqware")
     execute("echo \"options(bitmapType='cairo')\" > /var/spool/cwl/.Rprofile")
+
+    # WRITE WORKFLOW INI
+    ini_file = write_ini(args)
 
     cmd_parts = ["seqware bundle launch",
                  "--dir {0}".format(seqware_bundle_dir),
