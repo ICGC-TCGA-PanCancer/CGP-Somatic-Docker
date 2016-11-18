@@ -16,7 +16,7 @@ RUN apt-get -yqq update && \
       wget time curl zlib1g-dev libncurses5-dev \
       libgd2-xpm-dev libexpat1-dev python unzip libboost-dev libboost-iostreams-dev \
       libpstreams-dev libglib2.0-dev gfortran libcairo2-dev cpanminus libwww-perl \
-      oracle-java8-installer && \
+      openjdk-7-jdk && \
     apt-get clean
 
 RUN mkdir -p /tmp/downloads $OPT/bin $OPT/etc $OPT/lib $OPT/share
@@ -338,8 +338,7 @@ RUN set -x \
     && gpg --batch --verify /usr/local/bin/gosu.asc /usr/local/bin/gosu \
     && rm -r "$GNUPGHOME" /usr/local/bin/gosu.asc \
     && chmod +x /usr/local/bin/gosu \
-    && gosu nobody true \
-    && apt-get purge -y --auto-remove ca-certificates wget
+    && gosu nobody true
 
 RUN chown root:users /usr/local/bin/gosu && chmod +s /usr/local/bin/gosu
 
