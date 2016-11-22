@@ -207,6 +207,10 @@ def execute(cmd):
 
 
 def main():
+    execute("export TMPDIR=/tmp")
+    execute("export HOME=/var/spool/cwl")
+    execute("whoami")
+
     parser = collect_args()
     args = parser.parse_args()
 
@@ -272,7 +276,6 @@ def main():
         execute("mv {0}/* {1}/".format(
             run_info_output_path, output_dir
         ))
-
 
 if __name__ == "__main__":
     main()

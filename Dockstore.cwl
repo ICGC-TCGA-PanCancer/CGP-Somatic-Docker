@@ -77,7 +77,7 @@ outputs:
     type: File
     outputBinding:
       glob: '*.somatic.imputeCounts.tar.gz'
-baseCommand: [gosu, seqware, python, /home/seqware/CGP-Somatic-Docker/scripts/run_seqware_workflow.py]
+baseCommand: [/start.sh, python, /home/seqware/CGP-Somatic-Docker/scripts/run_seqware_workflow.py]
 doc: "The Sanger's Cancer Genome Project core somatic calling workflow from \nthe\
   \ ICGC PanCancer Analysis of Whole Genomes (PCAWG) project.\nFor more information\
   \ see the PCAWG project [page](https://dcc.icgc.org/pcawg) and our GitHub\n[page](https://github.com/ICGC-TCGA-PanCancer)\

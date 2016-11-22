@@ -340,10 +340,11 @@ RUN set -x \
     && chmod +x /usr/local/bin/gosu \
     && gosu nobody true
 
-RUN chown root:users /usr/local/bin/gosu && chmod +s /usr/local/bin/gosu
+ADD scripts/start.sh /start.sh
+RUN chown root:users /usr/local/bin/gosu \
+    && chmod +s /usr/local/bin/gosu \
+    && chmod a+rx /start.sh
 
-VOLUME /output
-VOLUME /datastore
-VOLUME /home/seqware
+VOLUME /output /datastore /home/seqware
 
 CMD /bin/bash
