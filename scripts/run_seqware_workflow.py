@@ -209,6 +209,7 @@ def execute(cmd):
 def main():
     execute("export TMPDIR=/tmp")
     execute("export HOME=/var/spool/cwl")
+    execute("env")
     execute("whoami")
 
     parser = collect_args()
