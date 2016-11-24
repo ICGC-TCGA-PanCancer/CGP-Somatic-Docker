@@ -207,8 +207,8 @@ def execute(cmd):
 
 
 def main():
-    execute("export TMPDIR=/tmp")
-    execute("export HOME=/var/spool/cwl")
+    os.environ['TMPDIR'] = "/tmp"
+    os.environ['HOME'] = "/var/spool/cwl"
     execute("env")
     execute("whoami")
 

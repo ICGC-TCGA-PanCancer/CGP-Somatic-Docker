@@ -305,13 +305,8 @@ RUN   curl -sSL -o tmp.tar.gz --retry 10 https://github.com/wrpearson/fasta36/re
 
 COPY ./src					  /home/seqware/CGP-Somatic-Docker/src
 COPY ./workflow				/home/seqware/CGP-Somatic-Docker/workflow
-COPY ./scripts				/home/seqware/CGP-Somatic-Docker/scripts
 COPY ./pom.xml				/home/seqware/CGP-Somatic-Docker/pom.xml
 COPY ./workflow.properties	/home/seqware/CGP-Somatic-Docker/workflow.properties
-
-RUN chmod a+x /home/seqware/CGP-Somatic-Docker/scripts/run_sanger.sh
-RUN chmod a+x /home/seqware/CGP-Somatic-Docker/scripts/run_seqware_workflow.py
-
 
 ENV SEQWARE_ROOT="root"
 WORKDIR /home/seqware/CGP-Somatic-Docker
@@ -340,11 +335,19 @@ RUN set -x \
     && chmod +x /usr/local/bin/gosu \
     && gosu nobody true
 
+
+COPY ./scripts /home/seqware/CGP-Somatic-Docker/scripts
 ADD scripts/start.sh /start.sh
-RUN chown root:users /usr/local/bin/gosu \
+
+RUN chmod a+x /home/seqware/CGP-Somatic-Docker/scripts/run_sanger.sh \
+    && chmod a+x /home/seqware/CGP-Somatic-Docker/scripts/run_seqware_workflow.py \
+    && chown root:users /usr/local/bin/gosu \
     && chmod +s /usr/local/bin/gosu \
     && chmod a+rx /start.sh
 
-VOLUME /output /datastore /home/seqware
+VOLUME /output /datastore /home/seqware /root
+
+RUN apt-get -yqq purge openjdk-7-jdk  \
+    && apt-get -yqq install oracle-java8-installer
 
 CMD /bin/bash
