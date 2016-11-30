@@ -17,7 +17,7 @@ dct:contributor:
 
 requirements:
 - class: DockerRequirement
-  dockerPull: quay.io/pancancer/pcawg-sanger-cgp-workflow:feature_gosu_experiment
+  dockerPull: quay.io/pancancer/pcawg-sanger-cgp-workflow:2.0.3
 
 cwlVersion: v1.0
 

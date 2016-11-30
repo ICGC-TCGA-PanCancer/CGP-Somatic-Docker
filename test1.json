@@ -1,22 +1,22 @@
 {
   "tumor":
   {
-    "path":"https://dcc.icgc.org/api/v1/download?fn=/PCAWG/reference_data/wtsi-pancancer/testdata/HCC1143_ds/HCC1143.bam",
+    "path":"https://dcc.icgc.org/api/v1/download?fn=/PCAWG/reference_data/data_for_testing/HCC1143.bam",
     "class":"File"
   },
   "normal":
   {
-    "path":"https://dcc.icgc.org/api/v1/download?fn=/PCAWG/reference_data/wtsi-pancancer/testdata/HCC1143_ds/HCC1143_BL.bam",
+    "path":"https://dcc.icgc.org/api/v1/download?fn=/PCAWG/reference_data/data_for_testing/HCC1143_BL.bam",
     "class":"File"
   },
   "refFrom":
   {
-    "path":"https://s3-eu-west-1.amazonaws.com/wtsi-pancancer/reference/GRCh37d5_CGP_refBundle.tar.gz",
+    "path":"https://dcc.icgc.org/api/v1/download?fn=/PCAWG/reference_data/pcawg-sanger/GRCh37d5_CGP_refBundle.tar.gz",
     "class":"File"
   },
   "bbFrom":
   {
-    "path":"https://s3-eu-west-1.amazonaws.com/wtsi-pancancer/reference/GRCh37d5_battenberg.tar.gz",
+    "path":"https://dcc.icgc.org/api/v1/download?fn=/PCAWG/reference_data/pcawg-sanger/GRCh37d5_battenberg.tar.gz",
     "class":"File"
   },
   "somatic_snv_mnv_tar_gz":
