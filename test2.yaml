@@ -6,10 +6,10 @@ normal:
   path: "/media/large_volume/CGP-Somatic-Docker-input/9f8f6f03df6d100c90a761164800a42c.bam"
   class: File
 refFrom:
-  path: https://s3-eu-west-1.amazonaws.com/wtsi-pancancer/reference/GRCh37d5_CGP_refBundle.tar.gz
+  path: https://dcc.icgc.org/api/v1/download?fn=/PCAWG/reference_data/pcawg-sanger/GRCh37d5_CGP_refBundle.tar.gz
   class: File
 bbFrom:
-  path: https://s3-eu-west-1.amazonaws.com/wtsi-pancancer/reference/GRCh37d5_battenberg.tar.gz
+  path: https://dcc.icgc.org/api/v1/download?fn=/PCAWG/reference_data/pcawg-sanger/GRCh37d5_battenberg.tar.gz
   class: File
 somatic_snv_mnv_tar_gz:
   path: "/mnt/output/somatic_snv_mnv_tar_gz"
