@@ -16,7 +16,7 @@ RUN apt-get -yqq update && \
       wget time curl zlib1g-dev libncurses5-dev \
       libgd2-xpm-dev libexpat1-dev python unzip libboost-dev libboost-iostreams-dev \
       libpstreams-dev libglib2.0-dev gfortran libcairo2-dev cpanminus libwww-perl \
-      openjdk-7-jdk && \
+      openjdk-7-jdk libtest-most-perl && \
     apt-get clean
 
 RUN mkdir -p /tmp/downloads $OPT/bin $OPT/etc $OPT/lib $OPT/share
@@ -305,13 +305,8 @@ RUN   curl -sSL -o tmp.tar.gz --retry 10 https://github.com/wrpearson/fasta36/re
 
 COPY ./src					  /home/seqware/CGP-Somatic-Docker/src
 COPY ./workflow				/home/seqware/CGP-Somatic-Docker/workflow
-COPY ./scripts				/home/seqware/CGP-Somatic-Docker/scripts
 COPY ./pom.xml				/home/seqware/CGP-Somatic-Docker/pom.xml
 COPY ./workflow.properties	/home/seqware/CGP-Somatic-Docker/workflow.properties
-
-RUN chmod a+x /home/seqware/CGP-Somatic-Docker/scripts/run_sanger.sh
-RUN chmod a+x /home/seqware/CGP-Somatic-Docker/scripts/run_seqware_workflow.py
-
 
 ENV SEQWARE_ROOT="root"
 WORKDIR /home/seqware/CGP-Somatic-Docker
@@ -326,8 +321,33 @@ RUN echo "options(bitmapType='cairo')" > /home/seqware/.Rprofile && \
 # build the workflow which will prevent problems in the future if artifactory at OICR goes down
 RUN mvn -B clean install
 
-VOLUME /output
-VOLUME /datastore
-VOLUME /home/seqware
+# install gosu which prevents unknown user issue
+ENV GOSU_VERSION 1.9
+RUN set -x \
+    && apt-get update && apt-get install -y --no-install-recommends ca-certificates wget && rm -rf /var/lib/apt/lists/* \
+    && dpkgArch="$(dpkg --print-architecture | awk -F- '{ print $NF }')" \
+    && wget -O /usr/local/bin/gosu "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$dpkgArch" \
+    && wget -O /usr/local/bin/gosu.asc "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$dpkgArch.asc" \
+    && export GNUPGHOME="$(mktemp -d)" \
+    && gpg --keyserver ha.pool.sks-keyservers.net --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4 \
+    && gpg --batch --verify /usr/local/bin/gosu.asc /usr/local/bin/gosu \
+    && rm -r "$GNUPGHOME" /usr/local/bin/gosu.asc \
+    && chmod +x /usr/local/bin/gosu \
+    && gosu nobody true
+
+
+COPY ./scripts /home/seqware/CGP-Somatic-Docker/scripts
+ADD scripts/start.sh /start.sh
+
+RUN chmod a+x /home/seqware/CGP-Somatic-Docker/scripts/run_sanger.sh \
+    && chmod a+x /home/seqware/CGP-Somatic-Docker/scripts/run_seqware_workflow.py \
+    && chown root:users /usr/local/bin/gosu \
+    && chmod +s /usr/local/bin/gosu \
+    && chmod a+rx /start.sh
+
+VOLUME /output /datastore /home/seqware /root
+
+RUN apt-get -yqq purge openjdk-7-jdk  \
+    && apt-get -yqq install oracle-java8-installer
 
 CMD /bin/bash
