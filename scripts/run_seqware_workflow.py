@@ -210,7 +210,6 @@ def main():
     os.environ['TMPDIR'] = "/tmp"
     os.environ['HOME'] = "/var/spool/cwl"
     execute("env")
-    execute("whoami")
 
     parser = collect_args()
     args = parser.parse_args()
@@ -218,7 +217,7 @@ def main():
     workflow_version = "0.0.0"
     workflow_bundle = "Workflow_Bundle_CgpSomaticCore"
     seqware_bundle_dir = "".join(
-        ["/home/seqware/CGP-Somatic-Docker/target/",
+        ["/home/not-seqware/CGP-Somatic-Docker/target/",
          workflow_bundle,
          "_",
          workflow_version,
@@ -232,17 +231,18 @@ def main():
 
     # RUN WORKFLOW
     # workaround for docker permissions for cwltool
-    execute("gosu root mkdir -p /var/spool/cwl/.seqware")
-    execute("gosu root chown -R seqware /var/spool/cwl/")
-    execute("gosu root cp /home/seqware/.seqware/settings /var/spool/cwl/.seqware")
-    execute("gosu root chmod a+wrx /var/spool/cwl/.seqware/settings")
-    execute("perl -pi -e 's/wrench.res/seqwaremaven/g' /home/seqware/bin/seqware")
+    execute("mkdir -p /var/spool/cwl/.seqware")
+    execute("mkdir -p /var/spool/cwl/.seqware/self-installs")
+    execute("cp /home/not-seqware/seqware-distribution-1.1.2-full.jar /var/spool/cwl/.seqware/self-installs")
+    execute("cp /home/not-seqware/seqware-sanity-check-1.1.2-jar-paired-with-distribution.jar /var/spool/cwl/.seqware/self-installs")
+    execute("cp /home/not-seqware/.seqware/settings /var/spool/cwl/.seqware")
+    execute("chmod a+wrx /var/spool/cwl/.seqware/settings")
     execute("echo \"options(bitmapType='cairo')\" > /var/spool/cwl/.Rprofile")
 
     # WRITE WORKFLOW INI
     ini_file = write_ini(args)
 
-    cmd_parts = ["seqware bundle launch",
+    cmd_parts = ["/home/not-seqware/bin/seqware bundle launch",
                  "--dir {0}".format(seqware_bundle_dir),
                  "--engine whitestar-parallel",
                  "--ini {0}".format(ini_file),
