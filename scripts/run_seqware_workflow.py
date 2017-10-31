@@ -271,7 +271,7 @@ def main():
     if (args.keep_all_seqware_output_files):
         # find seqware tmp output path; it contains generated scripts w/
         # stdout stderr for each step
-        run_info_output_path = glob.glob("/datastore/oozie-*")[0]
+        run_info_output_path = glob.glob("/not-datastore/oozie-*")[0]
 
         # move all files to the output directory
         execute("mv {0}/* {1}/".format(
