@@ -79,40 +79,50 @@ outputs:
       glob: '*.somatic.imputeCounts.tar.gz'
 baseCommand: [/start.sh, python, /home/seqware/CGP-Somatic-Docker/scripts/run_seqware_workflow.py]
 doc: |
-    PCAWG Sanger variant calling workflow is developed by Wellcome Trust Sanger Institute (http://www.sanger.ac.uk/), it consists of software components calling somatic substitutions, indels and structural variants using uniformly aligned tumour / normal WGS sequences. The workflow has been dockerized and packaged using CWL workflow language, the source code is available on GitHub at: https://github.com/ICGC-TCGA-PanCancer/CGP-Somatic-Docker. The workflow is also registered in Dockstore at: https://dockstore.org/containers/quay.io/pancancer/pcawg-sanger-cgp-workflow 
-    
-    
+    PCAWG Sanger variant calling workflow is developed by Wellcome Trust Sanger Institute
+    (http://www.sanger.ac.uk/), it consists of software components calling somatic substitutions,
+    indels and structural variants using uniformly aligned tumour / normal WGS sequences.
+    The workflow has been dockerized and packaged using CWL workflow language, the source code
+    is available on GitHub at: https://github.com/ICGC-TCGA-PanCancer/CGP-Somatic-Docker.
+
     ## Run the workflow with your own data
-    
+
     ### Prepare compute environment and install software packages
     The workflow has been tested in Ubuntu 16.04 Linux environment with the following hardware and software settings.
-    
-    1. Hardware requirement (assuming X30 coverage whole genome sequence)
+
+    #### Hardware requirement (assuming X30 coverage whole genome sequence)
     - CPU core: 16
     - Memory: 64GB
     - Disk space: 1TB
-    
-    2. Software installation
+
+    #### Software installation
     - Docker (1.12.6): follow instructions to install Docker https://docs.docker.com/engine/installation
     - CWL tool
     ```
     pip install cwltool==1.0.20170217172322
     ```
-    
+
     ### Prepare input data
-    1. Input aligned tumor / normal BAM files
-    
-    The workflow uses a pair of aligned BAM files as input, one BAM for tumor, the other for normal, both from the same donor. Here we assume file names are `tumor_sample.bam` and `normal_sample.bam`, and both files are under `bams` subfolder.
-    
-    2. Reference data files
-    
-    The workflow also uses two precompiled reference files as input, they can be downloaded from the ICGC Data Portal at [https://dcc.icgc.org/releases/PCAWG/reference_data/pcawg-sanger](https://dcc.icgc.org/releases/PCAWG/reference_data/pcawg-sanger). We assume the two reference files are under `reference` subfolder. 
-    
-    3. Job JSON file for CWL
-    
-    Finally, we need to prepare a JSON file with input, reference and output files specified. Please replace the `tumor` and `normal` parameters with your real BAM file names. Parameters for output are file name suffixes, usually don't need to be changed.
-    
-    Name the JSON file: `pcawg-sanger-variant-caller.job.json`
+    #### Input aligned tumor / normal BAM files
+
+    The workflow uses a pair of aligned BAM files as input, one BAM for tumor, the other for normal,
+    both from the same donor. Here we assume file names are *tumor_sample.bam* and *normal_sample.bam*,
+    and both files are under *bams* subfolder.
+
+    #### Reference data files
+
+    The workflow also uses two precompiled reference files (*GRCh37d5_CGP_refBundle.tar.gz*,
+    *GRCh37d5_battenberg.tar.gz*) as input, they can be downloaded from the
+    ICGC Data Portal under https://dcc.icgc.org/releases/PCAWG/reference_data/pcawg-sanger.
+    We assume the two reference files are downloaded and put under *reference* subfolder.
+
+    #### Job JSON file for CWL
+
+    Finally, we need to prepare a JSON file with input, reference and output files specified. Please replace
+    the *tumor* and *normal* parameters with your real BAM file names. Parameters for output are file name
+    suffixes, usually don't need to be changed.
+
+    Name the JSON file: *pcawg-sanger-variant-caller.job.json*
     ```
     {
       "tumor":
@@ -172,3 +182,18 @@ doc: |
       }
     }
     ```
+
+    ### Run the workflow
+    #### Option 1: Run with CWL tool
+    - Download CWL workflow definition file
+    ```
+    wget -O pcawg-sanger-variant-caller.cwl "https://raw.githubusercontent.com/ICGC-TCGA-PanCancer/CGP-Somatic-Docker/2.0.3/Dockstore.cwl"
+    ```
+
+    - Run `cwltool` to execute the workflow
+    ```
+    nohup cwltool --debug --non-strict pcawg-sanger-variant-caller.cwl pcawg-sanger-variant-caller.job.json > pcawg-sanger-variant-caller.log 2>&1 &
+    ```
+
+    #### Option 2: Run with the Dockstore CLI
+    See the *Launch with* section below for details.
