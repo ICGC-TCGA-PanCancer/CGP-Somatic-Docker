@@ -77,6 +77,22 @@ outputs:
     type: File
     outputBinding:
       glob: '*.somatic.imputeCounts.tar.gz'
+  somatic_cnv_vcf_gz:
+    type: File
+    outputBinding:
+      glob: '*.somatic.cnv.vcf.gz'
+  somatic_indel_vcf_gz:
+    type: File
+    outputBinding:
+      glob: '*.somatic.indel.vcf.gz'
+  somatic_snv_mnv_vcf_gz:
+    type: File
+    outputBinding:
+      glob: '*.somatic.snv_mnv.vcf.gz'
+  somatic_sv_vcf_gz:
+    type: File
+    outputBinding:
+      glob: '*.somatic.sv.vcf.gz'
 baseCommand: [/start.sh, python, /home/seqware/CGP-Somatic-Docker/scripts/run_seqware_workflow.py]
 doc: |
     PCAWG Sanger variant calling workflow is developed by Wellcome Trust Sanger Institute

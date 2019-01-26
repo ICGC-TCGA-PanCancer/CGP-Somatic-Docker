@@ -32,7 +32,7 @@ def collect_args():
                         help="matched normal BAM input")
     parser.add_argument("--output-dir",
                         type=str,
-                        default="/var/spool/cwl/",
+                        required=True,
                         help="directory in which to store the outputs of the \
                         workflow.")
     parser.add_argument("--output-file-basename",
@@ -207,13 +207,17 @@ def execute(cmd):
 
 
 def main():
-    os.environ['TMPDIR'] = "/tmp"
-    os.environ['HOME'] = "/var/spool/cwl"
-    execute("env")
-    execute("whoami")
-
     parser = collect_args()
     args = parser.parse_args()
+    output_dir = os.path.abspath(args.output_dir)
+
+    os.environ['TMPDIR'] = "/tmp"
+    # this is necessary because SeqWare will self-install to $HOME dir,
+    # we make sure $HOME is same as output_dir. $HOME may not be the same
+    # as output_dir if this script is run using sudo
+    os.environ['HOME'] = output_dir
+    execute("env")
+    execute("whoami")
 
     workflow_version = "0.0.0"
     workflow_bundle = "Workflow_Bundle_CgpSomaticCore"
@@ -225,19 +229,18 @@ def main():
          "_SeqWare_1.1.1/"]
     )
 
-    output_dir = os.path.abspath(args.output_dir)
     if not os.path.isdir(output_dir):
         # Make the output directory if it does not exist
         execute("mkdir -p {0}".format(output_dir))
 
     # RUN WORKFLOW
     # workaround for docker permissions for cwltool
-    execute("gosu root mkdir -p /var/spool/cwl/.seqware")
-    execute("gosu root chown -R seqware /var/spool/cwl/")
-    execute("gosu root cp /home/seqware/.seqware/settings /var/spool/cwl/.seqware")
-    execute("gosu root chmod a+wrx /var/spool/cwl/.seqware/settings")
+    execute("gosu root mkdir -p %s/.seqware" % output_dir)
+    execute("gosu root chown -R seqware %s" % output_dir)
+    execute("gosu root cp /home/seqware/.seqware/settings %s/.seqware" % output_dir)
+    execute("gosu root chmod a+wrx %s/.seqware/settings" % output_dir)
     execute("perl -pi -e 's/wrench.res/seqwaremaven/g' /home/seqware/bin/seqware")
-    execute("echo \"options(bitmapType='cairo')\" > /var/spool/cwl/.Rprofile")
+    execute("echo \"options(bitmapType='cairo')\" > %s/.Rprofile" % output_dir)
 
     # WRITE WORKFLOW INI
     ini_file = write_ini(args)
