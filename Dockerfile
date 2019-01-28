@@ -22,7 +22,7 @@ RUN apt-get -yqq update && \
 RUN mkdir -p /tmp/downloads $OPT/bin $OPT/etc $OPT/lib $OPT/share
 WORKDIR /tmp/downloads
 
-RUN cpanm --mirror https://cpan.metacpan.org -l $OPT File::ShareDir File::ShareDir::Install CJFIELDS/BioPerl-1.6.924.tar.gz Const::Fast Graph && \
+RUN cpanm --no-lwp --mirror https://cpan.metacpan.org -l $OPT File::ShareDir File::ShareDir::Install CJFIELDS/BioPerl-1.6.924.tar.gz Const::Fast Graph && \
      rm -rf ~/.cpanm
 
 RUN export SOURCE_JKENT_BIN=https://github.com/ENCODE-DCC/kentUtils/raw/master/bin/linux.x86_64 && \
@@ -226,7 +226,7 @@ RUN curl -sSL -o $OPT/bin/blat --retry 10 http://hgdownload.cse.ucsc.edu/admin/e
     chmod ugo+x $OPT/bin/blat
 
 # pre-compiled exonerate
-RUN curl -sSL http://ftp.ebi.ac.uk/pub/software/vertebrategenomics/exonerate/exonerate-2.2.0-x86_64.tar.gz | \
+RUN curl -sSL --retry 10 http://ftp.ebi.ac.uk/pub/software/vertebrategenomics/exonerate/exonerate-2.2.0-x86_64.tar.gz | \
     tar -C $OPT/bin --strip-components=2 -zx exonerate-2.2.0-x86_64/bin/exonerate && \
     chmod ugo+x $OPT/bin/exonerate
 
