@@ -99,7 +99,7 @@ doc: |
     - Docker (1.12.6): follow instructions to install Docker https://docs.docker.com/engine/installation
     - CWL tool
     ```
-    pip install cwltool==1.0.20170217172322
+    pip install cwltool==1.0.20180116213856
     ```
 
     ### Prepare input data
@@ -135,6 +135,7 @@ doc: |
         "path":"bams/normal_sample.bam",
         "class":"File"
       },
+      "download_reference_files": "false",
       "refFrom":
       {
         "path":"reference/GRCh37d5_CGP_refBundle.tar.gz",
