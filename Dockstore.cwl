@@ -99,7 +99,7 @@ doc: |
     - Docker (1.12.6): follow instructions to install Docker https://docs.docker.com/engine/installation
     - CWL tool
     ```
-    pip install cwltool==1.0.20170217172322
+    pip install cwltool==1.0.20180116213856
     ```
 
     ### Prepare input data
