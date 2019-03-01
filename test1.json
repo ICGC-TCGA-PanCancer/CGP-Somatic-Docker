@@ -9,6 +9,7 @@
     "path":"https://dcc.icgc.org/api/v1/download?fn=/PCAWG/reference_data/data_for_testing/HCC1143_ds/HCC1143_BL.bam",
     "class":"File"
   },
+  "download_reference_files": "false",
   "refFrom":
   {
     "path":"https://dcc.icgc.org/api/v1/download?fn=/PCAWG/reference_data/pcawg-sanger/GRCh37d5_CGP_refBundle.tar.gz",
