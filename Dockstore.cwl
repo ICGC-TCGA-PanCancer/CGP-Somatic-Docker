@@ -135,7 +135,6 @@ doc: |
         "path":"bams/normal_sample.bam",
         "class":"File"
       },
-      "download_reference_files": "false",
       "refFrom":
       {
         "path":"reference/GRCh37d5_CGP_refBundle.tar.gz",
