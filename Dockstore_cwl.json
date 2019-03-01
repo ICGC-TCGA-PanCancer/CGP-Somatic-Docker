@@ -9,6 +9,7 @@
     "path":"/mnt/data/9f8f6f03df6d100c90a761164800a42c.bam",
     "class":"File"
   },
+  "download_reference_files": "false",
   "refFrom":
   {
     "path":"https://dcc.icgc.org/api/v1/download?fn=/PCAWG/reference_data/pcawg-sanger/GRCh37d5_CGP_refBundle.tar.gz",
