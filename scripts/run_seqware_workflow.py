@@ -67,6 +67,7 @@ def collect_args():
     parser.add_argument("--coreNum",
                         type=int,
                         required=True,
+                        default=multiprocessing.cpu_count(),
                         help="number of CPU cores to use"
                         )
 

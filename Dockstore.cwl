@@ -47,8 +47,7 @@ inputs:
     secondaryFiles:
     - .bai
   coreNum:
-    type: int
-    default: $(runtime.cores)
+    type: int?
     inputBinding:
       position: 5
       prefix: --coreNum
