@@ -29,7 +29,6 @@ inputs:
       prefix: --tumor
     secondaryFiles:
     - .bai
-
   refFrom:
     type: File
     inputBinding:
@@ -47,6 +46,13 @@ inputs:
       prefix: --normal
     secondaryFiles:
     - .bai
+  coreNum:
+    type: int
+    default: $(runtime.cores)
+    inputBinding:
+      position: 5
+      prefix: --coreNum
+
 
 outputs:
   somatic_sv_tar_gz:

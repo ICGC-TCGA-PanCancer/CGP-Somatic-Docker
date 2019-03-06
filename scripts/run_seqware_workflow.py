@@ -14,6 +14,7 @@ import os
 import re
 import subprocess
 import sys
+import multiprocessing
 
 
 def collect_args():
@@ -63,6 +64,12 @@ def collect_args():
                         default=False,
                         action="store_true",
                         help=argparse.SUPPRESS)
+    parser.add_argument("--coreNum",
+                        type=int,
+                        required=True,
+                        help="number of CPU cores to use"
+                        )
+
     return parser
 
 
@@ -87,6 +94,7 @@ def write_ini(args):
     else:
         raise Exception("bbFrom must be a local file or a valid URL")
 
+
     # based on workflow/config/CgpSomaticCore.ini
     # set up like this to make it easy to parameterize addtional settings
     # in the future
@@ -105,7 +113,8 @@ def write_ini(args):
                  "cleanup={0}".format("false"),
                  "cleanupBams={0}".format("false"),
                  # basic setup
-                 "coresAddressable={0}".format("24"),
+                 # "coresAddressable={0}".format("24"),
+                 "coresAddressable={0}".format(args.coreNum),
                  "memHostMbAvailable={0}".format("108000"),
                  "study-refname-override={0}".format(""),
                  "analysis-center-override={0}".format(""),
