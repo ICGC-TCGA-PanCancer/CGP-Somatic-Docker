@@ -17,7 +17,7 @@ dct:contributor:
 
 requirements:
 - class: DockerRequirement
-  dockerPull: quay.io/pancancer/pcawg-sanger-cgp-workflow:2.0.3
+  dockerPull: quay.io/pancancer/pcawg-sanger-cgp-workflow:expose-cpu-memory
 
 cwlVersion: v1.0
 

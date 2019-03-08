@@ -15,8 +15,10 @@ env
 # of cwltool set $PWD same as $HOME
 OUTPUT_DIR=$HOME
 
+# allow cwltool to pick up the results created by seqware
+gosu root chmod -R a+wrx $OUTPUT_DIR
+
 cd $OUTPUT_DIR
 gosu root bash -c "$* --output-dir $OUTPUT_DIR"
 
-# allow cwltool to pick up the results created by seqware
-gosu root chmod -R a+wrx $OUTPUT_DIR
+

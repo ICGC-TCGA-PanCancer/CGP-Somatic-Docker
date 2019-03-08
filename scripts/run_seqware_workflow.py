@@ -276,7 +276,7 @@ def main():
             new_f += f_base[-4:]
 
             # rename file
-            execute("mv {0} {1}".format(
+            execute("gosu root mv {0} {1}".format(
                 f, os.path.join(output_dir, ".".join(new_f))
             ))
 
@@ -286,7 +286,7 @@ def main():
         run_info_output_path = glob.glob("/datastore/oozie-*")[0]
 
         # move all files to the output directory
-        execute("mv {0}/* {1}/".format(
+        execute("gosu root mv {0}/* {1}/".format(
             run_info_output_path, output_dir
         ))
 
