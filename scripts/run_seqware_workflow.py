@@ -69,7 +69,11 @@ def collect_args():
                         default=multiprocessing.cpu_count(),
                         help="number of CPU cores to use"
                         )
-
+    parser.add_argument("--memMb",
+                        type=float,
+                        default=(os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES') * 0.85)/(1024.**2),
+                        help="maximum RAM to use"
+                        )
     return parser
 
 
@@ -115,7 +119,8 @@ def write_ini(args):
                  # basic setup
                  # "coresAddressable={0}".format("24"),
                  "coresAddressable={0}".format(args.coreNum),
-                 "memHostMbAvailable={0}".format("108000"),
+                 # "memHostMbAvailable={0}".format("108000"),
+                 "memHostMbAvailable={0}".format(args.memMb),
                  "study-refname-override={0}".format(""),
                  "analysis-center-override={0}".format(""),
                  "assembly={0}".format("GRCh37"),
