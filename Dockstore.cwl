@@ -51,7 +51,11 @@ inputs:
     inputBinding:
       position: 5
       prefix: --coreNum
-
+  memMb:
+    type: float?
+    inputBinding:
+      position: 6
+      prefix: --memMb
 
 outputs:
   somatic_sv_tar_gz:
