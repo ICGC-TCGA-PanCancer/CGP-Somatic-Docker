@@ -17,7 +17,7 @@ dct:contributor:
 
 requirements:
 - class: DockerRequirement
-  dockerPull: quay.io/pancancer/pcawg-sanger-cgp-workflow:2.0.3
+  dockerPull: quay.io/pancancer/pcawg-sanger-cgp-workflow:expose-cpu-memory
 
 cwlVersion: v1.0
 
@@ -29,7 +29,6 @@ inputs:
       prefix: --tumor
     secondaryFiles:
     - .bai
-
   refFrom:
     type: File
     inputBinding:
@@ -47,6 +46,16 @@ inputs:
       prefix: --normal
     secondaryFiles:
     - .bai
+  coreNum:
+    type: int?
+    inputBinding:
+      position: 5
+      prefix: --coreNum
+  memGB:
+    type: int?
+    inputBinding:
+      position: 6
+      prefix: --memGB
 
 outputs:
   somatic_sv_tar_gz:
@@ -77,6 +86,22 @@ outputs:
     type: File
     outputBinding:
       glob: '*.somatic.imputeCounts.tar.gz'
+  somatic_cnv_vcf_gz:
+    type: File
+    outputBinding:
+      glob: '*.somatic.cnv.vcf.gz'
+  somatic_indel_vcf_gz:
+    type: File
+    outputBinding:
+      glob: '*.somatic.indel.vcf.gz'
+  somatic_snv_mnv_vcf_gz:
+    type: File
+    outputBinding:
+      glob: '*.somatic.snv_mnv.vcf.gz'
+  somatic_sv_vcf_gz:
+    type: File
+    outputBinding:
+      glob: '*.somatic.sv.vcf.gz'
 baseCommand: [/start.sh, python, /home/seqware/CGP-Somatic-Docker/scripts/run_seqware_workflow.py]
 doc: |
     PCAWG Sanger variant calling workflow is developed by Wellcome Trust Sanger Institute

@@ -14,6 +14,7 @@ import os
 import re
 import subprocess
 import sys
+import multiprocessing
 
 
 def collect_args():
@@ -32,7 +33,7 @@ def collect_args():
                         help="matched normal BAM input")
     parser.add_argument("--output-dir",
                         type=str,
-                        default="/var/spool/cwl/",
+                        required=True,
                         help="directory in which to store the outputs of the \
                         workflow.")
     parser.add_argument("--output-file-basename",
@@ -63,6 +64,16 @@ def collect_args():
                         default=False,
                         action="store_true",
                         help=argparse.SUPPRESS)
+    parser.add_argument("--coreNum",
+                        type=int,
+                        default=multiprocessing.cpu_count(),
+                        help="number of CPU cores to use"
+                        )
+    parser.add_argument("--memGB",
+                        type=int,
+                        default=int((os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES') * 0.85)/(1024.**3)),
+                        help="maximum RAM in GB to use"
+                        )
     return parser
 
 
@@ -87,6 +98,7 @@ def write_ini(args):
     else:
         raise Exception("bbFrom must be a local file or a valid URL")
 
+
     # based on workflow/config/CgpSomaticCore.ini
     # set up like this to make it easy to parameterize addtional settings
     # in the future
@@ -105,8 +117,10 @@ def write_ini(args):
                  "cleanup={0}".format("false"),
                  "cleanupBams={0}".format("false"),
                  # basic setup
-                 "coresAddressable={0}".format("24"),
-                 "memHostMbAvailable={0}".format("108000"),
+                 # "coresAddressable={0}".format("24"),
+                 "coresAddressable={0}".format(args.coreNum),
+                 # "memHostMbAvailable={0}".format("108000"),
+                 "memHostMbAvailable={0}".format(args.memGB * 1024),
                  "study-refname-override={0}".format(""),
                  "analysis-center-override={0}".format(""),
                  "assembly={0}".format("GRCh37"),
@@ -207,13 +221,17 @@ def execute(cmd):
 
 
 def main():
-    os.environ['TMPDIR'] = "/tmp"
-    os.environ['HOME'] = "/var/spool/cwl"
-    execute("env")
-    execute("whoami")
-
     parser = collect_args()
     args = parser.parse_args()
+    output_dir = os.path.abspath(args.output_dir)
+
+    os.environ['TMPDIR'] = "/tmp"
+    # this is necessary because SeqWare will self-install to $HOME dir,
+    # we make sure $HOME is same as output_dir. $HOME may not be the same
+    # as output_dir if this script is run using sudo
+    os.environ['HOME'] = output_dir
+    execute("env")
+    execute("whoami")
 
     workflow_version = "0.0.0"
     workflow_bundle = "Workflow_Bundle_CgpSomaticCore"
@@ -225,19 +243,18 @@ def main():
          "_SeqWare_1.1.1/"]
     )
 
-    output_dir = os.path.abspath(args.output_dir)
     if not os.path.isdir(output_dir):
         # Make the output directory if it does not exist
         execute("mkdir -p {0}".format(output_dir))
 
     # RUN WORKFLOW
     # workaround for docker permissions for cwltool
-    execute("gosu root mkdir -p /var/spool/cwl/.seqware")
-    execute("gosu root chown -R seqware /var/spool/cwl/")
-    execute("gosu root cp /home/seqware/.seqware/settings /var/spool/cwl/.seqware")
-    execute("gosu root chmod a+wrx /var/spool/cwl/.seqware/settings")
+    execute("gosu root mkdir -p %s/.seqware" % output_dir)
+    execute("gosu root chown -R seqware %s" % output_dir)
+    execute("gosu root cp /home/seqware/.seqware/settings %s/.seqware" % output_dir)
+    execute("gosu root chmod a+wrx %s/.seqware/settings" % output_dir)
     execute("perl -pi -e 's/wrench.res/seqwaremaven/g' /home/seqware/bin/seqware")
-    execute("echo \"options(bitmapType='cairo')\" > /var/spool/cwl/.Rprofile")
+    execute("echo \"options(bitmapType='cairo')\" > %s/.Rprofile" % output_dir)
 
     # WRITE WORKFLOW INI
     ini_file = write_ini(args)
@@ -264,7 +281,7 @@ def main():
             new_f += f_base[-4:]
 
             # rename file
-            execute("mv {0} {1}".format(
+            execute("gosu root mv {0} {1}".format(
                 f, os.path.join(output_dir, ".".join(new_f))
             ))
 
@@ -274,7 +291,7 @@ def main():
         run_info_output_path = glob.glob("/datastore/oozie-*")[0]
 
         # move all files to the output directory
-        execute("mv {0}/* {1}/".format(
+        execute("gosu root mv {0}/* {1}/".format(
             run_info_output_path, output_dir
         ))
 
