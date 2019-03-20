@@ -141,13 +141,13 @@ outputs:
   qc_metrics:
     type: File
     outputBinding:
-      glob: 'qc_metrics.tar.gz'
+      glob: '*.qc_metrics.tar.gz'
     secondaryFiles:
     - .md5
   timing_metrics:
     type: File
     outputBinding:
-      glob: 'timing_metrics.tar.gz'
+      glob: '*.timing_metrics.tar.gz'
     secondaryFiles:
     - .md5
 
