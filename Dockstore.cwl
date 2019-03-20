@@ -132,10 +132,10 @@ outputs:
       glob: '*.somatic.verifyBamId.tar.gz'
     secondaryFiles:
     - .md5
-  input_bam_bas_tar_gz:
+  bas_tar_gz:
     type: File
     outputBinding:
-      glob: '*.bam.bas.tar.gz'
+      glob: '*.bas.tar.gz'
     secondaryFiles:
     - .md5
   qc_metrics:
