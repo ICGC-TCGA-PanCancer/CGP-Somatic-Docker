@@ -267,21 +267,22 @@ def main():
     cmd = " ".join(cmd_parts)
     execute(cmd)
 
-    # get the tumor SM
+    # get the filename prefix
     genotype_tar = glob.glob(os.path.join(output_dir, "*.somatic.genotype.tar.gz"))
-    tumor_sampleId = os.path.basename(genotype_tar[0]).split('.')[0]
+    file_base = os.path.basename(genotype_tar[0]).split('.')
+    prefix = '.'.join(file_base[0:3])
 
     # tar gzip *.bam.bas files and generate md5
-    execute("cd {0} && tar -cvzf {1}.bas.tar.gz *.bam.bas".format(output_dir, tumor_sampleId))
-    execute("cat {0}/{1}.bas.tar.gz | md5sum | cut -b 1-33 > {0}/{1}.bas.tar.gz.md5".format(output_dir, tumor_sampleId))
+    execute("cd {0} && tar -cvzf {1}.bas.tar.gz *.bam.bas".format(output_dir, prefix))
+    execute("cat {0}/{1}.bas.tar.gz | md5sum | cut -b 1-33 > {0}/{1}.bas.tar.gz.md5".format(output_dir, prefix))
 
     # tar gzip timing_metrics json files and generate md5
-    execute("tar -cvzf {0}/timing_metrics.tar.gz -C {0} process_metrics.json".format(output_dir))
-    execute("cat {0}/timing_metrics.tar.gz | md5sum | cut -b 1-33 > {0}/timing_metrics.tar.gz.md5".format(output_dir))
+    execute("tar -cvzf {0}/{1}.timing_metrics.tar.gz -C {0} process_metrics.json".format(output_dir, prefix))
+    execute("cat {0}/{1}.timing_metrics.tar.gz | md5sum | cut -b 1-33 > {0}/{1}.timing_metrics.tar.gz.md5".format(output_dir, prefix))
 
     # tar gzip qc_metrics json files and generate md5
-    execute("tar -cvzf {0}/qc_metrics.tar.gz -C {0} qc_metrics.json".format(output_dir))
-    execute("cat {0}/qc_metrics.tar.gz | md5sum | cut -b 1-33 > {0}/qc_metrics.tar.gz.md5".format(output_dir))
+    execute("tar -cvzf {0}/{1}.qc_metrics.tar.gz -C {0} qc_metrics.json".format(output_dir, prefix))
+    execute("cat {0}/{1}.qc_metrics.tar.gz | md5sum | cut -b 1-33 > {0}/{1}.qc_metrics.tar.gz.md5".format(output_dir, prefix))
 
     if args.output_file_basename is not None:
         # find all primary output file archives
