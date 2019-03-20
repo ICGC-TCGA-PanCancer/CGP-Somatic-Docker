@@ -58,50 +58,100 @@ inputs:
       prefix: --memGB
 
 outputs:
-  somatic_sv_tar_gz:
-    type: File
-    outputBinding:
-      glob: '*.somatic.sv.tar.gz'
-  somatic_snv_mnv_tar_gz:
-    type: File
-    outputBinding:
-      glob: '*.somatic.snv_mnv.tar.gz'
-  somatic_verifyBamId_tar_gz:
-    type: File
-    outputBinding:
-      glob: '*.somatic.verifyBamId.tar.gz'
-  somatic_indel_tar_gz:
-    type: File
-    outputBinding:
-      glob: '*.somatic.indel.tar.gz'
-  somatic_genotype_tar_gz:
-    type: File
-    outputBinding:
-      glob: '*.somatic.genotype.tar.gz'
-  somatic_cnv_tar_gz:
-    type: File
-    outputBinding:
-      glob: '*.somatic.cnv.tar.gz'
-  somatic_imputeCounts_tar_gz:
-    type: File
-    outputBinding:
-      glob: '*.somatic.imputeCounts.tar.gz'
   somatic_cnv_vcf_gz:
     type: File
     outputBinding:
       glob: '*.somatic.cnv.vcf.gz'
+    secondaryFiles:
+    - .md5
+    - .tbi
+    - .tbi.md5
+  somatic_cnv_tar_gz:
+    type: File
+    outputBinding:
+      glob: '*.somatic.cnv.tar.gz'
+    secondaryFiles:
+    - .md5
   somatic_indel_vcf_gz:
     type: File
     outputBinding:
       glob: '*.somatic.indel.vcf.gz'
-  somatic_snv_mnv_vcf_gz:
+    secondaryFiles:
+    - .md5
+    - .tbi
+    - .tbi.md5
+  somatic_indel_tar_gz:
     type: File
     outputBinding:
-      glob: '*.somatic.snv_mnv.vcf.gz'
+      glob: '*.somatic.indel.tar.gz'
+    secondaryFiles:
+    - .md5
   somatic_sv_vcf_gz:
     type: File
     outputBinding:
       glob: '*.somatic.sv.vcf.gz'
+    secondaryFiles:
+    - .md5
+    - .tbi
+    - .tbi.md5
+  somatic_sv_tar_gz:
+    type: File
+    outputBinding:
+      glob: '*.somatic.sv.tar.gz'
+    secondaryFiles:
+    - .md5
+  somatic_snv_mnv_vcf_gz:
+    type: File
+    outputBinding:
+      glob: '*.somatic.snv_mnv.vcf.gz'
+    secondaryFiles:
+    - .md5
+    - .tbi
+    - .tbi.md5
+  somatic_snv_mnv_tar_gz:
+    type: File
+    outputBinding:
+      glob: '*.somatic.snv_mnv.tar.gz'
+    secondaryFiles:
+    - .md5
+  somatic_genotype_tar_gz:
+    type: File
+    outputBinding:
+      glob: '*.somatic.genotype.tar.gz'
+    secondaryFiles:
+    - .md5
+  somatic_imputeCounts_tar_gz:
+    type: File
+    outputBinding:
+      glob: '*.somatic.imputeCounts.tar.gz'
+    secondaryFiles:
+    - .md5
+  somatic_verifyBamId_tar_gz:
+    type: File
+    outputBinding:
+      glob: '*.somatic.verifyBamId.tar.gz'
+    secondaryFiles:
+    - .md5
+  input_bam_bas_tar_gz:
+    type: File
+    outputBinding:
+      glob: '*.bam.bas.tar.gz'
+    secondaryFiles:
+    - .md5
+  qc_metrics:
+    type: File
+    outputBinding:
+      glob: 'qc_metrics.tar.gz'
+    secondaryFiles:
+    - .md5
+  timing_metrics:
+    type: File
+    outputBinding:
+      glob: 'timing_metrics.tar.gz'
+    secondaryFiles:
+    - .md5
+
+
 baseCommand: [/start.sh, python, /home/seqware/CGP-Somatic-Docker/scripts/run_seqware_workflow.py]
 doc: |
     PCAWG Sanger variant calling workflow is developed by Wellcome Trust Sanger Institute
