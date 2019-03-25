@@ -56,6 +56,11 @@ inputs:
     inputBinding:
       position: 6
       prefix: --memGB
+  run-id:
+    type: string?
+    inputBinding:
+      position: 7
+      prefix: --run-id
 
 outputs:
   somatic_cnv_vcf_gz:

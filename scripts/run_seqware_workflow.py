@@ -36,12 +36,12 @@ def collect_args():
                         required=True,
                         help="directory in which to store the outputs of the \
                         workflow.")
-    parser.add_argument("--output-file-basename",
-                        dest="output_file_basename",
+    parser.add_argument("--run-id",
+                        dest="run_id",
                         type=str,
                         help="all primary output files with be named following \
                         the convention: \
-                        <output_file_basename>.somatic.<output_type>.tar.gz \
+                        <run_id>.<workflowName>.<dateString>.somatic.<output_type>.tar.gz \
                         where output type is one of: [snv_mnv, cnv, sv, indel, \
                         imputeCounts, genotype, verifyBamId]. \
                         Otherwise sample files will be named automatically \
@@ -98,6 +98,8 @@ def write_ini(args):
     else:
         raise Exception("bbFrom must be a local file or a valid URL")
 
+    # check run_id
+    run_id = args.run_id if args.run_id is not None else ""
 
     # based on workflow/config/CgpSomaticCore.ini
     # set up like this to make it easy to parameterize addtional settings
@@ -105,7 +107,7 @@ def write_ini(args):
     ini_parts = ["refFrom={0}".format(refFrom),
                  "bbFrom={0}".format(bbFrom),
                  # input files
-                 "tumourAliquotIds={0}".format(""),
+                 "tumourAliquotIds={0}".format(run_id),
                  "tumourAnalysisIds={0}".format(""),
                  "tumourBams={0}".format(":".join(args.tumor)),
                  "controlAnalysisId={0}".format(""),
@@ -283,24 +285,6 @@ def main():
     # tar gzip qc_metrics json files and generate md5
     execute("tar -cvzf {0}/{1}.qc_metrics.tar.gz -C {0} qc_metrics.json".format(output_dir, prefix))
     execute("cat {0}/{1}.qc_metrics.tar.gz | md5sum | cut -b 1-33 > {0}/{1}.qc_metrics.tar.gz.md5".format(output_dir, prefix))
-
-    if args.output_file_basename is not None:
-        # find all primary output file archives
-        output_files = glob.glob(
-            os.path.join(output_dir, "*.somatic.*.tar.gz")
-        )
-
-        for f in output_files:
-            new_f = [args.output_file_basename]
-            f_base = os.path.basename(f).split(".")
-            # extract out ["somatic", <output_type>, "tar", "gz"] and append to
-            # new file basename
-            new_f += f_base[-4:]
-
-            # rename file
-            execute("gosu root mv {0} {1}".format(
-                f, os.path.join(output_dir, ".".join(new_f))
-            ))
 
     if (args.keep_all_seqware_output_files):
         # find seqware tmp output path; it contains generated scripts w/
