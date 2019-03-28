@@ -98,16 +98,13 @@ def write_ini(args):
     else:
         raise Exception("bbFrom must be a local file or a valid URL")
 
-    # check run_id
-    run_id = args.run_id if args.run_id is not None else ""
-
     # based on workflow/config/CgpSomaticCore.ini
     # set up like this to make it easy to parameterize addtional settings
     # in the future
     ini_parts = ["refFrom={0}".format(refFrom),
                  "bbFrom={0}".format(bbFrom),
                  # input files
-                 "tumourAliquotIds={0}".format(run_id),
+                 "tumourAliquotIds={0}".format(""),
                  "tumourAnalysisIds={0}".format(""),
                  "tumourBams={0}".format(":".join(args.tumor)),
                  "controlAnalysisId={0}".format(""),
@@ -285,6 +282,22 @@ def main():
     # tar gzip qc_metrics json files and generate md5
     execute("tar -cvzf {0}/{1}.qc_metrics.tar.gz -C {0} qc_metrics.json".format(output_dir, prefix))
     execute("cat {0}/{1}.qc_metrics.tar.gz | md5sum | cut -b 1-33 > {0}/{1}.qc_metrics.tar.gz.md5".format(output_dir, prefix))
+
+    if args.run_id is not None:
+        # find all output file archives
+        output_files = glob.glob(
+            os.path.join(output_dir, "*.*")
+        )
+
+        for f in output_files:
+            new_f = [args.run_id]
+            f_base = os.path.basename(f).split(".")
+            new_f += f_base[1:]
+
+            # rename file
+            execute("gosu root mv {0} {1}".format(
+                f, os.path.join(output_dir, ".".join(new_f))
+            ))
 
     if (args.keep_all_seqware_output_files):
         # find seqware tmp output path; it contains generated scripts w/
