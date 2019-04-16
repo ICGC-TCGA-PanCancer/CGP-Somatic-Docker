@@ -36,12 +36,12 @@ def collect_args():
                         required=True,
                         help="directory in which to store the outputs of the \
                         workflow.")
-    parser.add_argument("--output-file-basename",
-                        dest="output_file_basename",
+    parser.add_argument("--run-id",
+                        dest="run_id",
                         type=str,
                         help="all primary output files with be named following \
                         the convention: \
-                        <output_file_basename>.somatic.<output_type>.tar.gz \
+                        <run_id>.<workflowName>.<dateString>.somatic.<output_type>.tar.gz \
                         where output type is one of: [snv_mnv, cnv, sv, indel, \
                         imputeCounts, genotype, verifyBamId]. \
                         Otherwise sample files will be named automatically \
@@ -97,7 +97,6 @@ def write_ini(args):
         bbFrom = args.bbFrom
     else:
         raise Exception("bbFrom must be a local file or a valid URL")
-
 
     # based on workflow/config/CgpSomaticCore.ini
     # set up like this to make it easy to parameterize addtional settings
@@ -284,18 +283,16 @@ def main():
     execute("tar -cvzf {0}/{1}.qc_metrics.tar.gz -C {0} qc_metrics.json".format(output_dir, prefix))
     execute("cat {0}/{1}.qc_metrics.tar.gz | md5sum | cut -b 1-33 > {0}/{1}.qc_metrics.tar.gz.md5".format(output_dir, prefix))
 
-    if args.output_file_basename is not None:
-        # find all primary output file archives
+    if args.run_id is not None:
+        # find all output file archives
         output_files = glob.glob(
-            os.path.join(output_dir, "*.somatic.*.tar.gz")
+            os.path.join(output_dir, "*.*")
         )
 
         for f in output_files:
-            new_f = [args.output_file_basename]
+            new_f = [args.run_id]
             f_base = os.path.basename(f).split(".")
-            # extract out ["somatic", <output_type>, "tar", "gz"] and append to
-            # new file basename
-            new_f += f_base[-4:]
+            new_f += f_base[1:]
 
             # rename file
             execute("gosu root mv {0} {1}".format(
