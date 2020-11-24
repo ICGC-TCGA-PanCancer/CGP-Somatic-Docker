@@ -12,7 +12,7 @@ notifications:
 
 language: java
 jdk: 
-  - oraclejdk8
+  - oraclejdk9
 
 before_install:
   - pip2.7 install --user setuptools==24.0.3
