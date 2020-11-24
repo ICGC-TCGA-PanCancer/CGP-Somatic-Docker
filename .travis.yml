@@ -18,9 +18,10 @@ before_install:
   - pip2.7 install --user setuptools==24.0.3
 
 install: 
-  - pip2.7 install --user cwl-runner cwltool==1.0.20160712154127 schema-salad==1.14.20160708181155 avro==1.8.1
+  - pip2.7 install --user cwl-runner cwltool==3.0.20200807132242
 
 script: 
 #- cwltool --non-strict Dockstore.cwl test.json 
   - mvn clean install 
+  - cwltool --validate Dockstore.cwl
 # unable to test tool execution, test data and runtime too large
