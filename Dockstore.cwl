@@ -3,17 +3,20 @@
 class: CommandLineTool
 id: Seqware-Sanger-Somatic-Workflow
 label: Seqware-Sanger-Somatic-Workflow
+
+$namespaces:
+  foaf: http://xmlns.com/foaf/0.1/
+
 dct:creator:
   '@id': http://sanger.ac.uk/...
   foaf:name: Keiran Raine
   foaf:mbox: mailto:keiranmraine@gmail.com
-dct:contributor:
-  foaf:name: Brian O'Connor
-  foaf:mbox: mailto:broconno@ucsc.edu
 
 dct:contributor:
-  foaf:name: Denis Yuen
-  foaf:mbox: mailto:denis.yuen@oicr.on.ca
+  - foaf:name: Brian O'Connor
+    foaf:mbox: mailto:broconno@ucsc.edu
+  - foaf:name: Denis Yuen
+    foaf:mbox: mailto:denis.yuen@oicr.on.ca
 
 requirements:
 - class: DockerRequirement
