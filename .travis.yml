@@ -15,6 +15,7 @@ jdk:
   - oraclejdk9
 
 before_install:
+  - pyenv global 3.6.10
   - pip2.7 install --user setuptools==24.0.3
 
 install: 
