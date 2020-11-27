@@ -12,9 +12,10 @@ notifications:
 
 language: java
 jdk: 
-  - oraclejdk9
+  - openjdk12
 
 before_install:
+  - pyenv install --list
   - pyenv install 3.6.10
   - pyenv global 3.6.10
   - pip2.7 install --user setuptools==24.0.3
