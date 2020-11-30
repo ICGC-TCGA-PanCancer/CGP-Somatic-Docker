@@ -18,10 +18,10 @@ before_install:
   - pyenv install --list
   - pyenv install 3.6.3
   - pyenv global 3.6.3
-  - pip2.7 install --user setuptools==24.0.3
+  - pip3 install --user setuptools==24.0.3
 
 install: 
-  - pip2.7 install --user cwl-runner cwltool==3.0.20200807132242
+  - pip3 install --user cwl-runner cwltool==3.0.20200807132242
 
 script: 
 #- cwltool --non-strict Dockstore.cwl test.json 
