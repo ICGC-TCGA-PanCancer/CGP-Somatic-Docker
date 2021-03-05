@@ -29,6 +29,12 @@ task Seqware_Sanger_Somatic_Workflow_Task {
     runtime {
         docker: 'quay.io/pancancer/pcawg-sanger-cgp-workflow:2.0.0-cwl1'
     }
+    
+    meta {
+        author: "Doctor Test"
+        email: "test@oicr.on.ca"
+        description: "testing syntax"
+    }
 }
 
 workflow Seqware_Sanger_Somatic_Workflow {
