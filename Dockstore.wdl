@@ -1,4 +1,4 @@
-task Seqware_Sanger_Somatic_Workflow {
+task Seqware_Sanger_Somatic_Workflow_Task {
     File tumorBam
     File tumorBai
     File normalBam
@@ -32,5 +32,5 @@ task Seqware_Sanger_Somatic_Workflow {
 }
 
 workflow Seqware_Sanger_Somatic_Workflow {
-    call Seqware_Sanger_Somatic_Workflow
+    call Seqware_Sanger_Somatic_Workflow_Task
 }
